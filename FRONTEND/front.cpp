@@ -104,7 +104,7 @@ int do_token (SSrc* Source, SToken* TokenArr)
     seek (Source);
     CharT* Lexem = NULL;
 
-    swscanf (&(Source->Code[Source->ip]), L"%m[^\n; ]", &Lexem);
+    swscanf (&(Source->Code[Source->ip]), L"%ml[^\n; ]", &Lexem);
     MLA (Lexem != NULL);
 
     wprintf (L"\n++%ls++\n", Lexem);
