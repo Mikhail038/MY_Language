@@ -1,0 +1,6 @@
+void main (var x, var y)
+{
+    var x = a + b;
+
+    return 0;
+}
