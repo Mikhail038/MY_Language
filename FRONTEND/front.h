@@ -1,5 +1,5 @@
 //=============================================================================================================================================================================
-#define TKN_IS_OP TKN.category = COperation
+#define TKN_IS_OP       TKN.category = COperation
 
 #define TKN_OP_AND_IS__ TKN.category == COperation && TKN.type ==
 
@@ -7,13 +7,19 @@
     MTokAss (TKN_OP_AND_IS__ tkn_type); \
     Tokens->number++;
 
-#define TKN      Tokens->TokenArr[Tokens->number]
-#define TKN_ARGS TKN.category, TKN.type, TKN.data
+#define TKN         Tokens->TokenArr[Tokens->number]
+#define TKN_ARGS    TKN.category, TKN.type, TKN.data
+
+#define NEXT_TKN    Tokens->number++; \
+    if (Tokens->number = Tokens->size + 1) \
+    { \
+        return NULL; \
+    } \
 
 #define VAR Vars->Arr[counter]
 
 #define FUNC_HEAD_ARGUMENTS STokens* Tokens, SVars* Vars, SFuncs* Funcs
-#define FUNC_ARGUMENTS Tokens, Vars, Funcs
+#define FUNC_ARGUMENTS      Tokens, Vars, Funcs
 
 #define SHOUT wprintf (L"%s %s:%d\n", LOCATION)
 
@@ -221,5 +227,26 @@ ValT get_Pow        (FUNC_HEAD_ARGUMENTS);
 ValT get_Bracket    (FUNC_HEAD_ARGUMENTS);
 
 //===================================================================================================================================================================
+//GraphViz//
+//===================================================================================================================================================================
 
+#define GV_VAR_COLOUR "#1cfc03"
+#define GV_OP_COLOUR  "#39c3ed"
+#define GV_VAL_COLOUR "#f21847"
+
+#define VAR_SPEC "%ls"
+#define VAL_SPEC "%lg"
+
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void make_gv_tree (SNode* Root, const char* FileName);
+
+void make_gv_node (FILE* File, SNode* Node);
+
+void print_gv_node (FILE* File, SNode* Node);
+
+void draw_gv_tree (const char* FileName);
+
+//===================================================================================================================================================================
 

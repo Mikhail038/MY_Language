@@ -1,4 +1,4 @@
-void main (var x, var y)
+void main ( var x, var y )
 {
     var x = a + b;
 
