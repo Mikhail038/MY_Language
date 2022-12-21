@@ -25,6 +25,8 @@
 #define MAX_VARS_ARRAY  50
 #define MAX_FUNCS_ARRAY 50
 
+
+#define SEP_SYMBOLS "\n;, "
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 const int StdErr = 1;
@@ -107,80 +109,7 @@ SSrc* construct_source (SSrc* Source, FILE* SourceText)
 }
 
 //=============================================================================================================================================================================
-<<<<<<< HEAD
-//lexer//
-//=============================================================================================================================================================================
-
-SToken* lex_src (SSrc* Source)
-{
-    SToken* TokenArr = (SToken*) calloc (Source->size, sizeof (*TokenArr));
-
-    wprintf (L"%lu==%lu==\n", Source->ip, Source->size);
-
-    while (Source->ip < Source->size)
-    {
-        if (do_token (Source, TokenArr) != NoErr)
-        {
-            free (TokenArr);
-
-            return NULL;
-        }
-    }
-
-    return TokenArr;
-}
-
-int do_token (SSrc* Source, SToken* TokenArr)
-{
-    seek (Source);
-    CharT* Lexem = NULL;
-
-    swscanf (&(Source->Code[Source->ip]), L"%ml[^\n; ]", &Lexem);
-    MLA (Lexem != NULL);
-
-    wprintf (L"\n++%ls++\n", Lexem);
-    wprintf (L"\n++%lc++\n", *Lexem);
-
-    if (parse_token (Lexem, TokenArr) != NoErr)
-    {
-        free (Lexem);
-
-        return StdErr;
-    }
-
-    Source->ip += wcslen (Lexem); //TODO CHANGE IF CHAR_T IS NOT WCHAR_T !!! T
-
-    free (Lexem);
-
-    return NoErr;
-}
-
-int parse_token (CharT* Lexem, SToken* TokenArr)
-{
-    wprintf (L"tkn '%ls'\n", Lexem);
-
-    #define DEF_LEX(p_condition, p_tokenize) \
-    else if (p_condition) \
-    { \
-        p_tokenize \
-    }
-
-    if (0) {}
-    #include "Lexer.h"
-    else
-    {
-        wprintf (L"Lexer default error. Word '%ls'\n", Lexem);
-        return StdErr;
-    }
-
-    #undef DEF_LEX
-
-    return 0;
-}
-
-=======
 //seekers//
->>>>>>> e5a8470 (Half of Recoursive descent 0.2)
 //=============================================================================================================================================================================
 
 void seek (SSrc* Source)
@@ -243,7 +172,7 @@ int do_token (SSrc* Source,  STokens* Tokens)
     seek (Source);
     CharT* Lexem = NULL;
 
-    swscanf (&(Source->Code[Source->ip]), L"%ml[^\n; ]", &Lexem);
+    swscanf (&(Source->Code[Source->ip]), L"%ml[^" SEP_SYMBOLS "]", &Lexem);
 
     if (Lexem == NULL)
     {
@@ -276,7 +205,7 @@ int do_token (SSrc* Source,  STokens* Tokens)
     return NoErr;
 }
 
-#define DEF_LEX(d_type, d_condition, d_tokenize) \
+#define DEF_LEX(d_type, d_condition, d_tokenize,...) \
 else if (d_condition) \
 { \
     wprintf (L"It is:  " #d_type "\n"); \
@@ -594,8 +523,7 @@ SNode* get_Function (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT; //TODO if not do if/else //if not do while //if not do call// if not do return// if not vars//think about
 
-
-    if ((TKN_OP_AND_IS__ TVariable) && (Tokens->TokenArr[Tokens->number + 1].category == COperation && Tokens->TokenArr[Tokens->number + 1].type == TOpenRoundBracket))
+    if (((TKN_OP_AND_IS__ TnoType) || (TKN_OP_AND_IS__ TstdType)) && (Tokens->TokenArr[Tokens->number + 1].category == CLine) && (Tokens->TokenArr[Tokens->number + 2].type == TOpenRoundBracket))
     {
         SNode* Node = construct_op_node (T_Function);
 
@@ -645,32 +573,34 @@ SNode* get_Parameters (FUNC_HEAD_ARGUMENTS)
 
     // MTokAss (TKN_OP_AND_IS__ TOpenRoundBracket);
     // Tokens->number++;
-    CHECK_SYNTAX (TOpenBracket);
+    CHECK_SYNTAX (TOpenRoundBracket);
 
     if (TKN_OP_AND_IS__ TCloseRoundBracket)
     {
         return NULL;
     }
 
-    while (true)
-    {
-        SNode* Node = construct_op_node (T_Param);
+    SNode* Node = get_Param (FUNC_ARGUMENTS);
 
-        Node->left  = get_Param (FUNC_ARGUMENTS);
-
-        if (TKN_OP_AND_IS__ TCloseRoundBracket)
-        {
-            Tokens->number++;
-
-            return Node;
-        }
-
-        CHECK_SYNTAX (TComma);
-
-        Node->right = get_Param
-    }
+    CHECK_SYNTAX (TCloseRoundBracket);
 
     return Node;
+//     SNode* Node = construct_op_node (T_Param);
+//
+//     Node->left  = get_Param (FUNC_ARGUMENTS);
+//
+//     if (TKN_OP_AND_IS__ TCloseRoundBracket)
+//     {
+//         Tokens->number++;
+//
+//         return Node;
+//     }
+//
+//     CHECK_SYNTAX (TComma);
+//
+//     Node->right = get_Param
+//
+//     return Node;
 }
 
 SNode* get_Param (FUNC_HEAD_ARGUMENTS)
@@ -679,9 +609,20 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS)
 
     SNode* Node = construct_op_node (T_Param);
 
-    Node->left = get_Type (FUNC_ARGUMENTS);
+    Node->left = get_Announce (FUNC_ARGUMENTS);
 
-    Node->right = get_Variable (FUNC_ARGUMENTS);
+    if (TKN_OP_AND_IS__ TComma)
+    {
+        Tokens->number++;
+
+        Node->right = get_Param (FUNC_ARGUMENTS);
+
+        return Node;
+    }
+
+    Node->right = NULL;
+
+    return Node;
 }
 
 SNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
@@ -705,23 +646,43 @@ SNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
 
         return Node;
     }
+
+    return get_While (FUNC_ARGUMENTS);
 }
 
 SNode* get_While (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
+    Tokens->number++;
+    if (Tokens->number = Tokens->size + 1)
+    {
+        return NULL;
+    }
+
+    //exit (0);
+
+    return NULL;
 }
 
 SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 {
-    if (TKN_OP_AND_IS__ TAnnounce)
+    SHOUT;
+
+    if (TKN_OP_AND_IS__ TstdType)
     {
-        SNode* Node = construct_op_node (TAnnounce);
+        Tokens->number++;
+
+        SNode* Node = construct_op_node (T_Announce);
 
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
-        Node->right = get_Expression (FUNC_ARGUMENTS);
+        if (TKN_OP_AND_IS__ TAssign)
+        {
+            Tokens->number++;
+
+            Node->right = get_Expression (FUNC_ARGUMENTS);
+        }
 
         for (int counter = 0; counter < Vars->number; counter++)
         {
@@ -729,7 +690,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
             {
                 VAR.name = Node->left->data.var;
 
-                VAR.value = Node->right->data.val;
+                VAR.value = (Node->right == NULL) ? 38 : Node->right->data.val;
             }
         }
 
@@ -741,13 +702,18 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 
 SNode* get_Variable (FUNC_HEAD_ARGUMENTS)
 {
+    SHOUT;
+
     SNode* Node = construct_var_node (&TKN);
+    Tokens->number++;
 
     return Node;
 }
 
 SNode* get_Expression (FUNC_HEAD_ARGUMENTS)
 {
+    SHOUT;
+
     SNode* Node = construct_val_node (get_AddSub (FUNC_ARGUMENTS));
 
     // MTokAss (TKN_OP_AND_IS__ TFinish);
@@ -758,6 +724,8 @@ SNode* get_Expression (FUNC_HEAD_ARGUMENTS)
 
 ValT get_AddSub (FUNC_HEAD_ARGUMENTS)
 {
+    SHOUT;
+
     double Value = get_MulDiv (FUNC_ARGUMENTS);
 
     while ((TKN_OP_AND_IS__ TAdd)|| (TKN_OP_AND_IS__ TSub))
@@ -806,6 +774,8 @@ ValT get_MulDiv (FUNC_HEAD_ARGUMENTS)
 
 ValT get_Pow (FUNC_HEAD_ARGUMENTS)
 {
+    SHOUT;
+
     double Value = get_Bracket (FUNC_ARGUMENTS);
 
     while (TKN_OP_AND_IS__ TPow)
@@ -822,6 +792,8 @@ ValT get_Pow (FUNC_HEAD_ARGUMENTS)
 
 ValT get_Bracket (FUNC_HEAD_ARGUMENTS)
 {
+    SHOUT;
+
     double Value = 0;
 
     if (TKN_OP_AND_IS__ TOpenRoundBracket)
@@ -868,3 +840,150 @@ ValT get_Bracket (FUNC_HEAD_ARGUMENTS)
 }
 
 //=============================================================================================================================================================================
+//GraphViz//
+//===================================================================================================================================================================
+
+void make_gv_tree (SNode* Root, const char* FileName)
+{
+    FILE* gvInputFile = fopen (FileName, "w");
+    MLA (gvInputFile != NULL);
+
+    fprintf (gvInputFile,
+        R"(digraph {
+    rankdir = VR
+    graph [splines = curved];
+    bgcolor = "white";
+    node [shape = "plaintext", style = "solid"];)");
+
+    make_gv_node (gvInputFile, Root);
+
+    fprintf (gvInputFile, "\n}\n");
+
+    fclose (gvInputFile);
+
+    draw_gv_tree (FileName);
+
+    return;
+}
+
+void make_gv_node (FILE* File, SNode* Node)
+{
+    MLA (File != NULL);
+
+    if (Node == NULL)
+    {
+        return;
+    }
+
+    fprintf (File,
+        R"(
+
+                    node_%p
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr>)", Node);
+
+    print_gv_node (File, Node);
+
+    fprintf (File,
+            R"(</td>
+                            </tr>)");
+
+    // if (Node->left != NULL)
+    // {
+    //     fprintf(File,
+    //     R"(
+    //                         <tr>
+    //                             <td bgcolor = "#61de4b" port="left" > %p   </td>
+    //                             <td bgcolor = "#f27798" port="right"> %p   </td>
+    //                         </tr>)", Node->left, Node->right);
+    // }
+
+    fprintf (File, R"(
+                        </table>
+                        >
+                    ]
+                    )");
+
+    if (Node->parent != NULL)
+    {
+        //wprintf (L"!%d!\n", Node->branch);
+        if ((Node->parent != NULL) && (Node->parent->left == Node))
+        {
+            fprintf (File,  "\n                    node_%p -> node_%p;",
+                        Node->parent, Node);
+        }
+        else if ((Node->parent != NULL) && (Node->parent->right == Node))
+        {
+            fprintf (File,  "\n                    node_%p -> node_%p;",
+                        Node->parent, Node);
+        }
+    }
+
+    make_gv_node (File, Node->left);
+    make_gv_node (File, Node->right);
+}
+
+void print_gv_node (FILE* File, SNode* Node)
+{
+    MLA (File != NULL);
+
+    switch (Node->category)
+    {
+        case COperation:
+            switch (Node->type)
+            {
+                #define DEF_LEX(d_type, d_condition, d_tokenize, d_print) \
+                case d_type: \
+                    fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_OP_COLOUR "\">\n"  " %s", d_print); \
+                    break;
+
+                    #include "Lexer.h"
+
+                #undef DEF_LEX
+
+                default:
+                MCA (0, (void) 0);
+            }
+            break;
+
+
+
+        case CLine:
+            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAR_COLOUR "\">\n" VAR_SPEC, Node->data.var);
+            break;
+
+        case CValue:
+            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAL_COLOUR "\">\n" VAL_SPEC, Node->data.val);
+            break;
+
+        default:
+            MCA (0, (void) 0);
+    }
+
+    return;
+}
+
+void draw_gv_tree (const char* FileName)
+{
+    size_t length = strlen (FileName) + 60;
+
+    char* Command = (char*) calloc (sizeof (*FileName), length);
+
+    sprintf (Command, "dot -Tpng %s -o %s.png", FileName, FileName);
+    //system ("dot -Tpng gvDiff.dot -o gvDiff.png");
+    system (Command);
+
+    sprintf (Command, "xdg-open %s.png", FileName);
+
+    //system ("xdg-open 1.png");
+    system (Command);
+
+    free (Command);
+
+    return;
+}
+
+//===================================================================================================================================================================
