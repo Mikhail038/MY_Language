@@ -1,0 +1,4 @@
+*.txt
+"front"
+*.o
+*/OBJECTS/*

@@ -16,7 +16,7 @@
 
 int main ()
 {
-    _main ();
+    my_main ();
 
     return 0;
 }

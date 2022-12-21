@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include "colors.h"
 
+#define LOCATION __FILE__,__PRETTY_FUNCTION__,__LINE__
+
 #define DOTXT(Message) #Message
 
 #define MCP(Message)                                                                                       \
@@ -32,6 +34,17 @@
             if (!(Condition))                         \
             {                                         \
                 MCP (Condition);                      \
+                exit (0);                             \
+            }                                         \
+        } while (0)
+
+#define MTokAss(Condition)                                \
+        do                                            \
+        {                                             \
+            if (!(Condition))                         \
+            {                                         \
+                MCP (Condition);                      \
+                wprintf (L"==[%d] %d %d==\n", Tokens->number, Tokens->TokenArr[Tokens->number].category, Tokens->TokenArr[Tokens->number].type); \
                 exit (0);                             \
             }                                         \
         } while (0)
