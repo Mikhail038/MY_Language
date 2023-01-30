@@ -20,13 +20,15 @@
 
 //=============================================================================================================================================================================
 
-#define MAX_MEMORY 10000
+#define MAX_MEMORY  10000
 
 #define MAX_VARS_ARRAY  50
 #define MAX_FUNCS_ARRAY 50
 
-
 #define SEP_SYMBOLS "\n;, "
+
+#define UNINITIALIZED   NAN
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 const int StdErr = 1;
@@ -49,14 +51,22 @@ void my_main (void)
 
     //print_tokens (Tokens);
 
+    if (Tokens == NULL)
+    {
+        if (Source.Code != NULL)
+        {
+            free (Source.Code);
+        }
+
+        return;
+    }
 
     Tokens->size   = Tokens->number;
     Tokens->number = 0;
 
+    SVars* Vars = construct_vars_table (MAX_VARS_ARRAY);
 
-    SVars* Vars = construct_vars_array (MAX_VARS_ARRAY);
-
-    SFuncs* Funcs = construct_funcs_array (MAX_FUNCS_ARRAY);
+    SFuncs* Funcs = construct_funcs_table (MAX_FUNCS_ARRAY);
 
 
     SNode* Root = get_All (FUNC_ARGUMENTS);
@@ -68,19 +78,28 @@ void my_main (void)
 
     if (Tokens != NULL)
     {
-        print_tokens (Tokens);
+        //print_tokens (Tokens);
 
         destruct_tokens (Tokens);
     }
 
+    if (Root != NULL)
+    {
+        make_gv_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump");
+
+        write_tree (Root, "ParsedSrc");
+
+        delete_tree (&Root);
+    }
+
     if (Vars != NULL)
     {
-        destruct_vars_array (Vars);
+        destruct_vars_table (Vars);
     }
 
     if (Funcs != NULL)
     {
-        destruct_funcs_array (Funcs);
+        destruct_funcs_table (Funcs);
     }
 
     return;
@@ -375,7 +394,7 @@ double parse_int (CharT* Lexem, int* Counter)
 //grammar//
 //=============================================================================================================================================================================
 
-SVars* construct_vars_array (size_t Capacity)
+SVars* construct_vars_table (size_t Capacity)
 {
     SVars* Vars = (SVars*) calloc (1, sizeof (*Vars));
 
@@ -384,9 +403,61 @@ SVars* construct_vars_array (size_t Capacity)
     return Vars;
 }
 
-void destruct_vars_array (SVars* Vars)
+void show_vars_table (SVars* Vars)
 {
-    for (int counter = 0; counter < Vars->number; ++counter)
+    wprintf (L"==Vars Array== size %d\n", Vars->size);
+    for (int counter = 0; counter < MAX_VARS_ARRAY; ++counter)
+    {
+        if (VAR.name != NULL)
+        {
+            wprintf (L"[%d] %ls = %lg\n", counter, VAR.name, VAR.value);
+        }
+    }
+}
+
+bool check_vars_table (CharT* Name, SVars* Vars)
+{
+    for (int counter = 0; counter < Vars->size; counter++)
+    {
+        if (wcscmp (VAR.name, Name) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars)
+{
+        for (int counter = 0; counter < MAX_VARS_ARRAY; counter++)
+        {
+            if ( VAR.name != NULL && wcscmp (VAR.name, Name) == 0)
+            {
+                return false;
+            }
+
+            if (VAR.name == NULL)
+            {
+                VAR.name = wcsdup (Name);
+
+                VAR.value = Data;
+
+                Vars->size++;
+
+                return true;
+            }
+        }
+
+        wprintf (L"2much vars\n");
+        return false;
+}
+
+void destruct_vars_table (SVars* Vars)
+{
+    show_vars_table (Vars);
+
+    for (int counter = 0; counter <= Vars->size; ++counter)
     {
         if (Vars->Arr[counter].name != NULL)
         {
@@ -404,7 +475,9 @@ void destruct_vars_array (SVars* Vars)
     return;
 }
 
-SFuncs* construct_funcs_array (size_t Capacity)
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SFuncs* construct_funcs_table (size_t Capacity)
 {
     SFuncs* Funcs = (SFuncs*) calloc (1, sizeof (*Funcs));
 
@@ -413,9 +486,60 @@ SFuncs* construct_funcs_array (size_t Capacity)
     return Funcs;
 }
 
-void destruct_funcs_array (SFuncs* Funcs)
+bool add_to_funcs_table (CharT* Name, SFuncs* Funcs)
 {
-    for (int counter = 0; counter < Funcs->number; ++counter)
+        for (int counter = 0; counter < MAX_FUNCS_ARRAY; counter++)
+        {
+            if ( FUNC.name != NULL && wcscmp (FUNC.name, Name) == 0)
+            {
+                return false;
+            }
+
+            if (FUNC.name == NULL)
+            {
+                FUNC.name = wcsdup (Name);
+
+                Funcs->size++;
+
+                return true;
+            }
+        }
+
+        wprintf (L"2much funcs\n");
+        return false;
+}
+
+bool check_funcs_table (CharT* Name, SFuncs* Funcs)
+{
+    for (int counter = 0; counter < Funcs->size; counter++)
+    {
+        if (wcscmp (FUNC.name, Name) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void show_funcs_table (SFuncs* Funcs)
+{
+    wprintf (L"==Funcs Array== size %d\n", Funcs->size);
+
+    for (int counter = 0; counter <= Funcs->size; ++counter)
+    {
+        if (FUNC.name != NULL)
+        {
+            wprintf (L"[%d] %ls\n", counter, FUNC.name);
+        }
+    }
+}
+
+void destruct_funcs_table (SFuncs* Funcs)
+{
+    show_funcs_table (Funcs);
+
+    for (int counter = 0; counter <= Funcs->size; ++counter)
     {
         if (Funcs->Arr[counter].name != NULL)
         {
@@ -459,9 +583,7 @@ SNode* construct_var_node (SToken* Token)
 
     MLA (Token->category == CLine && Token->type == TVariable);
 
-    Node->data.var = (CharT*) calloc (1, sizeof (*Node->data.var));
-
-    wcscpy (Node->data.var, Token->data.var);
+    Node->data.var = wcsdup (Token->data.var);
 
     return Node;
 }
@@ -477,6 +599,41 @@ SNode* construct_val_node (ValT Value)
     Node->data.val = Value;
 
     return Node;
+}
+
+void delete_tree (SNode** Node)
+{
+    if (*Node == NULL)
+    {
+        return;
+    }
+
+    if ((*Node)->left != NULL)
+    {
+        delete_tree (&((*Node)->left));
+    }
+
+    if ((*Node)->right != NULL)
+    {
+        delete_tree (&((*Node)->right));
+    }
+
+    //free (Node->data);
+
+    //printf ("\n%p freed\n", *Node);
+
+    if ((*Node)->category == CLine)
+    {
+        free ((*Node)->data.var);
+        (*Node)->data.var = NULL;
+    }
+
+    free (*Node);
+
+    *Node = NULL;
+    //printf ("\n%p freed^\n", *Node);
+
+    return;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -498,14 +655,14 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
 
     if (TKN_OP_AND_IS__ TFinish)
     {
-        Tokens->number++;
+        NEXT_TKN; //Tokens->number++;
 
         return get_Statement (FUNC_ARGUMENTS);
     }
 
     if (TKN_OP_AND_IS__ TCloseBracket)
     {
-        Tokens->number++;
+        NEXT_TKN; //Tokens->number++;
 
         return NULL;
     }
@@ -514,16 +671,33 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
 
     Node->left  = get_Function (FUNC_ARGUMENTS);
 
-    Node->right = get_Statement (FUNC_ARGUMENTS);
+    if (TKN_OP_AND_IS__ TOpenBracket)
+    {
+        NEXT_TKN;
+    }
+
+    if (Tokens->number < Tokens->size)
+    {
+        //int OldPtr = Tokens->number;
+
+        Node->right = get_Statement (FUNC_ARGUMENTS);
+    }
 
     return Node;
 }
 
 SNode* get_Function (FUNC_HEAD_ARGUMENTS)
 {
-    SHOUT; //TODO if not do if/else //if not do while //if not do call// if not do return// if not vars//think about
+    SHOUT; //TODO if not do if/else
+    //if not do while
+    //if not do call
+    // if not do return
+    // if not vars
+    //think about
 
-    if (((TKN_OP_AND_IS__ TnoType) || (TKN_OP_AND_IS__ TstdType)) && (Tokens->TokenArr[Tokens->number + 1].category == CLine) && (Tokens->TokenArr[Tokens->number + 2].type == TOpenRoundBracket))
+    if (((TKN_OP_AND_IS__ TnoType) || (TKN_OP_AND_IS__ TstdType)) &&
+    (Tokens->TokenArr[Tokens->number + 1].category == CLine) &&
+    (Tokens->TokenArr[Tokens->number + 2].type == TOpenRoundBracket))
     {
         SNode* Node = construct_op_node (T_Function);
 
@@ -545,7 +719,12 @@ SNode* get_Head (FUNC_HEAD_ARGUMENTS)
 
     SNode* Node = construct_var_node (&TKN);
 
-    Tokens->number++;
+    if (add_to_funcs_table (TKN.data.var, Funcs) == false)
+    {
+        wprintf (L"Loshara\n");
+    }
+
+    NEXT_TKN; //Tokens->number++;
 
     Node->left  = Left_son;
 
@@ -562,7 +741,7 @@ SNode* get_Type (FUNC_HEAD_ARGUMENTS)
 
     SNode* Node = construct_op_node (TKN.type);
 
-    Tokens->number++;
+    NEXT_TKN; //Tokens->number++;
 
     return Node;
 }
@@ -571,36 +750,13 @@ SNode* get_Parameters (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
-    // MTokAss (TKN_OP_AND_IS__ TOpenRoundBracket);
-    // Tokens->number++;
     CHECK_SYNTAX (TOpenRoundBracket);
-
-    if (TKN_OP_AND_IS__ TCloseRoundBracket)
-    {
-        return NULL;
-    }
 
     SNode* Node = get_Param (FUNC_ARGUMENTS);
 
     CHECK_SYNTAX (TCloseRoundBracket);
 
     return Node;
-//     SNode* Node = construct_op_node (T_Param);
-//
-//     Node->left  = get_Param (FUNC_ARGUMENTS);
-//
-//     if (TKN_OP_AND_IS__ TCloseRoundBracket)
-//     {
-//         Tokens->number++;
-//
-//         return Node;
-//     }
-//
-//     CHECK_SYNTAX (TComma);
-//
-//     Node->right = get_Param
-//
-//     return Node;
 }
 
 SNode* get_Param (FUNC_HEAD_ARGUMENTS)
@@ -609,11 +765,11 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS)
 
     SNode* Node = construct_op_node (T_Param);
 
-    Node->left = get_Announce (FUNC_ARGUMENTS);
+    Node->left = get_func_Announce (FUNC_ARGUMENTS);
 
     if (TKN_OP_AND_IS__ TComma)
     {
-        Tokens->number++;
+        NEXT_TKN; //Tokens->number++;
 
         Node->right = get_Param (FUNC_ARGUMENTS);
 
@@ -632,17 +788,16 @@ SNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
     if (TKN_OP_AND_IS__ TIf)
     {
         SNode* Node = construct_op_node (TKN.type);
-        Tokens->number++;
+        NEXT_TKN;
 
-        MTokAss (TKN_OP_AND_IS__ TOpenRoundBracket);
-        Tokens->number++;
+
+        CHECK_SYNTAX (TOpenRoundBracket);
 
         Node->left  = get_Expression (FUNC_ARGUMENTS);
 
-        MTokAss (TKN_OP_AND_IS__ TOpenRoundBracket);
-        Tokens->number++;
+        CHECK_SYNTAX (TCloseRoundBracket);
 
-        Node->right = get_Statement (FUNC_ARGUMENTS);
+        Node->right = get_IfStatements (FUNC_ARGUMENTS);
 
         return Node;
     }
@@ -650,19 +805,89 @@ SNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
     return get_While (FUNC_ARGUMENTS);
 }
 
+SNode* get_IfStatements (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    SNode* Node = construct_op_node (T_Crossroads);
+
+    Node->left = get_Statement (FUNC_ARGUMENTS);
+
+    if (TKN_OP_AND_IS__ TElse)
+    {
+        NEXT_TKN;
+
+        if (TKN_OP_AND_IS__ TIf)
+        {
+            Node->right = get_IfElse (FUNC_ARGUMENTS);
+
+            return Node;
+        }
+
+        Node->right = get_Statement (FUNC_ARGUMENTS);
+    }
+
+    return Node;
+}
+
 SNode* get_While (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
-    Tokens->number++;
-    if (Tokens->number = Tokens->size + 1)
+    if (TKN_OP_AND_IS__ TWhile)
     {
-        return NULL;
+        SNode* Node = construct_op_node (TKN.type);
+        NEXT_TKN;
+
+
+        CHECK_SYNTAX (TOpenRoundBracket);
+
+        Node->left  = get_Expression (FUNC_ARGUMENTS);
+
+        CHECK_SYNTAX (TCloseRoundBracket);
+
+        Node->right = get_Statement (FUNC_ARGUMENTS);
+
+        return Node;
     }
 
-    //exit (0);
+    return get_Input (FUNC_ARGUMENTS);
+}
 
-    return NULL;
+SNode* get_Input (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    if (TKN_OP_AND_IS__ TInput)
+    {
+        SNode* Node = construct_op_node (TKN.type);
+        NEXT_TKN;
+
+        Node->left = get_Parameters (FUNC_ARGUMENTS);
+
+        return Node;
+    }
+
+    return get_Return (FUNC_ARGUMENTS);
+}
+
+SNode* get_Return (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    if (TKN_OP_AND_IS__ TReturn)
+    {
+        SNode* Node = construct_op_node (TKN.type);
+        NEXT_TKN;
+
+        Node->left  = get_Expression (FUNC_ARGUMENTS);
+
+        Node->right = NULL;
+
+        return Node;
+    }
+
+    return get_Announce (FUNC_ARGUMENTS);
 }
 
 SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
@@ -671,7 +896,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 
     if (TKN_OP_AND_IS__ TstdType)
     {
-        Tokens->number++;
+        NEXT_TKN;
 
         SNode* Node = construct_op_node (T_Announce);
 
@@ -679,19 +904,69 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 
         if (TKN_OP_AND_IS__ TAssign)
         {
-            Tokens->number++;
+            NEXT_TKN;
 
             Node->right = get_Expression (FUNC_ARGUMENTS);
         }
 
-        for (int counter = 0; counter < Vars->number; counter++)
+        if (add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars) == false)
         {
-            if (VAR.name != NULL)
-            {
-                VAR.name = Node->left->data.var;
+            wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
+            exit (0);
+        }
 
-                VAR.value = (Node->right == NULL) ? 38 : Node->right->data.val;
-            }
+        //TODO do this in middle end later
+        // if (Node->right != NULL && Node->right->category == CValue && Node->right->type == TValue)
+        // {
+        //     if (add_to_vars_table (Node->left->data.var, Node->right->data.val, Vars) == false)
+        //     {
+        //         wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
+        //         exit (0);
+        //     }
+        // }
+        // else
+        // {
+        //     if (add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars) == false)
+        //     {
+        //         wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
+        //         exit (0);
+        //     }
+        // }
+
+        CHECK_SYNTAX (TFinish);
+
+        return Node;
+    }
+
+    return get_Equation (FUNC_ARGUMENTS);
+}
+
+SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS) //TODO redo vars, add var table!
+{
+    SHOUT;
+
+    if (TKN_OP_AND_IS__ TstdType)
+    {
+        NEXT_TKN;
+
+        SNode* Node = construct_op_node (T_func_Announce);
+
+        Node->left  = get_Variable (FUNC_ARGUMENTS);
+
+        if (TKN_OP_AND_IS__ TAssign)
+        {
+            NEXT_TKN; //Tokens->number++;
+
+            Node->right = get_Expression (FUNC_ARGUMENTS);
+        }
+
+        if (Node->right != NULL)
+        {
+            add_to_vars_table (Node->left->data.var, Node->right->data.val, Vars);
+        }
+        else
+        {
+            add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars);
         }
 
         return Node;
@@ -705,138 +980,266 @@ SNode* get_Variable (FUNC_HEAD_ARGUMENTS)
     SHOUT;
 
     SNode* Node = construct_var_node (&TKN);
-    Tokens->number++;
+    NEXT_TKN; //Tokens->number++;
 
     return Node;
 }
+
+SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    if (TKN_IS_WORD &&
+    (Tokens->TokenArr[Tokens->number + 1].category == COperation &&
+    Tokens->TokenArr[Tokens->number + 1].type == TAssign))
+    {
+        SNode* Node = construct_op_node (T_Equation);
+
+        Node->left  = construct_var_node (&TKN);
+        NEXT_TKN;
+
+        //here is TAssign
+        NEXT_TKN;
+
+        Node->right = get_Expression (FUNC_ARGUMENTS);
+
+        CHECK_SYNTAX (TFinish);
+
+        return Node;
+    }
+
+    return get_Call (FUNC_ARGUMENTS);
+}
+
+SNode* get_Call (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+
+
+    return NULL;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SNode* get_Expression (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
-    SNode* Node = construct_val_node (get_AddSub (FUNC_ARGUMENTS));
-
-    // MTokAss (TKN_OP_AND_IS__ TFinish);
-    // Tokens->number++;
+    SNode* Node = get_Logic (FUNC_ARGUMENTS);
 
     return Node;
 }
 
-ValT get_AddSub (FUNC_HEAD_ARGUMENTS)
+SNode* get_Logic (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
-    double Value = get_MulDiv (FUNC_ARGUMENTS);
+    SNode* LeftSon = get_Compare (FUNC_ARGUMENTS);
 
-    while ((TKN_OP_AND_IS__ TAdd)|| (TKN_OP_AND_IS__ TSub))
+    if
+    (
+        (TKN_OP_AND_IS__ TcAnd)   ||
+        (TKN_OP_AND_IS__ TcOr)   /* ||
+        (TKN_OP_AND_IS__ TcNot) */
+    )
     {
         ETokenType CurrentType = TKN.type;
-        Tokens->number++;
+        NEXT_TKN;
 
-        double SecondValue = get_MulDiv (FUNC_ARGUMENTS);
+        SNode* Node = construct_op_node (CurrentType);
 
-        if (CurrentType == TAdd)
-        {
-            Value = Value + SecondValue;
-        }
-        else
-        {
-            Value = Value - SecondValue;
-        }
+        Node->left = LeftSon;
+
+        Node->right = get_Logic (FUNC_ARGUMENTS);
+
+        return Node;
     }
 
-    return Value;
+    return LeftSon;
 }
 
-ValT get_MulDiv (FUNC_HEAD_ARGUMENTS)
+SNode* get_Compare (FUNC_HEAD_ARGUMENTS)
 {
-    double Value = get_Pow (FUNC_ARGUMENTS);
+    SHOUT;
 
-    while ((TKN_OP_AND_IS__ TMul)|| (TKN_OP_AND_IS__ TDiv))
+    SNode* LeftSon = get_AddSub (FUNC_ARGUMENTS);
+
+    if
+    (
+        (TKN_OP_AND_IS__ TcEqual)   ||
+        (TKN_OP_AND_IS__ TcLess)    ||
+        (TKN_OP_AND_IS__ TcMore)    ||
+        (TKN_OP_AND_IS__ TcLessEq)  ||
+        (TKN_OP_AND_IS__ TcMoreEq)  ||
+        (TKN_OP_AND_IS__ TcNotEq)
+    )
     {
         ETokenType CurrentType = TKN.type;
-        Tokens->number++;
+        NEXT_TKN;
 
-        double SecondValue = get_Pow (FUNC_ARGUMENTS);
+        SNode* Node = construct_op_node (CurrentType);
 
-        if (CurrentType == TMul)
-        {
-            Value = Value * SecondValue;
-        }
-        else
-        {
-            Value = Value / SecondValue;
-        }
+        Node->left = LeftSon;
+
+        Node->right = get_Compare (FUNC_ARGUMENTS);
+
+        return Node;
     }
 
-    return Value;
+    return LeftSon;
 }
 
-ValT get_Pow (FUNC_HEAD_ARGUMENTS)
+SNode* get_AddSub (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
-    double Value = get_Bracket (FUNC_ARGUMENTS);
+    SNode* LeftSon = get_MulDiv (FUNC_ARGUMENTS);
 
-    while (TKN_OP_AND_IS__ TPow)
+    if ((TKN_OP_AND_IS__ TaAdd)|| (TKN_OP_AND_IS__ TaSub))
     {
-        Tokens->number++;
+        ETokenType CurrentType = TKN.type;
+        NEXT_TKN;
 
-        double SecondValue = get_Bracket (FUNC_ARGUMENTS);
+        SNode* Node = construct_op_node (CurrentType);
 
-        Value = pow (Value, SecondValue);
+        Node->left = LeftSon;
+
+        Node->right = get_AddSub (FUNC_ARGUMENTS);
+
+        return Node;
     }
 
-    return Value;
+    return LeftSon;
 }
 
-ValT get_Bracket (FUNC_HEAD_ARGUMENTS)
+SNode* get_MulDiv (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
-    double Value = 0;
+    SNode* LeftSon =  get_Pow (FUNC_ARGUMENTS);
+
+    if ((TKN_OP_AND_IS__ TaMul)|| (TKN_OP_AND_IS__ TaDiv))
+    {
+        ETokenType CurrentType = TKN.type;
+        NEXT_TKN;
+
+        SNode* Node = construct_op_node (CurrentType);
+
+        Node->left = LeftSon;
+
+        Node->right =  get_MulDiv (FUNC_ARGUMENTS);
+
+        return Node;
+    }
+
+    return LeftSon;
+}
+
+SNode* get_Pow (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    SNode* LeftSon = get_Bracket (FUNC_ARGUMENTS);
+
+    if (TKN_OP_AND_IS__ TaPow)
+    {
+        ETokenType CurrentType = TKN.type;
+        NEXT_TKN;
+
+        SNode* Node = construct_op_node (CurrentType);
+
+        Node->left = LeftSon;
+
+        Node->right = get_Pow (FUNC_ARGUMENTS);
+
+        return Node;
+    }
+
+    return LeftSon;
+}
+
+SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    SNode* Node = NULL;
 
     if (TKN_OP_AND_IS__ TOpenRoundBracket)
     {
-        Tokens->number++;
+        NEXT_TKN;
 
-        Value = get_AddSub (FUNC_ARGUMENTS);
+        Node = get_Expression (FUNC_ARGUMENTS); //CHANGE IT ON GET_LOGIC IF CHANGES EXPRESSION
 
-        MTokAss (TKN_OP_AND_IS__ TCloseRoundBracket);
+        CHECK_SYNTAX (TCloseRoundBracket);
 
-        Tokens->number++;
-
-        return Value;
+        return Node;
     }
 
-    if (TKN.category == CLine)
+    if (TKN_IS_WORD)
     {
-        if (TKN.type == TVariable)
+        if (Tokens->TokenArr[Tokens->number + 1].category == COperation &&
+            Tokens->TokenArr[Tokens->number + 1].type     == TOpenRoundBracket)
         {
-            for (int counter = 0; counter < Vars->number; counter++)
-            {
-                if (VAR.name == TKN.data.var)
-                {
-                    Tokens->number++;
-
-                    return VAR.value;
-                }
+            #define DEF_UN(def_name, def_type) \
+            else if (wcscmp (def_name, TKN.data.var) == 0) \
+            { \
+                Node = construct_op_node (def_type); \
+                NEXT_TKN; /* skipped func name */ \
+                NEXT_TKN; /* skipped ( */ \
+                Node->right = get_Expression (FUNC_ARGUMENTS); /* //TODO HERE!!! */ \
+                CHECK_SYNTAX (TCloseRoundBracket); \
+                return Node; \
             }
-        } //TODO if func
+
+            if (0) {}
+
+            #include "BaseUnaryFunc.h"
+
+            #undef DEF_UN
+
+
+
+            if (check_funcs_table (TKN.data.var, Funcs) == true) //custom func check
+            {
+                NEXT_TKN; //skipped func name
+
+                NEXT_TKN; //skipped (
+
+                Node = get_Bracket (FUNC_ARGUMENTS); //TODO HERE!!!
+
+                CHECK_SYNTAX (TCloseRoundBracket);
+
+                return Node;
+            }
+        }
+
+        if (check_vars_table (TKN.data.var, Vars) == true)
+        {
+            Node = construct_var_node (&TKN);
+
+            NEXT_TKN;
+
+            return Node;
+        }
+
+        wprintf (L"==ERROR==\n""No such word '%ls' found!\n", TKN.data.var);
     }
+
+    //TODO if func
 
     if (TKN.category == CValue && TKN.type == TValue)
     {
-        Value = TKN.data.val;
-        Tokens->number++;
+        Node = construct_val_node (TKN.data.val);
+        NEXT_TKN;
 
-        return Value;
+        return Node;
     }
 
     wprintf (L"ERROR!\n");
     MTokAss (0);
 
-    return 0;
+    return NULL;
 }
 
 //=============================================================================================================================================================================
@@ -907,20 +1310,31 @@ void make_gv_node (FILE* File, SNode* Node)
                     ]
                     )");
 
-    if (Node->parent != NULL)
+    if (Node->left != NULL)
     {
-        //wprintf (L"!%d!\n", Node->branch);
-        if ((Node->parent != NULL) && (Node->parent->left == Node))
-        {
-            fprintf (File,  "\n                    node_%p -> node_%p;",
-                        Node->parent, Node);
-        }
-        else if ((Node->parent != NULL) && (Node->parent->right == Node))
-        {
-            fprintf (File,  "\n                    node_%p -> node_%p;",
-                        Node->parent, Node);
-        }
+        fprintf (File,  "\n                    node_%p -> node_%p;", Node, Node->left);
     }
+
+    if (Node->right != NULL)
+    {
+        fprintf (File,  "\n                    node_%p -> node_%p;", Node, Node->right);
+    }
+
+
+    // if (Node->parent != NULL) //TODO !!!was working
+    // {
+    //     //wprintf (L"!%d!\n", Node->branch);
+    //     if ((Node->parent != NULL) && (Node->parent->left == Node))
+    //     {
+    //         fprintf (File,  "\n                    node_%p -> node_%p;",
+    //                     Node->parent, Node);
+    //     }
+    //     else if ((Node->parent != NULL) && (Node->parent->right == Node))
+    //     {
+    //         fprintf (File,  "\n                    node_%p -> node_%p;",
+    //                     Node->parent, Node);
+    //     }
+    // }
 
     make_gv_node (File, Node->left);
     make_gv_node (File, Node->right);
@@ -937,10 +1351,10 @@ void print_gv_node (FILE* File, SNode* Node)
             {
                 #define DEF_LEX(d_type, d_condition, d_tokenize, d_print) \
                 case d_type: \
-                    fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_OP_COLOUR "\">\n"  " %s", d_print); \
+                    fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_OP_COLOUR "\">"  " %s ", d_print); \
                     break;
 
-                    #include "Lexer.h"
+                #include "Lexer.h"
 
                 #undef DEF_LEX
 
@@ -949,14 +1363,12 @@ void print_gv_node (FILE* File, SNode* Node)
             }
             break;
 
-
-
         case CLine:
-            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAR_COLOUR "\">\n" VAR_SPEC, Node->data.var);
+            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAR_COLOUR "\"> " VAR_SPEC " ", Node->data.var);
             break;
 
         case CValue:
-            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAL_COLOUR "\">\n" VAL_SPEC, Node->data.val);
+            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAL_COLOUR "\"> " VAL_SPEC " ", Node->data.val);
             break;
 
         default:
@@ -983,6 +1395,98 @@ void draw_gv_tree (const char* FileName)
 
     free (Command);
 
+    return;
+}
+
+//===================================================================================================================================================================
+//WriteTree//
+//===================================================================================================================================================================
+
+void write_tree (SNode* Root, const char* FileName)
+{
+    FILE* OutputFile = fopen (FileName, "w");
+    MLA (OutputFile != NULL);
+
+    file_wprint (Root, 0, OutputFile);
+
+    fwprintf (OutputFile, L".");
+
+    fclose (OutputFile);
+
+    return;
+}
+
+void file_wprint (SNode* Node, int n, FILE* OutputFile)
+{
+    if (Node == NULL)
+    {
+        return;
+    }
+
+    do_tab (n, OutputFile);
+
+    print_node (Node, OutputFile);
+
+    if (Node->left != NULL)
+    {
+        do_tab (n, OutputFile);
+        fwprintf (OutputFile, L"{\n");
+        file_wprint (Node->left, n + 1, OutputFile);
+        do_tab (n, OutputFile);
+        fwprintf (OutputFile, L"}\n");
+    }
+
+    if (Node->right != NULL)
+    {
+        //wprintf (L"i m here %ls\n", Node->data);
+        do_tab (n, OutputFile);
+        fwprintf (OutputFile, L"{\n");
+        file_wprint (Node->right, n + 1, OutputFile);
+        do_tab (n, OutputFile);
+        fwprintf (OutputFile, L"}\n");
+    }
+
+    return;
+}
+
+void do_tab (int n, FILE* OutputFile)
+{
+    for (int i = 0; i < n; i++)
+    {
+        fwprintf (OutputFile, L"" TAB);
+    }
+
+    return;
+}
+
+void print_node (SNode* Node, FILE* OutputFile)
+{
+    switch (Node->category)
+    {
+        case CValue:
+            fwprintf (OutputFile, L"CValue TValue %lg", Node->data.val);
+            break;
+
+        case CLine:
+            fwprintf (OutputFile, L"CLine TVariable %ls", Node->data.var);
+            break;
+
+        case COperation:
+            switch (Node->type)
+            {
+                #define DEF_LEX(d_type, d_condition, d_tokenize, d_print) \
+                case d_type: \
+                    fwprintf (OutputFile, L"COperation %s", d_print); \
+                    break;
+
+                #include "Lexer.h"
+
+                #undef DEF_LEX
+            }
+            break;
+    }
+
+    fwprintf (OutputFile, L"\n");
     return;
 }
 

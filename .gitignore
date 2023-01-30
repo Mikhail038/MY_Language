@@ -1,4 +1,4 @@
 *.txt
 "front"
+"back"
 *.o
-*/OBJECTS/*
