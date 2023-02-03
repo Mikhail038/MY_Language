@@ -36,11 +36,11 @@ const int NoErr  = 0;
 
 //=============================================================================================================================================================================
 
-void my_main (void)
+void my_f_main (int argc, char** argv)
 {
     setlocale(LC_CTYPE, "");
 
-    FILE* SourceText = fopen ("EXAMPLES/first_prog.ger", "r");
+    FILE* SourceText = (argc > 1) ? fopen (argv[1], "r") : fopen ("EXAMPLES/first_prog.ger", "r") ;
     MLA (SourceText != NULL);
 
     SSrc Source = *(construct_source (&Source, SourceText));
@@ -53,9 +53,9 @@ void my_main (void)
 
     if (Tokens == NULL)
     {
-        if (Source.Code != NULL)
+        if (Source.Arr != NULL)
         {
-            free (Source.Code);
+            free (Source.Arr);
         }
 
         return;
@@ -71,9 +71,9 @@ void my_main (void)
 
     SNode* Root = get_All (FUNC_ARGUMENTS);
 
-    if (Source.Code != NULL)
+    if (Source.Arr != NULL)
     {
-        free (Source.Code);
+        free (Source.Arr);
     }
 
     if (Tokens != NULL)
@@ -87,7 +87,7 @@ void my_main (void)
     {
         make_gv_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump");
 
-        write_tree (Root, "ParsedSrc");
+        write_tree (Root, "FILES/ParsedSrc.tr");
 
         delete_tree (&Root);
     }
@@ -114,11 +114,11 @@ SSrc* construct_source (SSrc* Source, FILE* SourceText)
     //Source->Code = (CharT*) calloc (MAX_MEMORY, sizeof (*(Source->Code)));
     //Source->size = MAX_MEMORY;
 
-    fwscanf (SourceText, L"%ml[^~]", &Source->Code); // TODO Ask Danya how to remove this shit!!
-    wprintf (L"|\n%ls|\n", Source->Code);
+    fwscanf (SourceText, L"%ml[^~]", &Source->Arr); // TODO Ask Danya how to remove this shit!!
+    wprintf (L"|\n%ls|\n", Source->Arr);
 
     Source->ip   = 0;
-    Source->size = wcslen (Source->Code);
+    Source->size = wcslen (Source->Arr);
 
     //fread (Source->Code, MAX_MEMORY, sizeof (CharT), SourceText);
     //fwscanf (SourceText, L"%m[^.]", &(Source->Code));
@@ -136,7 +136,7 @@ void seek (SSrc* Source)
     for (; Source->ip < Source->size; Source->ip++)
     {
         // if ((wcscmp (Buffer->Array[Buffer->ip], L"\n")) && ((wcscmp (Buffer->Array[Buffer->ip], L" "))))
-        if ((Source->Code[Source->ip] != L'\n') && ((Source->Code[Source->ip] != L' ')))
+        if ((Source->Arr[Source->ip] != L'\n') && ((Source->Arr[Source->ip] != L' ')))
         {
             return;
         }
@@ -150,7 +150,7 @@ void seek_out (SSrc* Source)
     for (; Source->ip < Source->size; Source->ip++)
     {
         // if ((wcscmp (Buffer->Array[Buffer->ip], L"\n")) && ((wcscmp (Buffer->Array[Buffer->ip], L" "))))
-        if ((Source->Code[Source->ip] == L'\n'))// || ((Buffer->Array[Buffer->ip] == L' ')))
+        if ((Source->Arr[Source->ip] == L'\n'))// || ((Buffer->Array[Buffer->ip] == L' ')))
         {
             Source->ip++;
             return;
@@ -191,13 +191,13 @@ int do_token (SSrc* Source,  STokens* Tokens)
     seek (Source);
     CharT* Lexem = NULL;
 
-    swscanf (&(Source->Code[Source->ip]), L"%ml[^" SEP_SYMBOLS "]", &Lexem);
+    swscanf (&(Source->Arr[Source->ip]), L"%ml[^" SEP_SYMBOLS "]", &Lexem);
 
     if (Lexem == NULL)
     {
-        swscanf (&(Source->Code[Source->ip]), L"%ml[^\n ]", &Lexem);
+        swscanf (&(Source->Arr[Source->ip]), L"%ml[^\n ]", &Lexem);
 
-        if (Lexem == NULL && Source->Code[Source->ip] == L'\0')
+        if (Lexem == NULL && Source->Arr[Source->ip] == L'\0')
         {
             return NoErr;
         }
@@ -224,7 +224,7 @@ int do_token (SSrc* Source,  STokens* Tokens)
     return NoErr;
 }
 
-#define DEF_LEX(d_type, d_condition, d_tokenize,...) \
+#define DEF_OP(d_type, d_condition, d_tokenize,...) \
 else if (d_condition) \
 { \
     wprintf (L"It is:  " #d_type "\n"); \
@@ -238,14 +238,14 @@ int parse_token (CharT* Lexem, STokens* Tokens)
     wprintf (L"[%d]\n""I see: '%ls'\n", Tokens->number, Lexem);
 
     if (0) {}
-    #include "Lexer.h"
+    #include "Operations.h"
     else
     {
         wprintf (L"Lexer default error. Word '%ls'\n", Lexem);
         return StdErr;
     }
 
-    #undef DEF_LEX
+    #undef DEF_OP
 
     return 0;
 }
@@ -993,19 +993,26 @@ SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
     (Tokens->TokenArr[Tokens->number + 1].category == COperation &&
     Tokens->TokenArr[Tokens->number + 1].type == TAssign))
     {
-        SNode* Node = construct_op_node (T_Equation);
+        if (check_vars_table (TKN.data.var, Vars) == true)
+        {
+            SNode* Node = construct_op_node (T_Equation);
 
-        Node->left  = construct_var_node (&TKN);
-        NEXT_TKN;
+            Node->left  = construct_var_node (&TKN);
+            NEXT_TKN;
 
-        //here is TAssign
-        NEXT_TKN;
+            //here is TAssign
+            NEXT_TKN;
 
-        Node->right = get_Expression (FUNC_ARGUMENTS);
+            Node->right = get_Expression (FUNC_ARGUMENTS);
 
-        CHECK_SYNTAX (TFinish);
+            CHECK_SYNTAX (TFinish);
 
-        return Node;
+            return Node;
+        }
+
+        wprintf (L"==ERROR==\n""No such word '%ls' found!\n", TKN.data.var);
+
+        MLA (0);
     }
 
     return get_Call (FUNC_ARGUMENTS);
@@ -1349,14 +1356,14 @@ void print_gv_node (FILE* File, SNode* Node)
         case COperation:
             switch (Node->type)
             {
-                #define DEF_LEX(d_type, d_condition, d_tokenize, d_print) \
+                #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
                 case d_type: \
-                    fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_OP_COLOUR "\">"  " %s ", d_print); \
+                    fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_OP_COLOUR "\">"  " %ls ", d_print); \
                     break;
 
-                #include "Lexer.h"
+                #include "Operations.h"
 
-                #undef DEF_LEX
+                #undef DEF_OP
 
                 default:
                 MCA (0, (void) 0);
@@ -1409,7 +1416,7 @@ void write_tree (SNode* Root, const char* FileName)
 
     file_wprint (Root, 0, OutputFile);
 
-    fwprintf (OutputFile, L".");
+    fwprintf (OutputFile, L"" FORBIDDEN_TERMINATING_SYMBOL);
 
     fclose (OutputFile);
 
@@ -1427,7 +1434,7 @@ void file_wprint (SNode* Node, int n, FILE* OutputFile)
 
     print_node (Node, OutputFile);
 
-    if (Node->left != NULL)
+    //if (Node->left != NULL)
     {
         do_tab (n, OutputFile);
         fwprintf (OutputFile, L"{\n");
@@ -1436,7 +1443,7 @@ void file_wprint (SNode* Node, int n, FILE* OutputFile)
         fwprintf (OutputFile, L"}\n");
     }
 
-    if (Node->right != NULL)
+    //if (Node->right != NULL)
     {
         //wprintf (L"i m here %ls\n", Node->data);
         do_tab (n, OutputFile);
@@ -1474,14 +1481,14 @@ void print_node (SNode* Node, FILE* OutputFile)
         case COperation:
             switch (Node->type)
             {
-                #define DEF_LEX(d_type, d_condition, d_tokenize, d_print) \
+                #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
                 case d_type: \
-                    fwprintf (OutputFile, L"COperation %s", d_print); \
+                    fwprintf (OutputFile, L"COperation %ls", d_print); \
                     break;
 
-                #include "Lexer.h"
+                #include "Operations.h"
 
-                #undef DEF_LEX
+                #undef DEF_OP
             }
             break;
     }

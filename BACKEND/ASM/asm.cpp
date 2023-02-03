@@ -340,12 +340,12 @@ int parse_push_or_pop (StructSource* Source, StructMachineCode* Code, const char
         if ((Name[counter] == ' ') || (Name[counter] == '\n') || (Name[counter] == '\0'))
         {
             Name[counter] = '\0';
-            counter = Junk;
+            counter = JUNK;
             break;
         }
     }
 
-    if (counter != Junk)
+    if (counter != JUNK)
     {
         printf ("Syntax error! (Maybe because of empty pop in the end)\n");
         return StdError;

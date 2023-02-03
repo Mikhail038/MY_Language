@@ -453,8 +453,6 @@ DEF_CMD ("sqrt", m_sqrt, 20,
     PUSH (sqrt (a));
 
     CPU->ip++;
-
-
 },
 {
     PRS_STD

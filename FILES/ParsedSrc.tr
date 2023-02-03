@@ -1,0 +1,256 @@
+COperation _STATEMENT
+{
+    COperation _FUNC
+    {
+        CLine TVariable main
+        {
+            COperation stdType
+            {
+            }
+            {
+            }
+        }
+        {
+            COperation _PARAM
+            {
+            }
+            {
+            }
+        }
+    }
+    {
+        COperation _STATEMENT
+        {
+        }
+        {
+            COperation _STATEMENT
+            {
+                COperation _ANNOUNCE
+                {
+                    CLine TVariable ы
+                    {
+                    }
+                    {
+                    }
+                }
+                {
+                    COperation MUL
+                    {
+                        CValue TValue 5
+                        {
+                        }
+                        {
+                        }
+                    }
+                    {
+                        CValue TValue 6
+                        {
+                        }
+                        {
+                        }
+                    }
+                }
+            }
+            {
+                COperation _STATEMENT
+                {
+                    COperation _ANNOUNCE
+                    {
+                        CLine TVariable ч
+                        {
+                        }
+                        {
+                        }
+                    }
+                    {
+                        COperation ADD
+                        {
+                            COperation MUL
+                            {
+                                CValue TValue 5
+                                {
+                                }
+                                {
+                                }
+                            }
+                            {
+                                COperation SUB
+                                {
+                                    CValue TValue 7
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                                {
+                                    CValue TValue 4
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                            }
+                        }
+                        {
+                            COperation ADD
+                            {
+                                CLine TVariable ы
+                                {
+                                }
+                                {
+                                }
+                            }
+                            {
+                                CLine TVariable ы
+                                {
+                                }
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+                {
+                    COperation _STATEMENT
+                    {
+                        COperation _ANNOUNCE
+                        {
+                            CLine TVariable x
+                            {
+                            }
+                            {
+                            }
+                        }
+                        {
+                            CValue TValue 0
+                            {
+                            }
+                            {
+                            }
+                        }
+                    }
+                    {
+                        COperation _STATEMENT
+                        {
+                            COperation _EQUATION
+                            {
+                                CLine TVariable x
+                                {
+                                }
+                                {
+                                }
+                            }
+                            {
+                                COperation DIV
+                                {
+                                    COperation SUB
+                                    {
+                                        CLine TVariable ч
+                                        {
+                                        }
+                                        {
+                                        }
+                                    }
+                                    {
+                                        COperation ADD
+                                        {
+                                            CLine TVariable ы
+                                            {
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                            CValue TValue 7
+                                            {
+                                            }
+                                            {
+                                            }
+                                        }
+                                    }
+                                }
+                                {
+                                    CValue TValue 5
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                            }
+                        }
+                        {
+                            COperation _STATEMENT
+                            {
+                                COperation RETURN
+                                {
+                                    COperation SUB
+                                    {
+                                        COperation UN_SIN
+                                        {
+                                        }
+                                        {
+                                            CValue TValue 3
+                                            {
+                                            }
+                                            {
+                                            }
+                                        }
+                                    }
+                                    {
+                                        COperation ADD
+                                        {
+                                            COperation MUL
+                                            {
+                                                CValue TValue 2
+                                                {
+                                                }
+                                                {
+                                                }
+                                            }
+                                            {
+                                                COperation ADD
+                                                {
+                                                    CValue TValue 4
+                                                    {
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                                {
+                                                    CValue TValue 5
+                                                    {
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        {
+                                            COperation UN_TAN
+                                            {
+                                            }
+                                            {
+                                                CValue TValue 6
+                                                {
+                                                }
+                                                {
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                {
+                                }
+                            }
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+{
+}
+@

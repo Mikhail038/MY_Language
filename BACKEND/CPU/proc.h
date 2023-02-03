@@ -12,7 +12,6 @@ typedef struct
     unsigned char* line = NULL;
 } StructDebug;
 
-
 typedef struct
 {
     int            ip;
@@ -30,7 +29,6 @@ typedef struct
 void do_dump (StructCPU* CPU);
 
 int dis_command (StructCPU* CPU, int num);
-
 
 int cpu_constructor (FILE* Bin, StructCPU* CPU);
 
@@ -55,6 +53,8 @@ void run_push (StructCPU* CPU);
 void run_pop (StructCPU* CPU);
 
 void run_jump (StructCPU* CPU);
+
+int check_passport (FILE* Bin, int* Size, int* VramSize);
 
 #endif
 
