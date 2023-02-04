@@ -6,11 +6,25 @@
 
 typedef wchar_t CharT; //will not work with char
 
+typedef struct
+{
+    CharT* name;
+    int    index;
+}
+SVarAccord;
+
+typedef struct
+{
+    int         size = 0;
+    SVarAccord* Arr  = NULL;
+}
+SVarTable;
+
 //===================================================================================================================================================================
 
 #include "front.h"
 
-#include "stack.h"
+#include "stackT.h"
 
 #include "asm.h"
 
@@ -49,7 +63,7 @@ typedef struct
     EVarTableConditions table_cond  = none;
     int                 top_index   = 0;
     FILE*               file        = NULL;
-    StructStack*        VarStack    = NULL;
+    SStack<SVarTable*>* VarStack    = NULL;
 }
 SBack;
 
@@ -86,6 +100,10 @@ void generate_node (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_op_node (BACK_FUNC_HEAD_PARAMETERS);
 
+void generate_input (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_output (BACK_FUNC_HEAD_PARAMETERS);
+
 void generate_return (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_announce (BACK_FUNC_HEAD_PARAMETERS);
@@ -95,6 +113,10 @@ void generate_equation (BACK_FUNC_HEAD_PARAMETERS);
 void generate_expression (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_postorder (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_pop_var (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_push_var (BACK_FUNC_HEAD_PARAMETERS);
 
 //===================================================================================================================================================================
 

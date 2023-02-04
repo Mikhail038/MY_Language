@@ -1,6 +1,11 @@
 #ifndef COLORS_H
 #define COLORS_H
 
+#define LOCATION __FILE__,__PRETTY_FUNCTION__,__LINE__
+
+#define DOTXT_1(Message) #Message+1
+
+
 #define TAB "    "
 
 #define KBLK "\x1b[30m"

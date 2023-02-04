@@ -64,10 +64,8 @@ void my_f_main (int argc, char** argv)
     Tokens->size   = Tokens->number;
     Tokens->number = 0;
 
-    SVars* Vars = construct_vars_table (MAX_VARS_ARRAY);
-
-    SFuncs* Funcs = construct_funcs_table (MAX_FUNCS_ARRAY);
-
+    SVars* Vars     = NULL;
+    SFuncs* Funcs   = construct_funcs_table (MAX_FUNCS_ARRAY);
 
     SNode* Root = get_All (FUNC_ARGUMENTS);
 
@@ -83,15 +81,6 @@ void my_f_main (int argc, char** argv)
         destruct_tokens (Tokens);
     }
 
-    if (Root != NULL)
-    {
-        make_gv_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump");
-
-        write_tree (Root, "FILES/ParsedSrc.tr");
-
-        delete_tree (&Root);
-    }
-
     if (Vars != NULL)
     {
         destruct_vars_table (Vars);
@@ -100,6 +89,15 @@ void my_f_main (int argc, char** argv)
     if (Funcs != NULL)
     {
         destruct_funcs_table (Funcs);
+    }
+
+    if (Root != NULL)
+    {
+        make_gv_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump");
+
+        write_tree (Root, "FILES/ParsedSrc.tr");
+
+        delete_tree (&Root);
     }
 
     return;
@@ -396,9 +394,12 @@ double parse_int (CharT* Lexem, int* Counter)
 
 SVars* construct_vars_table (size_t Capacity)
 {
-    SVars* Vars = (SVars*) calloc (1, sizeof (*Vars));
+    SVars* Vars  = (SVars*) calloc (1, sizeof (*Vars));
+    Vars->Arr    = (SVar*)  calloc (Capacity, sizeof (*(Vars->Arr)));
+    Vars->size   = 0;
 
-    Vars->Arr = (SVar*) calloc (Capacity, sizeof (*Vars->Arr));
+    MLA (Vars != NULL);
+    MLA (Vars->Arr != NULL);
 
     return Vars;
 }
@@ -664,6 +665,12 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN; //Tokens->number++;
 
+        if (Vars != NULL)
+        {
+            destruct_vars_table (Vars);
+        }
+        //TODO WTF??????????????
+
         return NULL;
     }
 
@@ -688,18 +695,19 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
 
 SNode* get_Function (FUNC_HEAD_ARGUMENTS)
 {
-    SHOUT; //TODO if not do if/else
-    //if not do while
-    //if not do call
-    // if not do return
-    // if not vars
-    //think about
+    SHOUT;
 
     if (((TKN_OP_AND_IS__ TnoType) || (TKN_OP_AND_IS__ TstdType)) &&
     (Tokens->TokenArr[Tokens->number + 1].category == CLine) &&
     (Tokens->TokenArr[Tokens->number + 2].type == TOpenRoundBracket))
     {
         SNode* Node = construct_op_node (T_Function);
+
+        if (Vars != NULL)
+        {
+            destruct_vars_table (Vars);
+        }
+        Vars = construct_vars_table (MAX_VARS_ARRAY);
 
         Node->left  = get_Head (FUNC_ARGUMENTS);
 
@@ -752,9 +760,31 @@ SNode* get_Parameters (FUNC_HEAD_ARGUMENTS)
 
     CHECK_SYNTAX (TOpenRoundBracket);
 
-    SNode* Node = get_Param (FUNC_ARGUMENTS);
+    SNode* Node = get_headParam (FUNC_ARGUMENTS);
 
     CHECK_SYNTAX (TCloseRoundBracket);
+
+    return Node;
+}
+
+SNode* get_headParam (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    SNode* Node = construct_op_node (T_Param);
+
+    Node->left = get_func_Announce (FUNC_ARGUMENTS);
+
+    if (TKN_OP_AND_IS__ TComma)
+    {
+        NEXT_TKN; //Tokens->number++;
+
+        Node->right = get_headParam (FUNC_ARGUMENTS);
+
+        return Node;
+    }
+
+    Node->right = NULL;
 
     return Node;
 }
@@ -765,7 +795,9 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS)
 
     SNode* Node = construct_op_node (T_Param);
 
-    Node->left = get_func_Announce (FUNC_ARGUMENTS);
+    MLA (check_vars_table (TKN.data.var, Vars) == true);
+
+    Node->left = get_Variable (FUNC_ARGUMENTS);
 
     if (TKN_OP_AND_IS__ TComma)
     {
@@ -863,7 +895,32 @@ SNode* get_Input (FUNC_HEAD_ARGUMENTS)
         SNode* Node = construct_op_node (TKN.type);
         NEXT_TKN;
 
-        Node->left = get_Parameters (FUNC_ARGUMENTS);
+        CHECK_SYNTAX (TOpenRoundBracket);
+
+        Node->left = get_Param (FUNC_ARGUMENTS);
+
+        CHECK_SYNTAX (TCloseRoundBracket);
+
+        return Node;
+    }
+
+    return get_Output (FUNC_ARGUMENTS);
+}
+
+SNode* get_Output (FUNC_HEAD_ARGUMENTS)
+{
+    SHOUT;
+
+    if (TKN_OP_AND_IS__ TOutput)
+    {
+        SNode* Node = construct_op_node (TKN.type);
+        NEXT_TKN;
+
+        CHECK_SYNTAX (TOpenRoundBracket);
+
+        Node->left = get_Param (FUNC_ARGUMENTS);
+
+        CHECK_SYNTAX (TCloseRoundBracket);
 
         return Node;
     }
@@ -912,6 +969,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
         if (add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars) == false)
         {
             wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
+
             exit (0);
         }
 
@@ -941,7 +999,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
     return get_Equation (FUNC_ARGUMENTS);
 }
 
-SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS) //TODO redo vars, add var table!
+SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
@@ -953,21 +1011,27 @@ SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS) //TODO redo vars, add var table!
 
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
-        if (TKN_OP_AND_IS__ TAssign)
+        if (add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars) == false)
         {
-            NEXT_TKN; //Tokens->number++;
+            wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
 
-            Node->right = get_Expression (FUNC_ARGUMENTS);
+            exit (0);
         }
+//         if (TKN_OP_AND_IS__ TAssign)
+//         {
+//             NEXT_TKN; //Tokens->number++;
+//
+//             Node->right = get_Expression (FUNC_ARGUMENTS);
+//         }
 
-        if (Node->right != NULL)
-        {
-            add_to_vars_table (Node->left->data.var, Node->right->data.val, Vars);
-        }
-        else
-        {
-            add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars);
-        }
+        // if (Node->right != NULL)
+        // {
+        //     add_to_vars_table (Node->left->data.var, Node->right->data.val, Vars);
+        // }
+        // else
+        // {
+        //     add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars);
+        // }
 
         return Node;
     }
@@ -980,6 +1044,7 @@ SNode* get_Variable (FUNC_HEAD_ARGUMENTS)
     SHOUT;
 
     SNode* Node = construct_var_node (&TKN);
+
     NEXT_TKN; //Tokens->number++;
 
     return Node;
@@ -1395,7 +1460,7 @@ void draw_gv_tree (const char* FileName)
     //system ("dot -Tpng gvDiff.dot -o gvDiff.png");
     system (Command);
 
-    sprintf (Command, "xdg-open %s.png", FileName);
+    //sprintf (Command, "xdg-open %s.png", FileName);
 
     //system ("xdg-open 1.png");
     system (Command);

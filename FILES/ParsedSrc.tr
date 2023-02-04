@@ -2,7 +2,7 @@ COperation _STATEMENT
 {
     COperation _FUNC
     {
-        CLine TVariable main
+        CLine TVariable sum
         {
             COperation stdType
             {
@@ -13,8 +13,33 @@ COperation _STATEMENT
         {
             COperation _PARAM
             {
+                COperation _FUNC_ANNOUNCE
+                {
+                    CLine TVariable a
+                    {
+                    }
+                    {
+                    }
+                }
+                {
+                }
             }
             {
+                COperation _PARAM
+                {
+                    COperation _FUNC_ANNOUNCE
+                    {
+                        CLine TVariable b
+                        {
+                        }
+                        {
+                        }
+                    }
+                    {
+                    }
+                }
+                {
+                }
             }
         }
     }
@@ -25,87 +50,82 @@ COperation _STATEMENT
         {
             COperation _STATEMENT
             {
-                COperation _ANNOUNCE
+                COperation RETURN
                 {
-                    CLine TVariable ы
+                    COperation ADD
                     {
-                    }
-                    {
-                    }
-                }
-                {
-                    COperation MUL
-                    {
-                        CValue TValue 5
+                        CLine TVariable a
                         {
                         }
                         {
                         }
                     }
                     {
-                        CValue TValue 6
+                        CLine TVariable b
                         {
                         }
                         {
                         }
                     }
                 }
+                {
+                }
+            }
+            {
+            }
+        }
+    }
+}
+{
+    COperation _STATEMENT
+    {
+        COperation _FUNC
+        {
+            CLine TVariable main
+            {
+                COperation stdType
+                {
+                }
+                {
+                }
+            }
+            {
+                COperation _PARAM
+                {
+                }
+                {
+                }
+            }
+        }
+        {
+            COperation _STATEMENT
+            {
             }
             {
                 COperation _STATEMENT
                 {
                     COperation _ANNOUNCE
                     {
-                        CLine TVariable ч
+                        CLine TVariable ы
                         {
                         }
                         {
                         }
                     }
                     {
-                        COperation ADD
+                        COperation MUL
                         {
-                            COperation MUL
+                            CValue TValue 5
                             {
-                                CValue TValue 5
-                                {
-                                }
-                                {
-                                }
                             }
                             {
-                                COperation SUB
-                                {
-                                    CValue TValue 7
-                                    {
-                                    }
-                                    {
-                                    }
-                                }
-                                {
-                                    CValue TValue 4
-                                    {
-                                    }
-                                    {
-                                    }
-                                }
                             }
                         }
                         {
-                            COperation ADD
+                            CValue TValue 6
                             {
-                                CLine TVariable ы
-                                {
-                                }
-                                {
-                                }
                             }
                             {
-                                CLine TVariable ы
-                                {
-                                }
-                                {
-                                }
                             }
                         }
                     }
@@ -132,23 +152,70 @@ COperation _STATEMENT
                     {
                         COperation _STATEMENT
                         {
-                            COperation _EQUATION
+                            COperation INPUT
                             {
-                                CLine TVariable x
+                                COperation _PARAM
                                 {
-                                }
-                                {
-                                }
-                            }
-                            {
-                                COperation DIV
-                                {
-                                    COperation SUB
+                                    CLine TVariable ы
                                     {
-                                        CLine TVariable ч
+                                    }
+                                    {
+                                    }
+                                }
+                                {
+                                    COperation _PARAM
+                                    {
+                                        CLine TVariable x
                                         {
                                         }
                                         {
+                                        }
+                                    }
+                                    {
+                                    }
+                                }
+                            }
+                            {
+                            }
+                        }
+                        {
+                            COperation _STATEMENT
+                            {
+                                COperation _ANNOUNCE
+                                {
+                                    CLine TVariable ч
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                                {
+                                    COperation ADD
+                                    {
+                                        COperation MUL
+                                        {
+                                            CValue TValue 5
+                                            {
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                            COperation SUB
+                                            {
+                                                CValue TValue 7
+                                                {
+                                                }
+                                                {
+                                                }
+                                            }
+                                            {
+                                                CValue TValue 4
+                                                {
+                                                }
+                                                {
+                                                }
+                                            }
                                         }
                                     }
                                     {
@@ -161,47 +228,37 @@ COperation _STATEMENT
                                             }
                                         }
                                         {
-                                            CValue TValue 7
+                                            COperation UN_CEIL
                                             {
                                             }
                                             {
+                                                CLine TVariable ы
+                                                {
+                                                }
+                                                {
+                                                }
                                             }
                                         }
-                                    }
-                                }
-                                {
-                                    CValue TValue 5
-                                    {
-                                    }
-                                    {
                                     }
                                 }
                             }
-                        }
-                        {
-                            COperation _STATEMENT
                             {
-                                COperation RETURN
+                                COperation _STATEMENT
                                 {
-                                    COperation SUB
+                                    COperation _EQUATION
                                     {
-                                        COperation UN_SIN
+                                        CLine TVariable x
                                         {
                                         }
                                         {
-                                            CValue TValue 3
-                                            {
-                                            }
-                                            {
-                                            }
                                         }
                                     }
                                     {
-                                        COperation ADD
+                                        COperation DIV
                                         {
-                                            COperation MUL
+                                            COperation SUB
                                             {
-                                                CValue TValue 2
+                                                CLine TVariable ч
                                                 {
                                                 }
                                                 {
@@ -210,14 +267,14 @@ COperation _STATEMENT
                                             {
                                                 COperation ADD
                                                 {
-                                                    CValue TValue 4
+                                                    CLine TVariable ы
                                                     {
                                                     }
                                                     {
                                                     }
                                                 }
                                                 {
-                                                    CValue TValue 5
+                                                    CValue TValue 7
                                                     {
                                                     }
                                                     {
@@ -226,23 +283,61 @@ COperation _STATEMENT
                                             }
                                         }
                                         {
-                                            COperation UN_TAN
+                                            CValue TValue 5
                                             {
                                             }
                                             {
-                                                CValue TValue 6
-                                                {
-                                                }
-                                                {
-                                                }
                                             }
                                         }
                                     }
                                 }
                                 {
+                                    COperation _STATEMENT
+                                    {
+                                        COperation OUTPUT
+                                        {
+                                            COperation _PARAM
+                                            {
+                                                CLine TVariable x
+                                                {
+                                                }
+                                                {
+                                                }
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                        }
+                                    }
+                                    {
+                                        COperation _STATEMENT
+                                        {
+                                            COperation RETURN
+                                            {
+                                                COperation SUB
+                                                {
+                                                    CValue TValue 2
+                                                    {
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                                {
+                                                    CValue TValue 4
+                                                    {
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                        }
+                                    }
                                 }
-                            }
-                            {
                             }
                         }
                     }
@@ -250,7 +345,87 @@ COperation _STATEMENT
             }
         }
     }
-}
-{
+    {
+        COperation _STATEMENT
+        {
+            COperation _FUNC
+            {
+                CLine TVariable mul
+                {
+                    COperation stdType
+                    {
+                    }
+                    {
+                    }
+                }
+                {
+                    COperation _PARAM
+                    {
+                        COperation _FUNC_ANNOUNCE
+                        {
+                            CLine TVariable a
+                            {
+                            }
+                            {
+                            }
+                        }
+                        {
+                        }
+                    }
+                    {
+                        COperation _PARAM
+                        {
+                            COperation _FUNC_ANNOUNCE
+                            {
+                                CLine TVariable b
+                                {
+                                }
+                                {
+                                }
+                            }
+                            {
+                            }
+                        }
+                        {
+                        }
+                    }
+                }
+            }
+            {
+                COperation _STATEMENT
+                {
+                }
+                {
+                    COperation _STATEMENT
+                    {
+                        COperation RETURN
+                        {
+                            COperation MUL
+                            {
+                                CLine TVariable a
+                                {
+                                }
+                                {
+                                }
+                            }
+                            {
+                                CLine TVariable b
+                                {
+                                }
+                                {
+                                }
+                            }
+                        }
+                        {
+                        }
+                    }
+                    {
+                    }
+                }
+            }
+        }
+        {
+        }
+    }
 }
 @

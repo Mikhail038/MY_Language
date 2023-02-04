@@ -41,7 +41,7 @@ void my_b_main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        FILE* ExFile = fopen ("FILES/Code.asm", "w");
+        FILE* ExFile = fopen ("EXAMPLES_ASM/code.asm", "w");
 
         make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump");
 
@@ -474,7 +474,7 @@ void draw_gv_tree (const char* FileName)
     //system ("dot -Tpng gvDiff.dot -o gvDiff.png");
     system (Command);
 
-    sprintf (Command, "xdg-open %s.png", FileName);
+    //sprintf (Command, "xdg-open %s.png", FileName);
 
     //system ("xdg-open 1.png");
     system (Command);
@@ -494,14 +494,15 @@ void make_asm_file (SNode* Root, FILE* File)
 
     SBack* Back = (SBack*) calloc (1, sizeof (SBack));
 
-    Back->VarStack = (StructStack*) calloc (1, sizeof (StructStack));
+    Back->VarStack = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
     Back->file = File;
 
     Back->table_cond = none;
 
+    stack_constructor (Back->VarStack, 4);
 
-    STACKCTOR (Back->VarStack, 4);
+    //generate_user_functions (Root, Back);
 
     generate_main (Root, Back);
 
@@ -599,15 +600,42 @@ void generate_equation (BACK_FUNC_HEAD_PARAMETERS)
 {
     generate_expression (BACK_RIGHT_SON_FUNC_PARAMETERS);
 
-    int Index = find_var (BACK_LEFT_SON_FUNC_PARAMETERS);
-
-    write_command (pop, Back->file);
-
-    fprintf (Back->file, " [%d]\n\n", Index);
+    generate_pop_var (BACK_LEFT_SON_FUNC_PARAMETERS);
 
     return;
 }
 
+void generate_input (BACK_FUNC_HEAD_PARAMETERS)
+{
+    SNode* Node = CurNode->left;
+
+    do
+    {
+        writeln_command (inp, Back->file);
+
+        generate_pop_var (Node->left, Back);
+
+        Node = Node->right;
+    } while (Node != NULL);
+
+    return;
+}
+
+void generate_output (BACK_FUNC_HEAD_PARAMETERS)
+{
+    SNode* Node = CurNode->left;
+
+    do
+    {
+        generate_push_var (Node->left, Back);
+
+        writeln_command (out, Back->file);
+
+        Node = Node->right;
+    } while (Node != NULL);
+
+    return;
+}
 
 void generate_return (BACK_FUNC_HEAD_PARAMETERS)
 {
@@ -645,6 +673,28 @@ void generate_postorder (BACK_FUNC_HEAD_PARAMETERS)
     }
 
     generate_node (BACK_FUNC_PARAMETERS);
+
+    return;
+}
+
+void generate_pop_var (BACK_FUNC_HEAD_PARAMETERS)
+{
+    int Index = find_var (BACK_FUNC_PARAMETERS);
+
+    write_command (pop, Back->file);
+
+    fprintf (Back->file, " [%d]\n\n", Index);
+
+    return;
+}
+
+void generate_push_var (BACK_FUNC_HEAD_PARAMETERS)
+{
+    int Index = find_var (BACK_FUNC_PARAMETERS);
+
+    write_command (push, Back->file);
+
+    fprintf (Back->file, " [%d]\n\n", Index);
 
     return;
 }
@@ -801,27 +851,9 @@ void writeln_command (ECommandNums eCommand, FILE* File)
 
 void execute_asm_file (FILE* ExFile)
 {
-    // FILE* Bin = argc > 2 ? fopen (argv[2], "r") : fopen ("EXAMPLES_MC/code.mc", "r");
-    MCA (ExFile != NULL, (void) 0);
+    system ("BACKEND/BUILD/asm");
 
-    StructCPU CPU = {};
-
-    // if ((argc > 1) && (strcmp (argv[1], "-g") == 0))
-    // {
-    //     CPU.mode = DBG_mode;
-    // }
-    // else
-    {
-        CPU.mode = NRM_mode;
-    }
-
-    cpu_constructor (ExFile, &CPU);
-
-    fclose (ExFile);
-
-    execute_code (&CPU);
-
-    cpu_destructor (&CPU);
+    system ("BACKEND/BUILD/proc");
 
     return;
 }

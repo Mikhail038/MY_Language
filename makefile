@@ -20,7 +20,7 @@ VR_COMPILER = g++
 
 #=============================================================================================================================================================================
 
-DO: FOLDERS BUILD_FRONTEND BUILD_BACKEND  #DO_COMPILE
+DO: FOLDERS BUILD_FRONTEND BUILD_BACKEND DO_ASM DO_DISASM DO_PROC  #DO_COMPILE
 
 #=============================================================================================================================================================================
 
@@ -37,23 +37,25 @@ VR_OBJ_B = $(VR_SRC_B)/OBJECTS
 BUILD_FRONTEND:  $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o
 	$(VR_COMPILER) $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o -o front $(VR_FLAGS)
 
-BUILD_BACKEND:  $(VR_OBJ_B)/back.o $(VR_OBJ_B)/main_back.o EXTRA/STACK/OBJECTS/stack.o BACKEND/OBJECTS/proc.o
-	$(VR_COMPILER) $(VR_OBJ_B)/back.o $(VR_OBJ_B)/main_back.o EXTRA/STACK/OBJECTS/stack.o BACKEND/OBJECTS/proc.o -o back $(VR_FLAGS)
+BUILD_BACKEND:  	$(VR_OBJ_B)/back.o $(VR_OBJ_B)/main_back.o BACKEND/OBJECTS/proc.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o
+	$(VR_COMPILER) 	$(VR_OBJ_B)/back.o $(VR_OBJ_B)/main_back.o BACKEND/OBJECTS/proc.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o -o back $(VR_FLAGS)
 
-EXTRA/STACK/OBJECTS/stack.o: EXTRA/STACK/stack.cpp
-	$(VR_COMPILER) -c -o EXTRA/STACK/OBJECTS/stack.o EXTRA/STACK/stack.cpp $(VR_FLAGS)
+# EXTRA/STACK/OBJECTS/stack.o: EXTRA/STACK/stack.cpp
+# 	$(VR_COMPILER) -c -o EXTRA/STACK/OBJECTS/stack.o EXTRA/STACK/stack.cpp $(VR_FLAGS)
 
 # EXTRA/STACK/OBJECTS/p_stack.o: EXTRA/STACK/p_stack.cpp
 # 	$(VR_COMPILER) -c -o EXTRA/STACK/OBJECTS/p_stack.o EXTRA/STACK/p_stack.cpp $(VR_FLAGS)
 
-BACKEND/OBJECTS/proc.o: BACKEND/CPU/proc.cpp
-	$(VR_COMPILER) -c -o BACKEND/OBJECTS/proc.o BACKEND/CPU/proc.cpp $(VR_FLAGS)
+# BACKEND/OBJECTS/proc.o: BACKEND/CPU/proc.cpp
+# 	$(VR_COMPILER) -c -o BACKEND/OBJECTS/proc.o BACKEND/CPU/proc.cpp $(VR_FLAGS)
+#
+# BACKEND/OBJECTS/asm.o: BACKEND/ASM/asm.cpp
+# 	$(VR_COMPILER) -c -o BACKEND/OBJECTS/asm.o BACKEND/ASM/asm.cpp $(VR_FLAGS)
+#
+# BACKEND/OBJECTS/disasm.o: BACKEND/DISASM/disasm.cpp
+# 	$(VR_COMPILER) -c -o BACKEND/OBJECTS/disasm.o BACKEND/DISASM/disasm.cpp $(VR_FLAGS)
 
 #=============================================================================================================================================================================
-
-
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 $(VR_OBJ_F)/front.o: $(VR_SRC_F)/front.cpp
 	$(VR_COMPILER) -c -o  $(VR_OBJ_F)/front.o $(VR_SRC_F)/front.cpp $(VR_FLAGS)
@@ -71,8 +73,43 @@ $(VR_OBJ_B)/main_back.o: $(VR_SRC_B)/main_back.cpp
 
 #=============================================================================================================================================================================
 
+DO_ASM: BACKEND/OBJECTS/m_asm.o BACKEND/OBJECTS/asm.o
+	$(VR_COMPILER) BACKEND/OBJECTS/m_asm.o BACKEND/OBJECTS/asm.o -o BACKEND/BUILD/asm $(VR_FLAGS)
+
+BACKEND/OBJECTS/m_asm.o: BACKEND/ASM/m_asm.cpp
+	$(VR_COMPILER) -c -o BACKEND/OBJECTS/m_asm.o BACKEND/ASM/m_asm.cpp $(VR_FLAGS)
+
+BACKEND/OBJECTS/asm.o: BACKEND/ASM/asm.cpp
+	$(VR_COMPILER) -c -o BACKEND/OBJECTS/asm.o BACKEND/ASM/asm.cpp $(VR_FLAGS)
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+DO_DISASM: BACKEND/OBJECTS/m_disasm.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o
+	$(VR_COMPILER) BACKEND/OBJECTS/m_disasm.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o -o BACKEND/BUILD/disasm $(VR_FLAGS)
+
+BACKEND/OBJECTS/m_disasm.o: BACKEND/DISASM/m_disasm.cpp
+	$(VR_COMPILER) -c -o BACKEND/OBJECTS/m_disasm.o BACKEND/DISASM/m_disasm.cpp $(VR_FLAGS)
+
+BACKEND/OBJECTS/disasm.o: BACKEND/DISASM/disasm.cpp
+	$(VR_COMPILER) -c -o BACKEND/OBJECTS/disasm.o BACKEND/DISASM/disasm.cpp $(VR_FLAGS)
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+DO_PROC: BACKEND/OBJECTS/m_proc.o BACKEND/OBJECTS/proc.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o
+	$(VR_COMPILER) BACKEND/OBJECTS/m_proc.o BACKEND/OBJECTS/proc.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o  -o BACKEND/BUILD/proc $(VR_FLAGS)
+
+BACKEND/OBJECTS/m_proc.o: BACKEND/CPU/m_proc.cpp
+	$(VR_COMPILER) -c -o BACKEND/OBJECTS/m_proc.o BACKEND/CPU/m_proc.cpp $(VR_FLAGS)
+
+BACKEND/OBJECTS/proc.o: BACKEND/CPU/proc.cpp
+	$(VR_COMPILER) -c -o BACKEND/OBJECTS/proc.o BACKEND/CPU/proc.cpp $(VR_FLAGS)
+
+#=============================================================================================================================================================================
+
 FOLDERS:
 	mkdir -p EXTRA/STACK/OBJECTS; mkdir -p $(VR_SRC_F)/OBJECTS; mkdir -p $(VR_SRC_B)/OBJECTS; mkdir -p $(VR_SRC_B)/GRAPH_VIZ; mkdir -p $(VR_SRC_F)/GRAPH_VIZ
+
+#=============================================================================================================================================================================
 
 # vg:
 # 	colour-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./front

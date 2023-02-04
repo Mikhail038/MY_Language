@@ -31,7 +31,7 @@
 #define FUNC_HEAD_ARGUMENTS STokens* Tokens, SVars* Vars, SFuncs* Funcs
 #define FUNC_ARGUMENTS      Tokens, Vars, Funcs
 
-#define SHOUT wprintf (L"[%d] %s %s:%d\n", Tokens->number, LOCATION)
+#define SHOUT wprintf (L"==%p== [%d] %s %s:%d\n", Vars, Tokens->number, LOCATION)
 
 #define LEXEM_IS(str) \
 (wcscmp (Lexem, str) == 0)
@@ -233,6 +233,8 @@ SNode* get_Type         (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Parameters   (FUNC_HEAD_ARGUMENTS);
 
+SNode* get_headParam    (FUNC_HEAD_ARGUMENTS);
+
 SNode* get_Param        (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_IfElse       (FUNC_HEAD_ARGUMENTS);
@@ -244,6 +246,8 @@ SNode* get_While        (FUNC_HEAD_ARGUMENTS);
 SNode* get_Call         (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Input        (FUNC_HEAD_ARGUMENTS);
+
+SNode* get_Output       (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Return       (FUNC_HEAD_ARGUMENTS);
 

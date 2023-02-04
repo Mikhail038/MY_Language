@@ -260,6 +260,7 @@ LEXEM_IS (L"input"),
 },
 L"INPUT",
 {
+    generate_input (BACK_FUNC_PARAMETERS);
 })
 
 DEF_OP (TOutput,
@@ -269,6 +270,7 @@ LEXEM_IS (L"output"),
 },
 L"OUTPUT",
 {
+    generate_output (BACK_FUNC_PARAMETERS);
 })
 
 DEF_OP (TReturn,

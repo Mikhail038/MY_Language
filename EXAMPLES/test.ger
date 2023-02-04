@@ -1,11 +1,27 @@
+var sum ( var a , var b )
+{
+    return a + b;
+}
+
 var main ( )
 {
     var ы = 5 * 6;
+    var x = 0;
 
-    var ч = 5 * ( 7 - 4 ) + ы + ы;
+    input ( ы , x );
 
-    var x = 0 ;
+    var ч = 5 * ( 7 - 4 ) + ы + ceil ( ы );
+
     x = ( ч - ы + 7 ) / 5 ;
 
-    return sin ( 3 ) - 2 * ( 4 + 5 ) + tan ( 6 ) ;
+    output ( x );
+
+    return 2 - 4 ;
 }
+
+var mul ( var a , var b )
+{
+    return a * b;
+}
+
+
