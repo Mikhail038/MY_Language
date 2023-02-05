@@ -1,0 +1,37 @@
+var main ( )
+{
+    var x = 3;
+
+    var y = 10;
+
+    if ( x > 2 )
+    {
+        x = 7;
+
+        if ( 1 )
+        {
+            x = 4 && 5;
+        }
+    }
+    else
+    {
+        x = 38;
+    }
+
+    while ( x < 12 )
+    {
+        x = x + 2;
+
+        while ( y != 3 * y )
+        {
+            y = y - 1;
+        }
+    }
+
+    output ( x ) ;
+
+    output ( y ) ;
+
+
+    return 0;
+}

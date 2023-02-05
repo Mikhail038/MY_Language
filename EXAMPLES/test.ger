@@ -5,23 +5,43 @@ var sum ( var a , var b )
 
 var main ( )
 {
-    var ы = 5 * 6;
+    var ы = 5 + sum ( 2 , sin ( 3 ) ) - 6 * sum ( 2 , 3 ) ;
     var x = 0;
 
-    input ( ы , x );
+    x = ( 3 >= 4 ) && ( 2 ) ;
 
-    var ч = 5 * ( 7 - 4 ) + ы + ceil ( ы );
+    output ( x ) ;
 
-    x = ( ч - ы + 7 ) / 5 ;
+    input ( ы , x ) ;
 
-    output ( x );
+    if ( x == 2 )
+    {
+        var t = 7;
+        x = 6;
+        output ( t ) ;
+    }
+    else if ( 0 )
+    {
+        output ( x ) ;
+    }
+    else
+    {
+        output ( ы ) ;
+    }
+
+    var ч = 5 * ( 7 - 4 ) + ы + ceil ( ы ) ;
+
+    x = ( ч - ы + 7 + sum ( x , sum ( x , 1 ) ) ) / 5 ;
+
+    output ( x ) ;
 
     return 2 - 4 ;
 }
 
-var mul ( var a , var b )
+var умн ( )
 {
-    return a * b;
-}
+    var z = 1;
 
+    return z;
+}
 

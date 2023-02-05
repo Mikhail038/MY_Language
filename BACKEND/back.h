@@ -6,19 +6,19 @@
 
 typedef wchar_t CharT; //will not work with char
 
-typedef struct
-{
-    CharT* name;
-    int    index;
-}
-SVarAccord;
-
-typedef struct
-{
-    int         size = 0;
-    SVarAccord* Arr  = NULL;
-}
-SVarTable;
+// typedef struct
+// {
+//     CharT* name;
+//     int    index;
+// }
+// SVarAccord;
+//
+// typedef struct
+// {
+//     int         size = 0;
+//     SVarAccord* Arr  = NULL;
+// }
+// SVarTable;
 
 //===================================================================================================================================================================
 
@@ -59,11 +59,27 @@ enum EVarTableConditions
 
 typedef struct
 {
-    EFuncConditions     func_cond   = any_f;
-    EVarTableConditions table_cond  = none;
-    int                 top_index   = 0;
-    FILE*               file        = NULL;
-    SStack<SVarTable*>* VarStack    = NULL;
+    CharT* Name         = NULL;
+    int    parameters   = 0;
+}
+SBackFunc;
+
+typedef struct
+{
+    SBackFunc* Table        = NULL;
+    int        top_index    = 0;
+}
+SBackFuncTable;
+
+typedef struct
+{
+    EFuncConditions     func_cond       = any_f;
+    EVarTableConditions table_cond      = none;
+    int                 RAM_top_index   = 0;
+    int                 label_cnt       = 0;
+    FILE*               file            = NULL;
+    SBackFuncTable*     Funcs           = NULL;
+    SStack<SVarTable*>* VarStack        = NULL;
 }
 SBack;
 
@@ -94,7 +110,13 @@ SNode* read_node (SSrc* Tree);
 
 void make_asm_file (SNode* Root, FILE* File);
 
+void generate_code (SNode* Root, SBack* Back);
+
 void generate_main (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_statement (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_function (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_node (BACK_FUNC_HEAD_PARAMETERS);
 
@@ -103,6 +125,12 @@ void generate_op_node (BACK_FUNC_HEAD_PARAMETERS);
 void generate_input (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_output (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_if (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_while (BACK_FUNC_HEAD_PARAMETERS);
+
+void generate_call (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_return (BACK_FUNC_HEAD_PARAMETERS);
 
@@ -120,9 +148,15 @@ void generate_push_var (BACK_FUNC_HEAD_PARAMETERS);
 
 //===================================================================================================================================================================
 
+void standard_if_jump (SBack* Back);
+
+//===================================================================================================================================================================
+
 void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS);
 
 void create_new_var_table (SBack* Back);
+
+void create_param_var_table (BACK_FUNC_HEAD_PARAMETERS);
 
 void delete_var_table (SBack* Back);
 

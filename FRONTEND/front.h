@@ -4,6 +4,10 @@
 
 //=============================================================================================================================================================================
 
+#include "stackT.h"
+
+//=============================================================================================================================================================================
+
 #define TKN_IS_OP       TKN.category = COperation
 
 #define TKN_IS_WORD (TKN.category == CLine && TKN.type == TVariable)
@@ -28,10 +32,10 @@
 #define FUNC    Funcs->Arr[counter]
 
 //TODO think about add flag here
-#define FUNC_HEAD_ARGUMENTS STokens* Tokens, SVars* Vars, SFuncs* Funcs
-#define FUNC_ARGUMENTS      Tokens, Vars, Funcs
+#define FUNC_HEAD_ARGUMENTS STokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker
+#define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker
 
-#define SHOUT wprintf (L"==%p== [%d] %s %s:%d\n", Vars, Tokens->number, LOCATION)
+#define SHOUT wprintf (L"==%p== [%d/%d] %s %s:%d\n", Vars, Tokens->number, Tokens->size, LOCATION)
 
 #define LEXEM_IS(str) \
 (wcscmp (Lexem, str) == 0)
@@ -39,6 +43,11 @@
 //===================================================================================================================================================================
 
 #define FORBIDDEN_TERMINATING_SYMBOL "@"
+
+#define VAR_TABLE_CAPACITY 30
+
+#define MAX_VARS_ARRAY  50
+#define MAX_FUNCS_ARRAY 50
 
 //===================================================================================================================================================================
 
@@ -157,17 +166,24 @@ SNode;
 
 typedef struct
 {
-    CharT*  name    =  NULL;
-    ValT    value   =  0;
+    CharT* name;
+    int    index;
 }
-SVar;
+SVarAccord;
 
 typedef struct
 {
-    SVar*   Arr     = NULL;
-    int     size    = 0;
+    int         size = 0;
+    SVarAccord* Arr  = NULL;
 }
-SVars;
+SVarTable;
+
+// typedef struct
+// {
+//     SVar*   Arr     = NULL;
+//     int     size    = 0;
+// }
+// SVars;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -187,15 +203,26 @@ SFuncs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SVars* construct_vars_table (size_t Capacity);
+// SVars* construct_vars_table (size_t Capacity);
+//
+// bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars);
+//
+// bool check_vars_table (CharT* Name, SVars* Vars);
+//
+// void show_vars_table (SVars* Vars);
+//
+// void destruct_vars_table (SVars* Vars);
 
-bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars);
+void f_create_new_var_table (SStack<SVarTable*>* Vars);
 
-bool check_vars_table (CharT* Name, SVars* Vars);
+void f_delete_var_table (SStack<SVarTable*>* Vars);
 
-void show_vars_table (SVars* Vars);
+bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars);
 
-void destruct_vars_table (SVars* Vars);
+bool f_find_in_table (CharT* Name, SVarTable* Table);
+
+void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars);
+
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

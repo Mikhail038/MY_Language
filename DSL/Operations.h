@@ -1,6 +1,7 @@
 #define ERR "YOU ARE NOT SUPPOSED TO SEE THAT!"
 
-#define PUT(d_command) writeln_command ( d_command , Back->file)
+
+
 
 DEF_OP (TValue,
 (*Lexem >= L'0' && *Lexem <= L'9'),
@@ -39,7 +40,7 @@ LEXEM_IS (L"+"),
 },
 L"ADD",
 {
-    PUT (add);
+    PUTLN (add);
 })
 
 DEF_OP (TaSub,
@@ -49,7 +50,7 @@ LEXEM_IS (L"-"),
 },
 L"SUB",
 {
-    PUT (sub);
+    PUTLN (sub);
 })
 
 DEF_OP (TaMul,
@@ -59,7 +60,7 @@ LEXEM_IS (L"*"),
 },
 L"MUL",
 {
-    PUT (mul);
+    PUTLN (mul);
 })
 
 DEF_OP (TaDiv,
@@ -69,7 +70,7 @@ LEXEM_IS (L"/"),
 },
 L"DIV",
 {
-    PUT (m_div);
+    PUTLN (m_div);
 })
 
 DEF_OP (TaPow,
@@ -89,6 +90,9 @@ LEXEM_IS (L"<"),
 },
 L"LESS",
 {
+    PUT (ja);
+
+    standard_if_jump (Back);
 })
 
 DEF_OP (TcMore,
@@ -98,6 +102,9 @@ LEXEM_IS (L">"),
 },
 L"MORE",
 {
+    PUT (jb);
+
+    standard_if_jump (Back);
 })
 
 DEF_OP (TcLessEq,
@@ -107,6 +114,9 @@ LEXEM_IS (L"<="),
 },
 L"LESS OR EQUAL",
 {
+    PUT (jae);
+
+    standard_if_jump (Back);
 })
 
 DEF_OP (TcMoreEq,
@@ -116,6 +126,9 @@ LEXEM_IS (L">="),
 },
 L"MORE OR EQUAL",
 {
+    PUT (jbe);
+
+    standard_if_jump (Back);
 })
 
 DEF_OP (TcEqual,
@@ -125,6 +138,9 @@ LEXEM_IS (L"=="),
 },
 L"EQUAL",
 {
+    PUT (je);
+
+    standard_if_jump (Back);
 })
 
 DEF_OP (TcNotEq,
@@ -134,6 +150,9 @@ LEXEM_IS (L"!="),
 },
 L"NOT EQUAL",
 {
+    PUT (jne);
+
+    standard_if_jump (Back);
 })
 
 DEF_OP (TcNot,
@@ -152,8 +171,17 @@ LEXEM_IS (L"&&"),
 },
 L"AND",
 {
+    PUTLN (mul);
+
+    PUT (push);
+    fprintf (Back->file, " %d\n", FALSE);
+
+    PUT (jne);
+
+    standard_if_jump (Back);
 })
 
+//TODO ABS ERROR THINK LATER
 DEF_OP (TcOr,
 LEXEM_IS (L"||"),
 {
@@ -161,6 +189,14 @@ LEXEM_IS (L"||"),
 },
 L"OR",
 {
+    PUTLN (add);
+
+    PUT (push);
+    fprintf (Back->file, " %d\n", FALSE);
+
+    PUT (jne);
+
+    standard_if_jump (Back);
 })
 
 DEF_OP (TOpenRoundBracket,
@@ -215,6 +251,7 @@ LEXEM_IS (L"if"),
 },
 L"IF",
 {
+    generate_if (BACK_FUNC_PARAMETERS);
 })
 
 DEF_OP (TElse,
@@ -233,6 +270,7 @@ LEXEM_IS (L"while"),
 },
 L"WHILE",
 {
+    generate_while (BACK_FUNC_PARAMETERS);
 })
 
 DEF_OP (TstdType,
@@ -299,6 +337,17 @@ DEF_OP (T_Function,
 },
 L"_FUNC",
 {
+    generate_function (BACK_FUNC_PARAMETERS);
+})
+
+DEF_OP (T_Call,
+(0),
+{
+    TKN_IS_OP;
+},
+L"_CALL",
+{
+    generate_call (BACK_FUNC_PARAMETERS);
 })
 
 DEF_OP (T_Parameters,
@@ -405,7 +454,7 @@ DEF_OP (TuSqrt,
 },
 L"UN_SQRT",
 {
-    PUT (m_sqrt);
+    PUTLN (m_sqrt);
 })
 
 DEF_OP (TuSin,
@@ -415,7 +464,7 @@ DEF_OP (TuSin,
 },
 L"UN_SIN",
 {
-    PUT (m_sin);
+    PUTLN (m_sin);
 })
 
 DEF_OP (TuCos,
@@ -425,7 +474,7 @@ DEF_OP (TuCos,
 },
 L"UN_COS",
 {
-    PUT (m_cos);
+    PUTLN (m_cos);
 })
 
 DEF_OP (TuTan,
@@ -435,12 +484,12 @@ DEF_OP (TuTan,
 },
 L"UN_TAN",
 {
-    PUT (m_dup);
+    PUTLN (m_dup);
 
-    PUT (m_sin);
-    PUT (m_cos);
+    PUTLN (m_sin);
+    PUTLN (m_cos);
 
-    PUT (m_div);
+    PUTLN (m_div);
 })
 
 DEF_OP (TuCeil,
@@ -450,7 +499,7 @@ DEF_OP (TuCeil,
 },
 L"UN_CEIL",
 {
-    PUT (m_ceil);
+    PUTLN (m_ceil);
 })
 
 DEF_OP (TuFloor,
@@ -460,5 +509,5 @@ DEF_OP (TuFloor,
 },
 L"UN_FLOOR",
 {
-    PUT (m_floor);
+    PUTLN (m_floor);
 })

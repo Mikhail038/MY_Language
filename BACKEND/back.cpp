@@ -28,7 +28,22 @@
 
 #define MAIN_WORD L"main"
 
+#define MAIN_JUMP "main"
+
+#define LABEL "lbl_"
+
 #define JUNK -1
+
+#define TRUE   1
+#define FALSE  0
+
+
+#define PUTLN(d_command) writeln_command ( d_command , Back->file)
+#define PUT(d_command)   write_command   ( d_command , Back->file)
+
+#define CLEAN_TABLE if (Back->table_cond != none) delete_var_table (Back); Back->table_cond = exist;
+
+#define SEP_LINE ";----------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
 
 //=============================================================================================================================================================================
 
@@ -494,7 +509,11 @@ void make_asm_file (SNode* Root, FILE* File)
 
     SBack* Back = (SBack*) calloc (1, sizeof (SBack));
 
-    Back->VarStack = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
+    Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
+    Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
+    Back->Funcs->top_index = 0;
+
+    Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
     Back->file = File;
 
@@ -504,14 +523,55 @@ void make_asm_file (SNode* Root, FILE* File)
 
     //generate_user_functions (Root, Back);
 
-    generate_main (Root, Back);
+    generate_code (Root, Back);
+
+    // generate_main (Root, Back);
 
     stack_destructor (Back->VarStack);
 
     fclose (Back->file);
 
+    // for (int i = 0; i < Back->Funcs->top_index; i++)
+    // {
+    //     printf ("'%ls'[%d]\n", Back->Funcs->Table[i]);
+    // }
+
+    free (Back->Funcs->Table);
+    free (Back->Funcs);
     free (Back->VarStack);
     free (Back);
+
+    return;
+}
+
+void generate_code (SNode* Root, SBack* Back)
+{
+    fprintf (Back->file, SEP_LINE "\n\n");
+
+    PUT (jump);
+    fprintf (Back->file, " " LABEL MAIN_JUMP "\n\n");
+
+    generate_statement (Root, Back);
+
+//     SNode* Main = find_main (Root);
+//     MLA (Main != NULL);
+//
+//     Back->func_cond = main_f;
+//
+//     generate_statement (Main, Back);
+
+//     generate_op_node (Main->left, Back);
+//
+//     SNode* CurStatement = Main->right;
+//
+//     while (CurStatement != NULL)
+//     {
+//         generate_op_node (CurStatement->left, Back);
+//
+//         CurStatement = CurStatement->right;
+//     }
+
+    //delete_var_table (Back);
 
     return;
 }
@@ -523,19 +583,53 @@ void generate_main (SNode* Root, SBack* Back)
 
     Back->func_cond = main_f;
 
+    generate_statement (Main, Back);
 
-    generate_op_node (Main->left, Back);
-
-    SNode* CurStatement = Main->right;
-
-    while (CurStatement != NULL)
-    {
-        generate_op_node (CurStatement->left, Back);
-
-        CurStatement = CurStatement->right;
-    }
+//     generate_op_node (Main->left, Back);
+//
+//     SNode* CurStatement = Main->right;
+//
+//     while (CurStatement != NULL)
+//     {
+//         generate_op_node (CurStatement->left, Back);
+//
+//         CurStatement = CurStatement->right;
+//     }
 
     delete_var_table (Back);
+
+    return;
+}
+
+void generate_statement (BACK_FUNC_HEAD_PARAMETERS)
+{
+    if (CurNode->left != NULL)
+    {
+        generate_op_node (BACK_LEFT_SON_FUNC_PARAMETERS);
+    }
+
+    if (CurNode->right != NULL)
+    {
+        generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    }
+
+    return;
+}
+
+void generate_function (BACK_FUNC_HEAD_PARAMETERS)
+{
+    fprintf (Back->file, LABEL "%ls:\n", CurNode->left->data.var);
+
+    Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
+
+    Back->table_cond = none;
+    create_param_var_table (CurNode->left->right, Back);
+    Back->Funcs->top_index++;
+
+    generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    CLEAN_TABLE;
+
+    fprintf (Back->file, "\n\n" SEP_LINE "\n\n\n");
 
     return;
 }
@@ -591,7 +685,7 @@ void generate_announce (BACK_FUNC_HEAD_PARAMETERS)
 
     write_command (pop, Back->file);
 
-    fprintf (Back->file, " [%d]\n\n", Back->top_index - 1);
+    fprintf (Back->file, " [%d]\n\n", Back->RAM_top_index - 1);
 
     return;
 }
@@ -637,17 +731,102 @@ void generate_output (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
+void generate_if (BACK_FUNC_HEAD_PARAMETERS)
+{
+    generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
+
+    PUT (push);
+    fprintf (Back->file, " %d\n", FALSE);
+
+    PUT (je);
+    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
+    int Label_1 = Back->label_cnt;
+    Back->label_cnt++;
+
+    CurNode = CurNode->right;
+
+    Back->table_cond = none;
+    generate_statement (BACK_LEFT_SON_FUNC_PARAMETERS);
+    CLEAN_TABLE;
+
+    PUT (jump);
+    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
+    int Label_2 = Back->label_cnt;
+    Back->label_cnt++;
+
+    fprintf (Back->file,  LABEL "%d:\n", Label_1);
+
+    CurNode = CurNode->right;
+
+    if (CurNode != NULL)
+    {
+        if (CurNode->category == COperation && CurNode->type == TIf)
+        {
+            generate_if (BACK_FUNC_PARAMETERS);
+        }
+        else
+        {
+            Back->table_cond = none;
+            generate_statement (BACK_FUNC_PARAMETERS);
+            CLEAN_TABLE;
+        }
+    }
+    fprintf (Back->file,  LABEL "%d:\n", Label_2);
+
+
+    return;
+}
+
+void generate_while (BACK_FUNC_HEAD_PARAMETERS)
+{
+    int Label_1 = Back->label_cnt;
+    fprintf (Back->file,  LABEL "%d:\n", Label_1);
+    Back->label_cnt++;
+
+    generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
+
+    PUT (push);
+    fprintf (Back->file, " %d\n", FALSE);
+
+    PUT (je);
+    int Label_2 = Back->label_cnt;
+    fprintf (Back->file, " " LABEL "%d\n", Label_2);
+    Back->label_cnt++;
+
+    Back->table_cond = none;
+    generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    delete_var_table (Back);
+
+    PUT (jump);
+    fprintf (Back->file, " " LABEL "%d\n", Label_1);
+
+    fprintf (Back->file,  LABEL "%d:\n", Label_2);
+
+    return;
+}
+
+void generate_call (BACK_FUNC_HEAD_PARAMETERS)
+{
+    PUT (push);
+    fprintf (Back->file, " 1\n");
+
+    //parameters_push (BACK_FUNC_PARAMETERS);
+
+    return;
+}
+
 void generate_return (BACK_FUNC_HEAD_PARAMETERS)
 {
-    generate_expression (BACK_LEFT_SON_FUNC_PARAMETERS);
-
     if (Back->func_cond == main_f)
     {
         writeln_command (hlt, Back->file);
     }
     else
     {
+        PUT (push);
+        generate_expression (BACK_LEFT_SON_FUNC_PARAMETERS);
 
+        PUTLN (ret);
     }
 
     return;
@@ -662,12 +841,12 @@ void generate_expression (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_postorder (BACK_FUNC_HEAD_PARAMETERS)
 {
-    if (CurNode->left != NULL)
+    if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->left != NULL)
     {
         generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
     }
 
-    if (CurNode->right != NULL)
+    if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->right != NULL)
     {
         generate_postorder (BACK_RIGHT_SON_FUNC_PARAMETERS);
     }
@@ -701,93 +880,28 @@ void generate_push_var (BACK_FUNC_HEAD_PARAMETERS)
 
 //=============================================================================================================================================================================
 
-#define VAR_TABLE_CAPACITY 30
-
-void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
+void standard_if_jump (SBack* Back)
 {
-    if (Back->table_cond == none)
-    {
-        create_new_var_table (Back);
-    }
+    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
+    Back->label_cnt++;
 
-    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+    PUT (push);
+    fprintf (Back->file, " %d\n", FALSE);
 
-    SVarTable* Table = NULL;
-    peek_from_stack (Back->VarStack, &Table);
+    PUT (jump);
+    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
 
-    Table->Arr[Table->size].name  = CurNode->data.var; //copy address from node
-    Table->Arr[Table->size].index = Back->top_index;
+    fprintf (Back->file, LABEL "%d:\n", Back->label_cnt - 1);
 
-    Back->top_index++;
-    Table->size++;
+    PUT (push);
+    fprintf (Back->file, " %d\n", TRUE);
+
+    fprintf (Back->file, LABEL "%d:\n", Back->label_cnt);
+
+    Back->label_cnt++;
 
     return;
 }
-
-void create_new_var_table (SBack* Back)
-{
-    SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
-    NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
-    NewTable->size = 0;
-
-    push_in_stack (Back->VarStack, NewTable);
-
-    Back->table_cond = exist;
-
-    return;
-}
-
-void delete_var_table (SBack* Back)
-{
-    SVarTable* Table = NULL;
-
-    peek_from_stack (Back->VarStack, &Table); //TODO why not pop???
-
-    free (Table->Arr);
-
-    free (Table);
-
-    return;
-}
-
-int find_var (BACK_FUNC_HEAD_PARAMETERS)
-{
-    int RetIndex = JUNK;
-
-    MLA (CurNode->category == CLine && CurNode->type == TVariable);
-
-    SVarTable* Table = NULL;
-
-    int depth = 1;
-    do
-    {
-        Table = Back->VarStack->data[Back->VarStack->size - depth];
-        depth++;
-    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth < Back->VarStack->size));
-
-    MLA (RetIndex >= 0);
-
-    return RetIndex;
-}
-
-bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex)
-{
-    MLA (Table != NULL);
-
-    for (int counter = 0; counter < Table->size; ++counter)
-    {
-        if (wcscmp (varName, Table->Arr[counter].name) == 0)
-        {
-            *RetIndex = Table->Arr[counter].index;
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-//=============================================================================================================================================================================
 
 SNode* find_main (SNode* Node)
 {
@@ -820,7 +934,7 @@ void write_command (ECommandNums eCommand, FILE* File)
     #define DEF_CMD(def_line, def_enum, ...) \
     else if (eCommand == def_enum) \
     { \
-        fprintf (File, def_line); \
+        fprintf (File, TAB  def_line); \
         return; \
     }
 
@@ -845,6 +959,113 @@ void writeln_command (ECommandNums eCommand, FILE* File)
     fprintf (File, "\n");
 
     return;
+}
+
+//=============================================================================================================================================================================
+
+void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
+{
+    if (Back->table_cond == none)
+    {
+        create_new_var_table (Back);
+    }
+
+    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+
+    SVarTable* Table = NULL;
+    peek_from_stack (Back->VarStack, &Table);
+
+    Table->Arr[Table->size].name  = CurNode->data.var; //copy address from node
+    Table->Arr[Table->size].index = Back->RAM_top_index;
+
+    Back->RAM_top_index++;
+    Table->size++;
+
+    return;
+}
+
+void create_new_var_table (SBack* Back)
+{
+    SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
+    NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
+    NewTable->size = 0;
+
+    push_in_stack (Back->VarStack, NewTable);
+
+    Back->table_cond = exist;
+
+    return;
+}
+
+void create_param_var_table (BACK_FUNC_HEAD_PARAMETERS)
+{
+    do
+    {
+        if (CurNode->left != NULL)
+        {
+            add_to_var_table (CurNode->left->left, Back);
+            Back->Funcs->Table[Back->Funcs->top_index].parameters++;
+        }
+
+        CurNode = CurNode->right;
+    } while (CurNode != NULL);
+
+    return;
+}
+
+void delete_var_table (SBack* Back)
+{
+    SVarTable* Table = NULL;
+
+    pop_from_stack (Back->VarStack, &Table); //TODO why not pop???
+
+    free (Table->Arr);
+
+    free (Table);
+
+    return;
+}
+
+int find_var (BACK_FUNC_HEAD_PARAMETERS)
+{
+    int RetIndex = JUNK;
+
+    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+
+    SVarTable* Table = NULL;
+
+    int depth = 1;
+    do
+    {
+        Table = Back->VarStack->data[Back->VarStack->size - depth];
+        //printf ("=%p=%d/%d=\n", Table, depth, Back->VarStack->size);
+        depth++;
+    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth <= Back->VarStack->size));
+
+    if (RetIndex < 0)
+    {
+        printf ("==ERROR==\n""No '%ls' found!\n", CurNode->data.var);
+        MLA (0);
+    }
+
+    return RetIndex;
+}
+
+bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex)
+{
+    MLA (Table != NULL);
+
+    for (int counter = 0; counter < Table->size; ++counter)
+    {
+        if (wcscmp (varName, Table->Arr[counter].name) == 0)
+        {
+            *RetIndex = Table->Arr[counter].index;
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 //=============================================================================================================================================================================

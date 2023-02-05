@@ -20,12 +20,13 @@
 
 //=============================================================================================================================================================================
 
+// #define SHOUT
+
+#define BASE_SCOPES_NUM 20
+
 #define MAX_MEMORY  10000
 
-#define MAX_VARS_ARRAY  50
-#define MAX_FUNCS_ARRAY 50
-
-#define SEP_SYMBOLS "\n;, "
+#define SEP_SYMBOLS "\n;,() "
 
 #define UNINITIALIZED   NAN
 
@@ -64,10 +65,17 @@ void my_f_main (int argc, char** argv)
     Tokens->size   = Tokens->number;
     Tokens->number = 0;
 
-    SVars* Vars     = NULL;
+    SStack<SVarTable*>* Vars = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
+    stack_constructor (Vars, BASE_SCOPES_NUM);
+
     SFuncs* Funcs   = construct_funcs_table (MAX_FUNCS_ARRAY);
 
+    int* marker = (int*) calloc (1, sizeof (int));
+    *marker = 0;
+
     SNode* Root = get_All (FUNC_ARGUMENTS);
+
+    free (marker);
 
     if (Source.Arr != NULL)
     {
@@ -83,7 +91,8 @@ void my_f_main (int argc, char** argv)
 
     if (Vars != NULL)
     {
-        destruct_vars_table (Vars);
+        stack_destructor (Vars);
+        free (Vars);
     }
 
     if (Funcs != NULL)
@@ -113,7 +122,7 @@ SSrc* construct_source (SSrc* Source, FILE* SourceText)
     //Source->size = MAX_MEMORY;
 
     fwscanf (SourceText, L"%ml[^~]", &Source->Arr); // TODO Ask Danya how to remove this shit!!
-    wprintf (L"|\n%ls|\n", Source->Arr);
+    //wprintf (L"|\n%ls|\n", Source->Arr);
 
     Source->ip   = 0;
     Source->size = wcslen (Source->Arr);
@@ -389,38 +398,70 @@ double parse_int (CharT* Lexem, int* Counter)
 }
 
 //=============================================================================================================================================================================
-//grammar//
+//front stuff//
 //=============================================================================================================================================================================
 
-SVars* construct_vars_table (size_t Capacity)
+void f_create_new_var_table (SStack<SVarTable*>* Vars)
 {
-    SVars* Vars  = (SVars*) calloc (1, sizeof (*Vars));
-    Vars->Arr    = (SVar*)  calloc (Capacity, sizeof (*(Vars->Arr)));
-    Vars->size   = 0;
+    wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
 
-    MLA (Vars != NULL);
-    MLA (Vars->Arr != NULL);
+    SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
+    NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
+    NewTable->size = 0;
 
-    return Vars;
+    push_in_stack (Vars, NewTable);
+
+    return;
 }
 
-void show_vars_table (SVars* Vars)
+void f_delete_var_table (SStack<SVarTable*>* Vars)
 {
-    wprintf (L"==Vars Array== size %d\n", Vars->size);
-    for (int counter = 0; counter < MAX_VARS_ARRAY; ++counter)
+    wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
+
+    SVarTable* Table = NULL;
+
+    pop_from_stack (Vars, &Table);
+
+    free (Table->Arr);
+
+    free (Table);
+
+    return;
+}
+
+bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars)
+{
+    SVarTable* Table = NULL;
+
+    int depth = 1;
+    do
     {
-        if (VAR.name != NULL)
+        Table = Vars->data[Vars->size - depth];
+        depth++;
+
+        wprintf (L"!!%ls!!\n", Name);
+
+        if (f_find_in_table (Name, Table) == true)
         {
-            wprintf (L"[%d] %ls = %lg\n", counter, VAR.name, VAR.value);
+            return true;
         }
-    }
+
+        wprintf (L"^^%ls^^\n", Name);
+
+
+    } while (depth <= Vars->size);
+
+    return false;
 }
 
-bool check_vars_table (CharT* Name, SVars* Vars)
+bool f_find_in_table (CharT* Name, SVarTable* Table)
 {
-    for (int counter = 0; counter < Vars->size; counter++)
+    MLA (Table != NULL);
+
+    for (int counter = 0; counter < Table->size; ++counter)
     {
-        if (wcscmp (VAR.name, Name) == 0)
+        wprintf (L"%d--%d--%ls--\n", Table->size, counter, Table->Arr[counter].name);
+        if (wcscmp (Name, Table->Arr[counter].name) == 0)
         {
             return true;
         }
@@ -429,52 +470,110 @@ bool check_vars_table (CharT* Name, SVars* Vars)
     return false;
 }
 
-bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars)
+void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars)
 {
-        for (int counter = 0; counter < MAX_VARS_ARRAY; counter++)
-        {
-            if ( VAR.name != NULL && wcscmp (VAR.name, Name) == 0)
-            {
-                return false;
-            }
+    wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
 
-            if (VAR.name == NULL)
-            {
-                VAR.name = wcsdup (Name);
+    MLA (Name != NULL);
 
-                VAR.value = Data;
+    // if (Back->table_cond == none)
+    // {
+    //     create_new_var_table (Back);
+    // }
 
-                Vars->size++;
+    SVarTable* Table = NULL;
+    peek_from_stack (Vars, &Table);
 
-                return true;
-            }
-        }
-
-        wprintf (L"2much vars\n");
-        return false;
-}
-
-void destruct_vars_table (SVars* Vars)
-{
-    show_vars_table (Vars);
-
-    for (int counter = 0; counter <= Vars->size; ++counter)
-    {
-        if (Vars->Arr[counter].name != NULL)
-        {
-            free (Vars->Arr[counter].name);
-            Vars->Arr[counter].name = NULL;
-        }
-    }
-
-    free (Vars->Arr);
-    Vars->Arr = NULL;
-
-    free (Vars);
-    Vars = NULL;
+    Table->Arr[Table->size].name = Name; //copy address from node
+    wprintf (L"added '%ls'\n", Table->Arr[Table->size].name);
+    Table->size++;
 
     return;
 }
+
+// SVars* construct_vars_table (size_t Capacity)
+// {
+//     SVars* Vars  = (SVars*) calloc (1, sizeof (*Vars));
+//     Vars->Arr    = (SVar*)  calloc (Capacity, sizeof (*(Vars->Arr)));
+//     Vars->size   = 0;
+//
+//     MLA (Vars != NULL);
+//     MLA (Vars->Arr != NULL);
+//
+//     return Vars;
+// }
+//
+// void show_vars_table (SVars* Vars)
+// {
+//     wprintf (L"==Vars Array== size %d\n", Vars->size);
+//     for (int counter = 0; counter < MAX_VARS_ARRAY; ++counter)
+//     {
+//         if (VAR.name != NULL)
+//         {
+//             wprintf (L"[%d] %ls = %lg\n", counter, VAR.name, VAR.value);
+//         }
+//     }
+// }
+//
+// bool check_vars_table (CharT* Name, SVars* Vars)
+// {
+//     for (int counter = 0; counter < Vars->size; counter++)
+//     {
+//         if (wcscmp (VAR.name, Name) == 0)
+//         {
+//             return true;
+//         }
+//     }
+//
+//     return false;
+// }
+//
+// bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars)
+// {
+//         for (int counter = 0; counter < MAX_VARS_ARRAY; counter++)
+//         {
+//             if ( VAR.name != NULL && wcscmp (VAR.name, Name) == 0)
+//             {
+//                 return false;
+//             }
+//
+//             if (VAR.name == NULL)
+//             {
+//                 VAR.name = wcsdup (Name);
+//
+//                 VAR.value = Data;
+//
+//                 Vars->size++;
+//
+//                 return true;
+//             }
+//         }
+//
+//         wprintf (L"2much vars\n");
+//         return false;
+// }
+
+// void destruct_vars_table (SVars* Vars)
+// {
+//     //show_vars_table (Vars);
+//
+//     for (int counter = 0; counter <= Vars->size; ++counter)
+//     {
+//         if (Vars->Arr[counter].name != NULL)
+//         {
+//             free (Vars->Arr[counter].name);
+//             Vars->Arr[counter].name = NULL;
+//         }
+//     }
+//
+//     free (Vars->Arr);
+//     Vars->Arr = NULL;
+//
+//     free (Vars);
+//     Vars = NULL;
+//
+//     return;
+// }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -637,7 +736,9 @@ void delete_tree (SNode** Node)
     return;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//=============================================================================================================================================================================
+//grammar//
+//=============================================================================================================================================================================
 
 SNode* get_All (FUNC_HEAD_ARGUMENTS)
 {
@@ -654,6 +755,14 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
+    // if (TKN_OP_AND_IS__ TOpenBracket
+    // && (Tokens->TokenArr[Tokens->number + 1].category == COperation
+    // &&  Tokens->TokenArr[Tokens->number + 1].type == TCloseBracket))
+    // {
+    //     NEXT_TKN;
+    //     NEXT_TKN;
+    // }
+
     if (TKN_OP_AND_IS__ TFinish)
     {
         NEXT_TKN; //Tokens->number++;
@@ -665,21 +774,27 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN; //Tokens->number++;
 
-        if (Vars != NULL)
-        {
-            destruct_vars_table (Vars);
-        }
-        //TODO WTF??????????????
+        f_delete_var_table (Vars);
 
         return NULL;
     }
 
     SNode* Node = construct_op_node (T_Statement);
 
+
     Node->left  = get_Function (FUNC_ARGUMENTS);
 
     if (TKN_OP_AND_IS__ TOpenBracket)
     {
+        if (*marker > 0)
+        {
+            (*marker)--;
+        }
+        else
+        {
+            f_create_new_var_table (Vars);
+        }
+
         NEXT_TKN;
     }
 
@@ -703,11 +818,13 @@ SNode* get_Function (FUNC_HEAD_ARGUMENTS)
     {
         SNode* Node = construct_op_node (T_Function);
 
-        if (Vars != NULL)
-        {
-            destruct_vars_table (Vars);
-        }
-        Vars = construct_vars_table (MAX_VARS_ARRAY);
+        // if (Vars != NULL && (Vars->size > 0))
+        // {
+        //     f_delete_var_table (Vars);
+        // }
+        f_create_new_var_table (Vars);
+
+        (*marker)++;
 
         Node->left  = get_Head (FUNC_ARGUMENTS);
 
@@ -795,9 +912,9 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS)
 
     SNode* Node = construct_op_node (T_Param);
 
-    MLA (check_vars_table (TKN.data.var, Vars) == true);
+    //MLA (f_check_vars_table (TKN.data.var, Vars) == true);
 
-    Node->left = get_Variable (FUNC_ARGUMENTS);
+    Node->left = get_Bracket (FUNC_ARGUMENTS);
 
     if (TKN_OP_AND_IS__ TComma)
     {
@@ -966,11 +1083,17 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
             Node->right = get_Expression (FUNC_ARGUMENTS);
         }
 
-        if (add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars) == false)
+        // if (f_add_to_var_table (Node->left->data.var, Vars) == false)
+        // if (f_check_vars_table (Node->left->data.var, Vars) == true)
+        if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1]) == true)
         {
             wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
 
-            exit (0);
+            MLA (0);
+        }
+        else
+        {
+            f_add_to_var_table (Node->left->data.var, Vars);
         }
 
         //TODO do this in middle end later
@@ -1011,12 +1134,18 @@ SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
 
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
-        if (add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars) == false)
+        // if (f_check_vars_table (Node->left->data.var, Vars) == true)
+        if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1]) == true)
         {
             wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
 
-            exit (0);
+            MLA (0);
         }
+        else
+        {
+            f_add_to_var_table (Node->left->data.var, Vars);
+        }
+
 //         if (TKN_OP_AND_IS__ TAssign)
 //         {
 //             NEXT_TKN; //Tokens->number++;
@@ -1058,7 +1187,7 @@ SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
     (Tokens->TokenArr[Tokens->number + 1].category == COperation &&
     Tokens->TokenArr[Tokens->number + 1].type == TAssign))
     {
-        if (check_vars_table (TKN.data.var, Vars) == true)
+        if (f_check_vars_table (TKN.data.var, Vars) == true)
         {
             SNode* Node = construct_op_node (T_Equation);
 
@@ -1274,19 +1403,34 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
 
             if (check_funcs_table (TKN.data.var, Funcs) == true) //custom func check
             {
-                NEXT_TKN; //skipped func name
+                // SNode* Node = construct_var_node (&TKN);
+                SNode* Node = construct_op_node (T_Call);
 
-                NEXT_TKN; //skipped (
+                Node->left = construct_var_node (&TKN);
 
-                Node = get_Bracket (FUNC_ARGUMENTS); //TODO HERE!!!
+                NEXT_TKN;
+
+                CHECK_SYNTAX (TOpenRoundBracket);
+
+                Node->right = get_Param (FUNC_ARGUMENTS);
 
                 CHECK_SYNTAX (TCloseRoundBracket);
 
                 return Node;
+
+//                 NEXT_TKN; //skipped func name
+//
+//                 NEXT_TKN; //skipped (
+//
+//                 Node = get_Bracket (FUNC_ARGUMENTS); //TODO HERE!!!
+//
+//                 CHECK_SYNTAX (TCloseRoundBracket);
+//
+//                 return Node;
             }
         }
 
-        if (check_vars_table (TKN.data.var, Vars) == true)
+        if (f_check_vars_table (TKN.data.var, Vars) == true)
         {
             Node = construct_var_node (&TKN);
 
