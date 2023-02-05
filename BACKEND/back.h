@@ -47,8 +47,8 @@ typedef wchar_t CharT; //will not work with char
 
 enum EFuncConditions
 {
-    any_f  = 1,
-    main_f = 2
+    any_f   = 1,
+    main_f  = 2
 };
 
 enum EVarTableConditions
@@ -147,6 +147,12 @@ void generate_pop_var (BACK_FUNC_HEAD_PARAMETERS);
 void generate_push_var (BACK_FUNC_HEAD_PARAMETERS);
 
 //===================================================================================================================================================================
+
+void push_parameters (BACK_FUNC_HEAD_PARAMETERS);
+
+void pop_parameters (SBack* Back);
+
+void incr_top_reg (SBack* Back);
 
 void standard_if_jump (SBack* Back);
 

@@ -5,8 +5,9 @@ var sum ( var a , var b )
 
 var main ( )
 {
-    var ы = 5 + sum ( 2 , sin ( 3 ) ) - 6 * sum ( 2 , 3 ) ;
-    var x = 0;
+    var x = sum ( 1 , 2 ) ;
+
+    var ы = sum ( 1 , x ) ;
 
     x = ( 3 >= 4 ) && ( 2 ) ;
 

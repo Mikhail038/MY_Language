@@ -127,6 +127,8 @@ STokens;
 
 STokens* lex_src (SSrc* Source);
 
+void make_lexem (CharT* Lexem, SSrc* Source);
+
 int do_token (SSrc* Source, STokens* Tokens);
 
 int parse_token (CharT* Lexem, STokens* Tokens);

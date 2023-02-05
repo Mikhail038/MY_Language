@@ -30,6 +30,11 @@
 
 #define MAIN_JUMP "main"
 
+#define SHIFT_REG   "rax"
+#define COUNT_REG   "rbx"
+#define TOP_REG     "rcx"
+#define FUNC_REG    "rdx"
+
 #define LABEL "lbl_"
 
 #define JUNK -1
@@ -548,8 +553,21 @@ void generate_code (SNode* Root, SBack* Back)
 {
     fprintf (Back->file, SEP_LINE "\n\n");
 
+    PUT (push);
+    fprintf (Back->file, " 0\n"); //TODO ask Danya maybe %d 0
+    PUT (pop);
+    fprintf (Back->file, " " SHIFT_REG "\n\n");
+
+
+    PUT (push);
+    fprintf (Back->file, " 0\n");
+    PUT (pop);
+    fprintf (Back->file, " " TOP_REG "\n\n");
+
     PUT (jump);
     fprintf (Back->file, " " LABEL MAIN_JUMP "\n\n");
+
+    fprintf (Back->file, SEP_LINE "\n\n");
 
     generate_statement (Root, Back);
 
@@ -618,13 +636,26 @@ void generate_statement (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_function (BACK_FUNC_HEAD_PARAMETERS)
 {
+    if (wcscmp (CurNode->left->data.var, MAIN_WORD) == 0)
+    {
+        Back->func_cond = main_f;
+    }
+    else
+    {
+        Back->func_cond = any_f;
+    }
+
     fprintf (Back->file, LABEL "%ls:\n", CurNode->left->data.var);
 
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
 
     Back->table_cond = none;
     create_param_var_table (CurNode->left->right, Back);
+
+    pop_parameters (Back);
+
     Back->Funcs->top_index++;
+
 
     generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
     CLEAN_TABLE;
@@ -650,11 +681,12 @@ void generate_node (BACK_FUNC_HEAD_PARAMETERS)
 
     if (CurNode->category == CLine && CurNode->type == TVariable)
     {
-        write_command (push, Back->file);
-
-        int Index = find_var (BACK_FUNC_PARAMETERS);
-
-        fprintf (Back->file, " [%d]\n", Index);
+        generate_push_var (BACK_FUNC_PARAMETERS);
+//         write_command (push, Back->file);
+//
+//         int Index = find_var (BACK_FUNC_PARAMETERS);
+//
+//         fprintf (Back->file, " [%d]\n", Index);
     }
 
     return;
@@ -683,9 +715,12 @@ void generate_announce (BACK_FUNC_HEAD_PARAMETERS)
 
     add_to_var_table (BACK_LEFT_SON_FUNC_PARAMETERS);
 
-    write_command (pop, Back->file);
+    generate_pop_var (BACK_LEFT_SON_FUNC_PARAMETERS);
 
-    fprintf (Back->file, " [%d]\n\n", Back->RAM_top_index - 1);
+    incr_top_reg (Back);
+//     write_command (pop, Back->file);
+//
+//     fprintf (Back->file, " [%d]\n\n", Back->RAM_top_index - 1);
 
     return;
 }
@@ -807,10 +842,29 @@ void generate_while (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_call (BACK_FUNC_HEAD_PARAMETERS)
 {
-    PUT (push);
-    fprintf (Back->file, " 1\n");
+    fprintf (Back->file, ";++" "\n\n");
 
-    //parameters_push (BACK_FUNC_PARAMETERS);
+    PUT (push);
+    fprintf (Back->file, " " TOP_REG "\n");
+
+    push_parameters (BACK_RIGHT_SON_FUNC_PARAMETERS);
+
+    PUT (push);
+    fprintf (Back->file, " " TOP_REG "\n");
+
+    PUT (pop);
+    fprintf (Back->file, " " SHIFT_REG "\n\n");
+
+    PUT (call);
+    fprintf (Back->file, " " LABEL "%ls\n", CurNode->left->data.var);
+
+    PUT (pop);
+    fprintf (Back->file, " " TOP_REG "\n");
+
+    fprintf (Back->file, ";++" "\n\n");
+
+    PUT (push);
+    fprintf (Back->file, " " FUNC_REG "\n");
 
     return;
 }
@@ -823,8 +877,10 @@ void generate_return (BACK_FUNC_HEAD_PARAMETERS)
     }
     else
     {
-        PUT (push);
         generate_expression (BACK_LEFT_SON_FUNC_PARAMETERS);
+
+        PUT (pop);
+        fprintf (Back->file, " " FUNC_REG "\n");
 
         PUTLN (ret);
     }
@@ -860,9 +916,20 @@ void generate_pop_var (BACK_FUNC_HEAD_PARAMETERS)
 {
     int Index = find_var (BACK_FUNC_PARAMETERS);
 
-    write_command (pop, Back->file);
+    PUT (push);
+    fprintf (Back->file, " %d\n", Index);
 
-    fprintf (Back->file, " [%d]\n\n", Index);
+    PUT (push);
+    fprintf (Back->file, " " SHIFT_REG "\n");
+
+    PUTLN (add);
+
+    PUT (pop);
+    fprintf (Back->file, " " COUNT_REG "\n");
+
+
+    PUT (pop);
+    fprintf (Back->file, " [" COUNT_REG "]\n\n");
 
     return;
 }
@@ -871,14 +938,95 @@ void generate_push_var (BACK_FUNC_HEAD_PARAMETERS)
 {
     int Index = find_var (BACK_FUNC_PARAMETERS);
 
-    write_command (push, Back->file);
+    PUT (push);
+    fprintf (Back->file, " %d\n", Index);
 
-    fprintf (Back->file, " [%d]\n\n", Index);
+    PUT (push);
+    fprintf (Back->file, " " SHIFT_REG "\n");
+
+    PUTLN (add);
+
+    PUT (pop);
+    fprintf (Back->file, " " COUNT_REG "\n");
+
+    PUT (push);
+    fprintf (Back->file, " [" COUNT_REG "]\n\n");
 
     return;
 }
 
 //=============================================================================================================================================================================
+
+void push_parameters (BACK_FUNC_HEAD_PARAMETERS)
+{
+    if (CurNode->right != NULL)
+    {
+        push_parameters (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    }
+
+    if (CurNode != NULL)
+    {
+        generate_expression (BACK_LEFT_SON_FUNC_PARAMETERS);
+    }
+
+    // PUT (push);
+    // fprintf (Back->file, " " TOP_REG "\n");
+
+    return;
+}
+
+void pop_parameters (SBack* Back)
+{
+    PUT (push);
+    fprintf (Back->file, " " SHIFT_REG "\n");
+
+    // PUTLN (m_dup);
+    // PUTLN (out);
+
+    PUT (pop);
+    fprintf (Back->file, " " COUNT_REG "\n\n");
+
+    for (int i = 0; i < Back->Funcs->Table[Back->Funcs->top_index].parameters ; i++)
+    {
+        PUT (push);
+        fprintf (Back->file, " " COUNT_REG "\n");
+
+        PUT (push);
+        fprintf (Back->file, " 1\n");
+
+        PUTLN (add);
+
+        PUT (pop);
+        fprintf (Back->file, " " COUNT_REG "\n");
+
+        PUT (pop);
+        fprintf (Back->file, " [" COUNT_REG "]\n\n");
+    }
+
+//     PUT (push);
+//     fprintf (Back->file, " " COUNT_REG "\n");
+//
+//     PUT (pop);
+//     fprintf (Back->file, " " SHIFT_REG "\n");
+
+    return;
+}
+
+void incr_top_reg (SBack* Back)
+{
+    PUT (push);
+    fprintf (Back->file, " " TOP_REG "\n");
+
+    PUT (push);
+    fprintf (Back->file, " 1\n");
+
+    PUTLN (add);
+
+    PUT (pop);
+    fprintf (Back->file, " " TOP_REG "\n\n");
+
+    return;
+}
 
 void standard_if_jump (SBack* Back)
 {
@@ -999,6 +1147,8 @@ void create_new_var_table (SBack* Back)
 
 void create_param_var_table (BACK_FUNC_HEAD_PARAMETERS)
 {
+    Back->RAM_top_index = 1;
+
     do
     {
         if (CurNode->left != NULL)
@@ -1017,7 +1167,7 @@ void delete_var_table (SBack* Back)
 {
     SVarTable* Table = NULL;
 
-    pop_from_stack (Back->VarStack, &Table); //TODO why not pop???
+    pop_from_stack (Back->VarStack, &Table);
 
     free (Table->Arr);
 

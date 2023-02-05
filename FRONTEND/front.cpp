@@ -200,6 +200,8 @@ int do_token (SSrc* Source,  STokens* Tokens)
 
     swscanf (&(Source->Arr[Source->ip]), L"%ml[^" SEP_SYMBOLS "]", &Lexem);
 
+    //wprintf (L"\n++%ls++\n", Lexem);
+
     if (Lexem == NULL)
     {
         swscanf (&(Source->Arr[Source->ip]), L"%ml[^\n ]", &Lexem);
@@ -914,13 +916,15 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS)
 
     //MLA (f_check_vars_table (TKN.data.var, Vars) == true);
 
-    Node->left = get_Bracket (FUNC_ARGUMENTS);
+    Node->left = get_Expression (FUNC_ARGUMENTS);
 
     if (TKN_OP_AND_IS__ TComma)
     {
         NEXT_TKN; //Tokens->number++;
 
         Node->right = get_Param (FUNC_ARGUMENTS);
+
+        //NEXT_TKN;
 
         return Node;
     }
@@ -1417,16 +1421,6 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
                 CHECK_SYNTAX (TCloseRoundBracket);
 
                 return Node;
-
-//                 NEXT_TKN; //skipped func name
-//
-//                 NEXT_TKN; //skipped (
-//
-//                 Node = get_Bracket (FUNC_ARGUMENTS); //TODO HERE!!!
-//
-//                 CHECK_SYNTAX (TCloseRoundBracket);
-//
-//                 return Node;
             }
         }
 
@@ -1441,8 +1435,6 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
 
         wprintf (L"==ERROR==\n""No such word '%ls' found!\n", TKN.data.var);
     }
-
-    //TODO if func
 
     if (TKN.category == CValue && TKN.type == TValue)
     {
