@@ -125,8 +125,8 @@ int close_listing_file (StructMachineCode* Code)
 
     fprintf (Code->listing_file,
              "---------------------------------------------------------------\n"
-             "sygnature 0x%0.2X | version 0x%0.2X (%d) |"
-             " size [%0.2X %0.2X %0.2X %0.2X] (%d) | VRAM-size [%0.2X %0.2X %0.2X %0.2X] (%d)\n"
+             "sygnature 0x%.2X | version 0x%.2X (%d) |"
+             " size [%.2X %.2X %.2X %.2X] (%d) | VRAM-size [%.2X %.2X %.2X %.2X] (%d)\n"
              "---------------------------------------------------------------\n"
              "Compilation ended: %s %s\n"
              "===============================================================\n"
@@ -244,7 +244,7 @@ int add_label (char* Name, StructMachineCode* Code)
             (ArrLabels[counter].name)[Length - 1] = '\0';
             ArrLabels[counter].num  = Code->ip;
 
-            fprintf (Code->listing_file, "added label: %s %d  [%0.2X %0.2X %0.2X %0.2X]\n", Name, Code->ip,
+            fprintf (Code->listing_file, "added label: %s %d  [%.2X %.2X %.2X %.2X]\n", Name, Code->ip,
             ((unsigned char*) &Code->ip)[0],
             ((unsigned char*) &Code->ip)[1],
             ((unsigned char*) &Code->ip)[2],
@@ -340,12 +340,12 @@ int parse_push_or_pop (StructSource* Source, StructMachineCode* Code, const char
         if ((Name[counter] == ' ') || (Name[counter] == '\n') || (Name[counter] == '\0'))
         {
             Name[counter] = '\0';
-            counter = Junk;
+            counter = JUNK;
             break;
         }
     }
 
-    if (counter != Junk)
+    if (counter != JUNK)
     {
         printf ("Syntax error! (Maybe because of empty pop in the end)\n");
         return StdError;
@@ -624,7 +624,7 @@ void jump_label (StructSource* Source,StructMachineCode* Code)
     {
         if (ROUND < FIRST_ROUND + 1)
         {
-            fprintf (Code->listing_file, "skipped %d bytes (label '%s' not found)\n", sizeof (int), Name);
+            fprintf (Code->listing_file, "skipped %lud bytes (label '%s' not found)\n", sizeof (int), Name);
             Code->ip += sizeof (int);
         }
         else
@@ -643,8 +643,6 @@ void jump_label (StructSource* Source,StructMachineCode* Code)
 
     Source->pointer += length;
 }
-
-
 
 void print_command (StructMachineCode* Code, const char* Name)
 {
@@ -706,7 +704,7 @@ void free_labels (StructMachineCode* Code)
     {
         if (ArrLabels[counter].num != -1)
         {
-            fprintf (Code->listing_file,"freed label: %-3d %-15s %-5d [%0.2X %0.2X %0.2X %0.2X]\n",
+            fprintf (Code->listing_file,"freed label: %-3d %-15s %-5d [%.2X %.2X %.2X %.2X]\n",
             counter, ArrLabels[counter].name, ArrLabels[counter].num,
             ((unsigned char*) &ArrLabels[counter].num)[0],
             ((unsigned char*) &ArrLabels[counter].num)[1],

@@ -3,7 +3,7 @@
 #define PROC_H
 
 #include <math.h>
-#include "stack.h"
+#include "stackT.h"
 #include "asm.h"
 
 typedef struct
@@ -12,25 +12,25 @@ typedef struct
     unsigned char* line = NULL;
 } StructDebug;
 
-
 typedef struct
 {
-    int            ip;
-    int            size;
-    int            size_RAM;
-    int            size_VRAM;
-    EModes         mode;
-    StructStack*   stack;
-    StructStack*   addres_stack;
-    unsigned char* Array;
-    double*        Regs;
-    double*        RAM;
+    int             ip;
+    int             size;
+    int             size_RAM;
+    int             size_VRAM;
+    EModes          mode;
+    SStack<double>* stack;
+    SStack<double>*    address_stack;
+    unsigned char*  Array;
+    double*         Regs;
+    double*         RAM;
 } StructCPU;
+
+void dump_code (StructCPU* CPU);
 
 void do_dump (StructCPU* CPU);
 
 int dis_command (StructCPU* CPU, int num);
-
 
 int cpu_constructor (FILE* Bin, StructCPU* CPU);
 

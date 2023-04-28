@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "colors.h"
 
-#define LOCATION __FILE__,__PRETTY_FUNCTION__,__LINE__
+#define LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
 
 #define DOTXT(Message) #Message
 

@@ -1,31 +1,58 @@
+
+#ifndef FRONT_H
+#define FRONT_H
+
 //=============================================================================================================================================================================
 #define TKN_IS_OP       TKN.category = COperation
+
+#include "stackT.h"
+
+//=============================================================================================================================================================================
+
+#define TKN_IS_OP       TKN.category = COperation
+
+#define TKN_IS_WORD (TKN.category == CLine && TKN.type == TVariable)
 
 #define TKN_OP_AND_IS__ TKN.category == COperation && TKN.type ==
 
 #define CHECK_SYNTAX(tkn_type)  \
     MTokAss (TKN_OP_AND_IS__ tkn_type); \
-    Tokens->number++;
+    NEXT_TKN;
 
 #define TKN         Tokens->TokenArr[Tokens->number]
 #define TKN_ARGS    TKN.category, TKN.type, TKN.data
 
 #define NEXT_TKN    Tokens->number++; \
-    if (Tokens->number = Tokens->size + 1) \
+    if (Tokens->number >= Tokens->size + 1) \
     { \
+        wprintf (L"Error!!!\n"); /*TODO remove*/\
         return NULL; \
     } \
 
-#define VAR Vars->Arr[counter]
+#define VAR     Vars->Arr[counter]
+#define FUNC    Funcs->Arr[counter]
 
-#define FUNC_HEAD_ARGUMENTS STokens* Tokens, SVars* Vars, SFuncs* Funcs
-#define FUNC_ARGUMENTS      Tokens, Vars, Funcs
+//TODO think about add flag here
+#define FUNC_HEAD_ARGUMENTS STokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker
+#define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker
 
-#define SHOUT wprintf (L"%s %s:%d\n", LOCATION)
+#define SHOUT wprintf (L"=[%d/%d] %s %s:%d\n", Tokens->number, Tokens->size, LOCATION)
+
+#define LEXEM_IS(str) \
+(wcscmp (Lexem, str) == 0)
 
 //===================================================================================================================================================================
 
-void my_main (void);
+#define FORBIDDEN_TERMINATING_SYMBOL "@"
+
+#define VAR_TABLE_CAPACITY 30
+
+#define MAX_VARS_ARRAY  50
+#define MAX_FUNCS_ARRAY 50
+
+//===================================================================================================================================================================
+
+void my_f_main (int argc, char** argv);
 
 //===================================================================================================================================================================
 //source//
@@ -38,7 +65,7 @@ typedef double  ValT;
 typedef struct
 {
     size_t ip   = 0;
-    CharT* Code = NULL;
+    CharT* Arr = NULL;
     size_t size = 0;
 }
 SSrc;
@@ -65,14 +92,14 @@ typedef union
     CharT*  var;
 } UData;
 
-#define DEF_LEX(d_type, ...) \
+#define DEF_OP(d_type, ...) \
     d_type,
 
 enum ETokenType
 {
-    #include "Lexer.h"
+    #include "Operations.h"
 };
-#undef DEF_LEX
+#undef DEF_OP
 
 enum ECategory
 {
@@ -100,6 +127,8 @@ STokens;
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 STokens* lex_src (SSrc* Source);
+
+void make_lexem (SSrc* Source, CharT** Lexem);
 
 int do_token (SSrc* Source, STokens* Tokens);
 
@@ -140,45 +169,81 @@ SNode;
 
 typedef struct
 {
-    CharT*  name    =  NULL;
-    ValT    value   =  0;
+    CharT* name;
+    int    index;
 }
-SVar;
+SVarAccord;
 
 typedef struct
 {
-    SVar*   Arr     = NULL;
-    int     number  = 0;
+    int         size = 0;
+    SVarAccord* Arr  = NULL;
 }
-SVars;
+SVarTable;
+
+// typedef struct
+// {
+//     SVar*   Arr     = NULL;
+//     int     size    = 0;
+// }
+// SVars;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 typedef struct
 {
-    CharT*  name    =  NULL;
-    SNode*  code    =  NULL;
+    CharT*  name        = NULL;
+    int     parameters  = 0;
 }
 SFunc;
 
 typedef struct
 {
-    SFunc*   Arr     = NULL;
-    int     number   = 0;
+    SFunc*   Arr    = NULL;
+    int      size   = 0;
 }
 SFuncs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SVars* construct_vars_array (size_t Capacity);
-
-void destruct_vars_array (SVars* Vars);
+// SVars* construct_vars_table (size_t Capacity);
+//
+// bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars);
+//
+// bool check_vars_table (CharT* Name, SVars* Vars);
+//
+// void show_vars_table (SVars* Vars);
+//
+// void destruct_vars_table (SVars* Vars);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SFuncs* construct_funcs_array (size_t Capacity);
+void f_create_new_var_table (SStack<SVarTable*>* Vars);
 
-void destruct_funcs_array (SFuncs* Funcs);
+void f_delete_var_table (SStack<SVarTable*>* Vars);
+
+bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars);
+
+bool f_find_in_table (CharT* Name, SVarTable* Table);
+
+void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars);
+
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SFuncs* construct_funcs_table (size_t Capacity);
+
+int add_to_funcs_table (CharT* Name, SFuncs* Funcs);
+
+void add_parameters (int Number, SNode* Node, SFuncs* Funcs);
+
+int count_parameters (SNode* Node);
+
+bool check_funcs_table (CharT* Name, SFuncs* Funcs);
+
+void show_funcs_table (SFuncs* Funcs);
+
+void destruct_funcs_table (SFuncs* Funcs);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -187,6 +252,8 @@ SNode* construct_op_node (ETokenType Type);
 SNode* construct_var_node (SToken* Token);
 
 SNode* construct_val_node (ValT Value);
+
+void delete_tree (SNode** Node);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -202,29 +269,45 @@ SNode* get_Type         (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Parameters   (FUNC_HEAD_ARGUMENTS);
 
+SNode* get_headParam    (FUNC_HEAD_ARGUMENTS);
+
 SNode* get_Param        (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_IfElse       (FUNC_HEAD_ARGUMENTS);
 
+SNode* get_IfStatements (FUNC_HEAD_ARGUMENTS);
+
 SNode* get_While        (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Call        (FUNC_HEAD_ARGUMENTS);
+SNode* get_Call         (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Return        (FUNC_HEAD_ARGUMENTS);
+SNode* get_Input        (FUNC_HEAD_ARGUMENTS);
+
+SNode* get_Output       (FUNC_HEAD_ARGUMENTS);
+
+SNode* get_Return       (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Announce     (FUNC_HEAD_ARGUMENTS);
+
+SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS);
+
+SNode* get_Equation     (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Variable     (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Expression   (FUNC_HEAD_ARGUMENTS);
 
-ValT get_AddSub     (FUNC_HEAD_ARGUMENTS);
+SNode* get_Logic        (FUNC_HEAD_ARGUMENTS);
 
-ValT get_MulDiv     (FUNC_HEAD_ARGUMENTS);
+SNode* get_Compare      (FUNC_HEAD_ARGUMENTS);
 
-ValT get_Pow        (FUNC_HEAD_ARGUMENTS);
+SNode* get_AddSub       (FUNC_HEAD_ARGUMENTS);
 
-ValT get_Bracket    (FUNC_HEAD_ARGUMENTS);
+SNode* get_MulDiv       (FUNC_HEAD_ARGUMENTS);
+
+SNode* get_Pow          (FUNC_HEAD_ARGUMENTS);
+
+SNode* get_Bracket      (FUNC_HEAD_ARGUMENTS);
 
 //===================================================================================================================================================================
 //GraphViz//
@@ -237,7 +320,6 @@ ValT get_Bracket    (FUNC_HEAD_ARGUMENTS);
 #define VAR_SPEC "%ls"
 #define VAL_SPEC "%lg"
 
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void make_gv_tree (SNode* Root, const char* FileName);
@@ -249,4 +331,17 @@ void print_gv_node (FILE* File, SNode* Node);
 void draw_gv_tree (const char* FileName);
 
 //===================================================================================================================================================================
+//WriteTree//
+//===================================================================================================================================================================
 
+void write_tree (SNode* Root, const char* FileName);
+
+void file_wprint (SNode* Node, int n, FILE* OutputFile);
+
+void do_tab (int n, FILE* OutputFile);
+
+void print_node (SNode* Node, FILE* OutputFile);
+
+//===================================================================================================================================================================
+
+#endif

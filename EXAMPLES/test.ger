@@ -1,6 +1,54 @@
-   2 a = 1;
-    b = 0;
+var sum ( var a , var b )
+{
+    return a + b;
+}
 
+var main ( )
+{
+    var x = sum ( 1 , 2 ) ;
+
+    var ы = sum ( 1 , x ) ;
+
+    x = ( 3 >= 4 ) && ( 2 ) ;
+
+    output ( x ) ;
+
+    input ( ы , x ) ;
+
+    if ( x == 2 )
+    {
+        var t = 7;
+        x = 6;
+        output ( t ) ;
+    }
+    else if ( 0 )
+    {
+        output ( x ) ;
+    }
+    else
+    {
+        output ( ы ) ;
+    }
+
+    var ч = 5 * ( 7 - 4 ) + ы + ceil ( ы ) ;
+
+    x = ( ч - ы + 7 + sum ( x , sum ( x , 1 ) ) ) / 5 ;
+
+    output ( x ) ;
+
+    return 2 - 4 ;
+}
+
+var умн ( )
+{
+    var z = 1;
+
+    return z;
+}
+
+<<<<<<< HEAD
     a = a + b;
 #алёша
     c = a + b;
+=======
+>>>>>>> NewMain

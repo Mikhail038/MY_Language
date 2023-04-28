@@ -22,10 +22,7 @@ int main (int argc, char** argv)
 
     cpu_constructor (Bin, &CPU);
 
-
-
     fclose (Bin);
-
 
     execute_code (&CPU);
 

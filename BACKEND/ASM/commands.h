@@ -12,7 +12,7 @@
 //---------------------------------------------------------------------------
 
 #define PRS_STD \
-    fprintf (Code->listing_file, "    %0.4d 0x%0.2X %s\n", \
+    fprintf (Code->listing_file, "    %.4d 0x%.2X %s\n", \
              Code->ip - 1, Code->ArrCode[Code->ip - 1], ArrCommands[counter].name); \
     return 0;
 
@@ -23,6 +23,7 @@
     Array->pointer++;
 
 //---------------------------------------------------------------------------
+
 #define PRS_JMP \
     if (parse_jump (Source, Code, ArrCommands[counter].name) != 0) \
     { \
@@ -178,7 +179,7 @@ DEF_CMD ("inp", inp, 7,
 {
     double x = 0;
 
-    printf ("Enter number to push:\n");
+    printf ("Input:\n");
     scanf ("%lg", &x);
 
     push_in_stack (CPU->stack, x);
@@ -408,7 +409,7 @@ DEF_CMD ("call", call, 18,
         ((unsigned char*) &label)[i] = CPU->Array[CPU->ip];
         CPU->ip++;
     }
-    push_in_stack (CPU->addres_stack, CPU->ip);
+    push_in_stack (CPU->address_stack, (double) CPU->ip);
 
     //printf ("   called %d from %d\n", label, CPU->ip);
     CPU->ip = label;
@@ -425,7 +426,7 @@ DEF_CMD ("ret", ret, 19,
 {
     double d_label = 0;
 
-    pop_from_stack (CPU->addres_stack, &d_label);
+    pop_from_stack (CPU->address_stack, &d_label);
 
     int label = (int) d_label;
 
@@ -453,8 +454,6 @@ DEF_CMD ("sqrt", m_sqrt, 20,
     PUSH (sqrt (a));
 
     CPU->ip++;
-
-
 },
 {
     PRS_STD

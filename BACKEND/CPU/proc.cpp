@@ -3,9 +3,10 @@
 #include <string.h>
 #include <assert.h>
 
-#include "functions.h"
 #include "proc.h"
 #include "disasm.h"
+
+#define STACKCTOR(d_stack, d_capacity) stack_constructor (d_stack, d_capacity)
 
 static const int REGS_CONST = 5;
 
@@ -116,9 +117,9 @@ void do_dump (StructCPU* CPU)
     printf (Kunderscore "Address stack:\n" KNRM);
 
     counter = 0;
-    for (; counter < CPU->addres_stack->size; counter++)
+    for (; counter < CPU->address_stack->size; counter++)
     {
-        printf (KMGN "%04d| %13lg\n" KNRM, counter, CPU->addres_stack->data[counter]);
+        printf (KMGN "%04d| %13lg\n" KNRM, counter, CPU->address_stack->data[counter]);
     }
 
     if (counter == 0)
@@ -183,11 +184,11 @@ int cpu_constructor (FILE* Bin, StructCPU* CPU)
     CPU->size_RAM = start + CPU->size_VRAM;
     CPU->RAM  = (double*) calloc (CPU->size_RAM, sizeof (*CPU->RAM));
 
-    CPU->stack = (StructStack*) calloc (1, sizeof (StructStack));
-    CPU->addres_stack = (StructStack*) calloc (1, sizeof (StructStack));
+    CPU->stack = (SStack<double>*) calloc (1, sizeof (SStack<double>));
+    CPU->address_stack = (SStack<double>*) calloc (1, sizeof (SStack<double>));
 
     STACKCTOR (CPU->stack, StartStackSize);
-    STACKCTOR (CPU->addres_stack, StartAddressStackSize);
+    STACKCTOR (CPU->address_stack, StartAddressStackSize);
 
     if (CPU->mode == DBG_mode)
         {
@@ -357,10 +358,7 @@ void cpu_destructor (StructCPU* CPU)
     free (CPU->Regs);
 
     stack_destructor (CPU->stack);
-    stack_destructor (CPU->addres_stack);
-
-    free (CPU->stack);
-    free (CPU->addres_stack);
+    stack_destructor (CPU->address_stack);
 
     if (CPU->mode == DBG_mode)
     {

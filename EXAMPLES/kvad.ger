@@ -1,0 +1,40 @@
+var discriminant (var a, var b, var c)
+{
+    return b*b - 4*a*c ;
+}
+
+var main ( )
+{
+    var a = 0;
+    var b = 0;
+    var c = 0;
+
+    ввод (a, b, c);
+
+    var x_1 = 0;
+    var x_2 = 0;
+
+    discriminant (a, b, c);
+
+    if (a > 0)
+    {
+        if ( discriminant (a, b, c) < 0)
+        {
+            x_1 = 0 - 111.7;
+            вывод (x_1);
+        }
+        else
+        {
+            x_1 = ((0 - b) - sqrt (discriminant (a, b, c))) / (2 * a);
+            x_2 = ((0 - b) + sqrt (discriminant (a, b, c))) / (2 * a);
+        }
+    }
+    else
+    {
+        return 1;
+    }
+
+    вывод (x_1, x_2);
+
+    return 0;
+}
