@@ -1,4 +1,5 @@
 *.txt
-"front"
-"back"
+front
+back
 *.o
+*.json
