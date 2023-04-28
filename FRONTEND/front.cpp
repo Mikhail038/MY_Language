@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include <locale.h>
+#include <wctype.h>
 #include <wchar.h>
 
 //===================================================================================================================================================================
@@ -25,6 +26,7 @@
 #define BASE_SCOPES_NUM 20
 
 #define MAX_MEMORY  10000
+#define MAX_LEXEM_SIZE 30
 
 #define SEP_SYMBOLS "\n;,() "
 
@@ -32,6 +34,7 @@
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+const int Err   = -1;
 const int StdErr = 1;
 const int NoErr  = 0;
 
@@ -92,7 +95,7 @@ void my_f_main (int argc, char** argv)
     if (Vars != NULL)
     {
         stack_destructor (Vars);
-        free (Vars);
+        //free (Vars);
     }
 
     if (Funcs != NULL)
@@ -198,20 +201,21 @@ int do_token (SSrc* Source,  STokens* Tokens)
     seek (Source);
     CharT* Lexem = NULL;
 
-    swscanf (&(Source->Arr[Source->ip]), L"%ml[^" SEP_SYMBOLS "]", &Lexem);
+    make_lexem (Source, &Lexem);
 
-    //wprintf (L"\n++%ls++\n", Lexem);
+//     swscanf (&(Source->Arr[Source->ip]), L"%ml[^" SEP_SYMBOLS "]", &Lexem);
+//
+//     //wprintf (L"\n++%ls++\n", Lexem);
+//
+//     if (Lexem == NULL)
+//     {
+//         swscanf (&(Source->Arr[Source->ip]), L"%ml[^\n ]", &Lexem);
+//         //wprintf (L"!%lc!\n", Source->Code[Source->ip]);
+//     }
 
-    if (Lexem == NULL)
+    if (Lexem == NULL && Source->Arr[Source->ip] == L'\0')
     {
-        swscanf (&(Source->Arr[Source->ip]), L"%ml[^\n ]", &Lexem);
-
-        if (Lexem == NULL && Source->Arr[Source->ip] == L'\0')
-        {
-            return NoErr;
-        }
-
-        //wprintf (L"!%lc!\n", Source->Code[Source->ip]);
+        return NoErr;
     }
 
     MTokAss (Lexem != NULL);
@@ -226,12 +230,79 @@ int do_token (SSrc* Source,  STokens* Tokens)
         return StdErr;
     }
 
-    Source->ip += wcslen (Lexem);
+    //Source->ip += wcslen (Lexem);
+    //Source->ip++;
 
     free (Lexem);
 
     return NoErr;
 }
+
+void make_lexem (SSrc* Source, CharT** Lexem)
+{
+    CharT* RawLexem = (CharT*) calloc (MAX_LEXEM_SIZE, sizeof (CharT));
+
+    int i = 0;
+    for (; 1 ; )
+    {
+        MLA (i < MAX_LEXEM_SIZE);
+
+        if (iswalpha (Source->Arr[Source->ip]) != 0)
+        {
+            while ( (iswalpha (Source->Arr[Source->ip]) != 0)
+                ||  (iswdigit (Source->Arr[Source->ip]) != 0)
+                ||  (Source->Arr[Source->ip] == L'_'))
+            {
+                RawLexem[i] = Source->Arr[Source->ip];
+                i++;
+                Source->ip++;
+            }
+
+            break;
+        }
+
+        if (iswdigit (Source->Arr[Source->ip]) != 0)
+        {
+            while ( (iswdigit (Source->Arr[Source->ip]) != 0)
+                ||  (Source->Arr[Source->ip] == L'.') )
+            {
+                RawLexem[i] = Source->Arr[Source->ip];
+                i++;
+                Source->ip++;
+            }
+
+            break;
+        }
+
+        if (    (Source->Arr[Source->ip] == L'\n')
+             || (Source->Arr[Source->ip] == L' '))
+        {
+            Source->ip++;
+            continue;
+        }
+
+        if ((Source->Arr[Source->ip]) == L'\0')
+        {
+            break;
+        }
+
+        RawLexem[i] = Source->Arr[Source->ip];
+        i++;
+        Source->ip++;
+
+        break;
+    }
+
+    RawLexem[i] = L'\0';
+
+    swscanf (RawLexem, L"%mls", Lexem);
+    free (RawLexem);
+
+    //wprintf (L"\n++%ls++\n", *Lexem);
+
+    return;
+}
+
 
 #define DEF_OP(d_type, d_condition, d_tokenize,...) \
 else if (d_condition) \
@@ -493,90 +564,6 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars)
     return;
 }
 
-// SVars* construct_vars_table (size_t Capacity)
-// {
-//     SVars* Vars  = (SVars*) calloc (1, sizeof (*Vars));
-//     Vars->Arr    = (SVar*)  calloc (Capacity, sizeof (*(Vars->Arr)));
-//     Vars->size   = 0;
-//
-//     MLA (Vars != NULL);
-//     MLA (Vars->Arr != NULL);
-//
-//     return Vars;
-// }
-//
-// void show_vars_table (SVars* Vars)
-// {
-//     wprintf (L"==Vars Array== size %d\n", Vars->size);
-//     for (int counter = 0; counter < MAX_VARS_ARRAY; ++counter)
-//     {
-//         if (VAR.name != NULL)
-//         {
-//             wprintf (L"[%d] %ls = %lg\n", counter, VAR.name, VAR.value);
-//         }
-//     }
-// }
-//
-// bool check_vars_table (CharT* Name, SVars* Vars)
-// {
-//     for (int counter = 0; counter < Vars->size; counter++)
-//     {
-//         if (wcscmp (VAR.name, Name) == 0)
-//         {
-//             return true;
-//         }
-//     }
-//
-//     return false;
-// }
-//
-// bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars)
-// {
-//         for (int counter = 0; counter < MAX_VARS_ARRAY; counter++)
-//         {
-//             if ( VAR.name != NULL && wcscmp (VAR.name, Name) == 0)
-//             {
-//                 return false;
-//             }
-//
-//             if (VAR.name == NULL)
-//             {
-//                 VAR.name = wcsdup (Name);
-//
-//                 VAR.value = Data;
-//
-//                 Vars->size++;
-//
-//                 return true;
-//             }
-//         }
-//
-//         wprintf (L"2much vars\n");
-//         return false;
-// }
-
-// void destruct_vars_table (SVars* Vars)
-// {
-//     //show_vars_table (Vars);
-//
-//     for (int counter = 0; counter <= Vars->size; ++counter)
-//     {
-//         if (Vars->Arr[counter].name != NULL)
-//         {
-//             free (Vars->Arr[counter].name);
-//             Vars->Arr[counter].name = NULL;
-//         }
-//     }
-//
-//     free (Vars->Arr);
-//     Vars->Arr = NULL;
-//
-//     free (Vars);
-//     Vars = NULL;
-//
-//     return;
-// }
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SFuncs* construct_funcs_table (size_t Capacity)
@@ -588,13 +575,13 @@ SFuncs* construct_funcs_table (size_t Capacity)
     return Funcs;
 }
 
-bool add_to_funcs_table (CharT* Name, SFuncs* Funcs)
+int add_to_funcs_table (CharT* Name, SFuncs* Funcs)
 {
         for (int counter = 0; counter < MAX_FUNCS_ARRAY; counter++)
         {
             if ( FUNC.name != NULL && wcscmp (FUNC.name, Name) == 0)
             {
-                return false;
+                return Err;
             }
 
             if (FUNC.name == NULL)
@@ -603,12 +590,40 @@ bool add_to_funcs_table (CharT* Name, SFuncs* Funcs)
 
                 Funcs->size++;
 
-                return true;
+                return counter;
             }
         }
 
-        wprintf (L"2much funcs\n");
-        return false;
+        wprintf (KRED L"==ERROR==Function table overflow\n" KNRM);
+        return Err;
+}
+
+void add_parameters (int Number, SNode* Node, SFuncs* Funcs)
+{
+    MLA (Funcs->Arr[Number].name != NULL);
+    Funcs->Arr[Number].parameters = count_parameters (Node);
+
+    return;
+}
+
+int count_parameters (SNode* Node)
+{
+    SNode* CurNode = Node;
+
+    MLA (Node != NULL);
+    int counter = 0;
+
+    while (CurNode != NULL)
+    {
+        if (CurNode->left != NULL)
+        {
+            counter++;
+        }
+
+        CurNode = CurNode->right;
+    }
+
+    return counter;
 }
 
 bool check_funcs_table (CharT* Name, SFuncs* Funcs)
@@ -647,9 +662,6 @@ void destruct_funcs_table (SFuncs* Funcs)
         {
             free (Funcs->Arr[counter].name);
             Funcs->Arr[counter].name = NULL;
-
-            free (Funcs->Arr[counter].code);
-            Funcs->Arr[counter].code = NULL;
         }
     }
 
@@ -846,9 +858,12 @@ SNode* get_Head (FUNC_HEAD_ARGUMENTS)
 
     SNode* Node = construct_var_node (&TKN);
 
-    if (add_to_funcs_table (TKN.data.var, Funcs) == false)
+    int table_number = add_to_funcs_table (TKN.data.var, Funcs);
+
+    if (table_number == Err)
     {
-        wprintf (L"Loshara\n");
+        wprintf (KRED L"ERROR\n" KNRM);
+        MLA (0);
     }
 
     NEXT_TKN; //Tokens->number++;
@@ -856,6 +871,8 @@ SNode* get_Head (FUNC_HEAD_ARGUMENTS)
     Node->left  = Left_son;
 
     Node->right = get_Parameters (FUNC_ARGUMENTS);
+
+    add_parameters (table_number, Node->right, Funcs);
 
     return Node;
 }
@@ -1022,6 +1039,8 @@ SNode* get_Input (FUNC_HEAD_ARGUMENTS)
 
         CHECK_SYNTAX (TCloseRoundBracket);
 
+        MLA (Node->left->left != NULL);
+
         return Node;
     }
 
@@ -1042,6 +1061,8 @@ SNode* get_Output (FUNC_HEAD_ARGUMENTS)
         Node->left = get_Param (FUNC_ARGUMENTS);
 
         CHECK_SYNTAX (TCloseRoundBracket);
+
+        MLA (Node->left->left != NULL);
 
         return Node;
     }
@@ -1089,6 +1110,9 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 
         // if (f_add_to_var_table (Node->left->data.var, Vars) == false)
         // if (f_check_vars_table (Node->left->data.var, Vars) == true)
+
+        MLA (Vars->size != 0);
+
         if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1]) == true)
         {
             wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
@@ -1220,7 +1244,34 @@ SNode* get_Call (FUNC_HEAD_ARGUMENTS)
 {
     SHOUT;
 
+    if (TKN.category == CLine && TKN.type == TVariable && check_funcs_table (TKN.data.var, Funcs) == true)
+    {
+        SNode* Node = construct_op_node (T_Call);
 
+        Node->left = construct_var_node (&TKN);
+
+        CharT* FuncName = TKN.data.var;
+
+        NEXT_TKN;
+
+        CHECK_SYNTAX (TOpenRoundBracket);
+
+        Node->right = get_Param (FUNC_ARGUMENTS);
+
+        CHECK_SYNTAX (TCloseRoundBracket);
+
+        int Parameters = count_parameters (Node->right);
+
+        for (int counter = 0; counter < Funcs->size; counter++)
+        {
+            if (wcscmp (FUNC.name, FuncName) == 0)
+            {
+                MLA (Parameters == Funcs->Arr[counter].parameters);
+            }
+        }
+
+        return Node;
+    }
 
     return NULL;
 }
@@ -1403,26 +1454,9 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
 
             #undef DEF_UN
 
-
-
-            if (check_funcs_table (TKN.data.var, Funcs) == true) //custom func check
-            {
-                // SNode* Node = construct_var_node (&TKN);
-                SNode* Node = construct_op_node (T_Call);
-
-                Node->left = construct_var_node (&TKN);
-
-                NEXT_TKN;
-
-                CHECK_SYNTAX (TOpenRoundBracket);
-
-                Node->right = get_Param (FUNC_ARGUMENTS);
-
-                CHECK_SYNTAX (TCloseRoundBracket);
-
-                return Node;
-            }
+            return get_Call (FUNC_ARGUMENTS);
         }
+
 
         if (f_check_vars_table (TKN.data.var, Vars) == true)
         {
@@ -1444,7 +1478,8 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
         return Node;
     }
 
-    wprintf (L"ERROR!\n");
+    wprintf (KRED L"==ERROR!!=expected variable, function or value=\n" KNRM);
+    //wprintf (L"==ERROR==\n""No such'%ls' found!\n", TKN.data.var);
     MTokAss (0);
 
     return NULL;

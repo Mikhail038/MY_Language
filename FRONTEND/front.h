@@ -35,7 +35,7 @@
 #define FUNC_HEAD_ARGUMENTS STokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker
 #define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker
 
-#define SHOUT wprintf (L"==%p== [%d/%d] %s %s:%d\n", Vars, Tokens->number, Tokens->size, LOCATION)
+#define SHOUT wprintf (L"=[%d/%d] %s %s:%d\n", Tokens->number, Tokens->size, LOCATION)
 
 #define LEXEM_IS(str) \
 (wcscmp (Lexem, str) == 0)
@@ -127,7 +127,7 @@ STokens;
 
 STokens* lex_src (SSrc* Source);
 
-void make_lexem (CharT* Lexem, SSrc* Source);
+void make_lexem (SSrc* Source, CharT** Lexem);
 
 int do_token (SSrc* Source, STokens* Tokens);
 
@@ -191,8 +191,8 @@ SVarTable;
 
 typedef struct
 {
-    CharT*  name    =  NULL;
-    SNode*  code    =  NULL;
+    CharT*  name        = NULL;
+    int     parameters  = 0;
 }
 SFunc;
 
@@ -215,6 +215,8 @@ SFuncs;
 //
 // void destruct_vars_table (SVars* Vars);
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void f_create_new_var_table (SStack<SVarTable*>* Vars);
 
 void f_delete_var_table (SStack<SVarTable*>* Vars);
@@ -230,7 +232,11 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars);
 
 SFuncs* construct_funcs_table (size_t Capacity);
 
-bool add_to_funcs_table (CharT* Name, SFuncs* Funcs);
+int add_to_funcs_table (CharT* Name, SFuncs* Funcs);
+
+void add_parameters (int Number, SNode* Node, SFuncs* Funcs);
+
+int count_parameters (SNode* Node);
 
 bool check_funcs_table (CharT* Name, SFuncs* Funcs);
 

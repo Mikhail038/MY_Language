@@ -1,7 +1,7 @@
 #ifndef COLORS_H
 #define COLORS_H
 
-#define LOCATION __FILE__,__PRETTY_FUNCTION__,__LINE__
+#define LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
 
 #define DOTXT_1(Message) #Message+1
 

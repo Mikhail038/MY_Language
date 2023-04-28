@@ -170,6 +170,8 @@ int find_var (BACK_FUNC_HEAD_PARAMETERS);
 
 bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex);
 
+void free_tables (SStack<SVarTable*>* VarStack);
+
 //===================================================================================================================================================================
 
 SNode* find_main (SNode* Root);

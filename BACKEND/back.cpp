@@ -42,11 +42,13 @@
 #define TRUE   1
 #define FALSE  0
 
+#define ME printf ("==%s %s:%d\n", LOCATION);
+#define ME
 
 #define PUTLN(d_command) writeln_command ( d_command , Back->file)
 #define PUT(d_command)   write_command   ( d_command , Back->file)
 
-#define CLEAN_TABLE if (Back->table_cond != none) delete_var_table (Back); Back->table_cond = exist;
+#define CLEAN_TABLE if (Back->table_cond != none) { delete_var_table (Back); Back->table_cond = exist; }
 
 #define SEP_LINE ";----------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
 
@@ -532,7 +534,7 @@ void make_asm_file (SNode* Root, FILE* File)
 
     // generate_main (Root, Back);
 
-    stack_destructor (Back->VarStack);
+    free_tables (Back->VarStack);
 
     fclose (Back->file);
 
@@ -543,7 +545,7 @@ void make_asm_file (SNode* Root, FILE* File)
 
     free (Back->Funcs->Table);
     free (Back->Funcs);
-    free (Back->VarStack);
+
     free (Back);
 
     return;
@@ -594,30 +596,30 @@ void generate_code (SNode* Root, SBack* Back)
     return;
 }
 
-void generate_main (SNode* Root, SBack* Back)
-{
-    SNode* Main = find_main (Root);
-    MLA (Main != NULL);
-
-    Back->func_cond = main_f;
-
-    generate_statement (Main, Back);
-
-//     generate_op_node (Main->left, Back);
+// void generate_main (SNode* Root, SBack* Back)
+// {
+//     SNode* Main = find_main (Root);
+//     MLA (Main != NULL);
 //
-//     SNode* CurStatement = Main->right;
+//     Back->func_cond = main_f;
 //
-//     while (CurStatement != NULL)
-//     {
-//         generate_op_node (CurStatement->left, Back);
+//     generate_statement (Main, Back);
 //
-//         CurStatement = CurStatement->right;
-//     }
-
-    delete_var_table (Back);
-
-    return;
-}
+// //     generate_op_node (Main->left, Back);
+// //
+// //     SNode* CurStatement = Main->right;
+// //
+// //     while (CurStatement != NULL)
+// //     {
+// //         generate_op_node (CurStatement->left, Back);
+// //
+// //         CurStatement = CurStatement->right;
+// //     }
+//
+//     delete_var_table (Back);
+//
+//     return;
+// }
 
 void generate_statement (BACK_FUNC_HEAD_PARAMETERS)
 {
@@ -830,7 +832,7 @@ void generate_while (BACK_FUNC_HEAD_PARAMETERS)
 
     Back->table_cond = none;
     generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
-    delete_var_table (Back);
+    CLEAN_TABLE;
 
     PUT (jump);
     fprintf (Back->file, " " LABEL "%d\n", Label_1);
@@ -1134,6 +1136,8 @@ void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
 
 void create_new_var_table (SBack* Back)
 {
+    ME;
+
     SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
     NewTable->size = 0;
@@ -1147,6 +1151,8 @@ void create_new_var_table (SBack* Back)
 
 void create_param_var_table (BACK_FUNC_HEAD_PARAMETERS)
 {
+    //ME;
+
     Back->RAM_top_index = 1;
 
     do
@@ -1165,6 +1171,8 @@ void create_param_var_table (BACK_FUNC_HEAD_PARAMETERS)
 
 void delete_var_table (SBack* Back)
 {
+    ME;
+
     SVarTable* Table = NULL;
 
     pop_from_stack (Back->VarStack, &Table);
@@ -1180,6 +1188,7 @@ int find_var (BACK_FUNC_HEAD_PARAMETERS)
 {
     int RetIndex = JUNK;
 
+    MLA (Back->VarStack->size != 0);
     MLA (CurNode->category == CLine && CurNode->type == TVariable);
 
     SVarTable* Table = NULL;
@@ -1216,6 +1225,22 @@ bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex)
     }
 
     return false;
+}
+
+void free_tables (SStack<SVarTable*>* VarStack)
+{
+    for (int i = 0; VarStack->size - i > 0; i++)
+    {
+        free (VarStack->data[i]->Arr);
+        VarStack->data[i]->Arr = NULL;
+
+        free (VarStack->data[i]);
+        VarStack->data[i] = NULL;
+    }
+
+    stack_destructor (VarStack);
+
+    return;
 }
 
 //=============================================================================================================================================================================

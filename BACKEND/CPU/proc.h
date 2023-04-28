@@ -26,6 +26,8 @@ typedef struct
     double*         RAM;
 } StructCPU;
 
+void dump_code (StructCPU* CPU);
+
 void do_dump (StructCPU* CPU);
 
 int dis_command (StructCPU* CPU, int num);

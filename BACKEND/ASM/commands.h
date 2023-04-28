@@ -23,6 +23,7 @@
     Array->pointer++;
 
 //---------------------------------------------------------------------------
+
 #define PRS_JMP \
     if (parse_jump (Source, Code, ArrCommands[counter].name) != 0) \
     { \

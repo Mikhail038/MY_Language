@@ -360,9 +360,6 @@ void cpu_destructor (StructCPU* CPU)
     stack_destructor (CPU->stack);
     stack_destructor (CPU->address_stack);
 
-    free (CPU->stack);
-    free (CPU->address_stack);
-
     if (CPU->mode == DBG_mode)
     {
         free (Code);
