@@ -1,5 +1,8 @@
 *.txt
-front
-back
 *.o
 *.json
+front
+back
+asm
+disasm
+proc
