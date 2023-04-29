@@ -16,11 +16,7 @@
 
 int main (int argc, char** argv)
 {
-<<<<<<< HEAD
-    my_main ();
-=======
     my_f_main (argc, argv);
->>>>>>> NewMain
 
     return 0;
 }
