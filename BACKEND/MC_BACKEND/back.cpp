@@ -23,35 +23,6 @@
 #include "asm.h"
 #include "proc.h"
 
-
-//=============================================================================================================================================================================
-
-#define MAIN_WORD L"main"
-
-#define MAIN_JUMP "main"
-
-#define SHIFT_REG   "rax"
-#define COUNT_REG   "rbx"
-#define TOP_REG     "rcx"
-#define FUNC_REG    "rdx"
-
-#define LABEL "lbl_"
-
-#define JUNK -1
-
-#define TRUE   1
-#define FALSE  0
-
-#define ME printf ("==%s %s:%d\n", LOCATION);
-#define ME
-
-#define PUTLN(d_command) writeln_command ( d_command , Back->file)
-#define PUT(d_command)   write_command   ( d_command , Back->file)
-
-#define CLEAN_TABLE if (Back->table_cond != none) { delete_var_table (Back); Back->table_cond = exist; }
-
-#define SEP_LINE ";----------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
-
 //=============================================================================================================================================================================
 
 void my_b_main (int argc, char** argv)
@@ -65,14 +36,13 @@ void my_b_main (int argc, char** argv)
     {
         FILE* ExFile = fopen ("EXAMPLES_ASM/code.asm", "w");
 
-        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump");
+        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
         make_asm_file (Root, ExFile);
 
         delete_tree (&Root);
 
         execute_asm_file (ExFile);
-
     }
 
     return;
@@ -354,7 +324,7 @@ void delete_tree (SNode** Node)
 //GraphViz//
 //===================================================================================================================================================================
 
-void make_gv_tree (SNode* Root, const char* FileName)
+void make_gv_tree (SNode* Root, const char* FileName, bool Display)
 {
     FILE* gvInputFile = fopen (FileName, "w");
     MLA (gvInputFile != NULL);
@@ -372,7 +342,7 @@ void make_gv_tree (SNode* Root, const char* FileName)
 
     fclose (gvInputFile);
 
-    draw_gv_tree (FileName);
+    show_gv_tree (FileName, Display);
 
     return;
 }
@@ -486,20 +456,22 @@ void print_gv_node (FILE* File, SNode* Node)
     return;
 }
 
-void draw_gv_tree (const char* FileName)
+void show_gv_tree (const char* FileName, bool Display)
 {
     size_t length = strlen (FileName) + 60;
 
     char* Command = (char*) calloc (sizeof (*FileName), length);
 
     sprintf (Command, "dot -Tpng %s -o %s.png", FileName, FileName);
-    //system ("dot -Tpng gvDiff.dot -o gvDiff.png");
+
     system (Command);
 
-    //sprintf (Command, "xdg-open %s.png", FileName);
+    if (Display)
+    {
+        sprintf (Command, "xdg-open %s.png", FileName);
 
-    //system ("xdg-open 1.png");
-    system (Command);
+        system (Command);
+    }
 
     free (Command);
 
@@ -531,8 +503,6 @@ void make_asm_file (SNode* Root, FILE* File)
     //generate_user_functions (Root, Back);
 
     generate_code (Root, Back);
-
-    // generate_main (Root, Back);
 
     free_tables (Back->VarStack);
 
@@ -573,53 +543,10 @@ void generate_code (SNode* Root, SBack* Back)
 
     generate_statement (Root, Back);
 
-//     SNode* Main = find_main (Root);
-//     MLA (Main != NULL);
-//
-//     Back->func_cond = main_f;
-//
-//     generate_statement (Main, Back);
-
-//     generate_op_node (Main->left, Back);
-//
-//     SNode* CurStatement = Main->right;
-//
-//     while (CurStatement != NULL)
-//     {
-//         generate_op_node (CurStatement->left, Back);
-//
-//         CurStatement = CurStatement->right;
-//     }
-
     //delete_var_table (Back);
 
     return;
 }
-
-// void generate_main (SNode* Root, SBack* Back)
-// {
-//     SNode* Main = find_main (Root);
-//     MLA (Main != NULL);
-//
-//     Back->func_cond = main_f;
-//
-//     generate_statement (Main, Back);
-//
-// //     generate_op_node (Main->left, Back);
-// //
-// //     SNode* CurStatement = Main->right;
-// //
-// //     while (CurStatement != NULL)
-// //     {
-// //         generate_op_node (CurStatement->left, Back);
-// //
-// //         CurStatement = CurStatement->right;
-// //     }
-//
-//     delete_var_table (Back);
-//
-//     return;
-// }
 
 void generate_statement (BACK_FUNC_HEAD_PARAMETERS)
 {
@@ -1053,31 +980,31 @@ void standard_if_jump (SBack* Back)
     return;
 }
 
-SNode* find_main (SNode* Node)
-{
-    if (NODE_IS_OP_AND__ T_Function)
-    {
-        if (Node->left != NULL &&
-        Node->left->category == CLine && (wcscmp (MAIN_WORD, Node->left->data.var) == 0))
-        {
-            return Node->right->right;
-        }
-    }
-
-    SNode* Main = NULL;
-
-    if (Node->left != NULL)
-    {
-        Main = find_main (Node->left);
-    }
-
-    if ((Node->right != NULL) && (Main == NULL))
-    {
-        Main = find_main (Node->right);
-    }
-
-    return Main;
-}
+// SNode* find_main (SNode* Node)
+// {
+//     if (NODE_IS_OP_AND__ T_Function)
+//     {
+//         if (Node->left != NULL &&
+//         Node->left->category == CLine && (wcscmp (MAIN_WORD, Node->left->data.var) == 0))
+//         {
+//             return Node->right->right;
+//         }
+//     }
+//
+//     SNode* Main = NULL;
+//
+//     if (Node->left != NULL)
+//     {
+//         Main = find_main (Node->left);
+//     }
+//
+//     if ((Node->right != NULL) && (Main == NULL))
+//     {
+//         Main = find_main (Node->right);
+//     }
+//
+//     return Main;
+// }
 
 void write_command (ECommandNums eCommand, FILE* File)
 {

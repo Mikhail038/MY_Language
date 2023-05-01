@@ -322,13 +322,13 @@ SNode* get_Bracket      (FUNC_HEAD_ARGUMENTS);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void make_gv_tree (SNode* Root, const char* FileName);
+void make_gv_tree (SNode* Root, const char* FileName, bool Display);
 
 void make_gv_node (FILE* File, SNode* Node);
 
 void print_gv_node (FILE* File, SNode* Node);
 
-void draw_gv_tree (const char* FileName);
+void show_gv_tree (const char* FileName, bool Display);
 
 //===================================================================================================================================================================
 //WriteTree//

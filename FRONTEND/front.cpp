@@ -1507,7 +1507,7 @@ void make_gv_tree (SNode* Root, const char* FileName)
 
     fclose (gvInputFile);
 
-    draw_gv_tree (FileName);
+    show_gv_tree (FileName);
 
     return;
 }
@@ -1621,7 +1621,7 @@ void print_gv_node (FILE* File, SNode* Node)
     return;
 }
 
-void draw_gv_tree (const char* FileName)
+void show_gv_tree (const char* FileName)
 {
     size_t length = strlen (FileName) + 60;
 

@@ -1,7 +1,4 @@
-
-#ifndef BACK_H
-#define BACK_H
-
+#pragma once
 //===================================================================================================================================================================
 
 typedef wchar_t CharT; //will not work with char
@@ -80,10 +77,41 @@ typedef struct
     FILE*               file            = NULL;
     SBackFuncTable*     Funcs           = NULL;
     SStack<SVarTable*>* VarStack        = NULL;
+
+    char*               Array           = NULL;
 }
 SBack;
 
 //===================================================================================================================================================================
+
+
+#define MAIN_WORD L"main"
+
+#define MAIN_JUMP "main"
+
+#define SHIFT_REG   "rax"
+#define COUNT_REG   "rbx"
+#define TOP_REG     "rcx"
+#define FUNC_REG    "rdx"
+
+#define LABEL "lbl_"
+
+#define JUNK -1
+
+#define TRUE   1
+#define FALSE  0
+
+#define ME printf ("==%s %s:%d\n", LOCATION);
+#define ME
+
+#define PUTLN(d_command) writeln_command ( d_command , Back->file)
+#define PUT(d_command)   write_command   ( d_command , Back->file)
+
+#define CLEAN_TABLE if (Back->table_cond != none) { delete_var_table (Back); Back->table_cond = exist; }
+
+#define SEP_LINE ";----------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+
+//=============================================================================================================================================================================
 
 // typedef struct
 // {
@@ -188,4 +216,3 @@ void execute_asm_file (FILE* ExFile);
 
 //===================================================================================================================================================================
 
-#endif

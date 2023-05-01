@@ -1,8 +1,8 @@
 *.txt
 *.o
 *.json
-front
 back
+front
 asm
 disasm
 proc
