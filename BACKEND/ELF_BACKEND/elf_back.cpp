@@ -2,6 +2,8 @@
 //29.04.2023
 //==================================================================================================================================================================
 
+#include <cstddef>
+#include <cstdlib>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -30,67 +32,134 @@
 
 //=============================================================================================================================================================================
 
+#define MAX_ELF_SIZE 10000
+
+#define SET(x) Back->Array[Back->cnt] = (x); Back->cnt++;
+
+//=============================================================================================================================================================================
+
 void make_elf_file (SNode* Root, FILE* ExFile)
 {
-    create_elf_header (Root, ExFile);
+    MLA (ExFile != NULL);
 
-    return;
-}
-
-//==================================================================================================================================================================
-
-void create_elf_header (SNode* Root, FILE* ExFile)
-{
-
-    return;
-}
-
-//==================================================================================================================================================================
-
-//=============================================================================================================================================================================
-//Make ASM//
-//=============================================================================================================================================================================
-
-void create_elf_body (SNode* Root, FILE* File)
-{
-    MLA (File != NULL);
-
-    SBack* Back = (SBack*) calloc (1, sizeof (SBack));
-
-    Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
-    Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
-    Back->Funcs->top_index = 0;
-
-    Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
-
-    Back->file = File;
-
-    Back->table_cond = none;
-
-    stack_constructor (Back->VarStack, 4);
+    SBack* Back = back_constructor (ExFile, MAX_ELF_SIZE);
 
     //generate_user_functions (Root, Back);
 
-    elf_generate_code (Root, Back);
+    elf_generate_header (Root, Back);
 
-    free_tables (Back->VarStack);
+    //elf_generate_code (Root, Back);
 
-    fclose (Back->file);
+    fwrite (Back->Array, sizeof (char), Back->cnt, Back->file);
+
+    back_destructor(Back);
 
     // for (int i = 0; i < Back->Funcs->top_index; i++)
     // {
     //     printf ("'%ls'[%d]\n", Back->Funcs->Table[i]);
     // }
 
-    free (Back->Funcs->Table);
-    free (Back->Funcs);
+    return;
+}
 
-    free (Back);
+//=============================================================================================================================================================================
+//Make ELF//
+//=============================================================================================================================================================================
+
+void elf_generate_header (SNode* Root, SBack* Back)
+{
+    SET (0x7f); //MAGIC SIGNATURE
+
+    SET ('E');
+    SET ('L');
+    SET ('F');
+
+    SET (0x02); //Class (64-bit = 2)
+
+    SET (0x01); //Endian (little endian = 1)
+
+    SET (0x01); //Elf Version (only correct = 1)
+
+    SET (0x00); //OS ABI (System V (UNIX) = 0)
+
+    SET (0x00); //ABI version (none = 0)
+
+    for (int padding_bytes = 0; padding_bytes < 7; padding_bytes++)
+    {
+        SET (0x00);
+    }
+
+    SET (0x02); //Type (executable = 2)
+    SET (0x00); //nothing
+
+    SET (0x3e); //Machine (x86_64 = 3e)
+    SET (0x00); //nothing
+
+    SET (0x01); //Version (only correct = 1)
+    SET (0x00); //nothing
+    SET (0x00); //nothing
+    SET (0x00); //nothing
+
+    size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
+
+    size_t EntryVA  = 0;
+    size_t addr_EntryVA = Back->cnt;
+
+    Back->cnt += 8; //we ll skip it now
+
+    size_t ProgramHeadersStart = 0;
+    size_t addr_ProgramHeadersStart = Back->cnt;
+
+    Back->cnt += 8; //we ll skip it now
+
+    size_t SectionHeadersStart = 0;
+    size_t addr_SectionHeadersStart = Back->cnt;
+
+    Back->cnt += 8; //we ll skip it now
+
+    SET (0x00); //Flags (no flags = 0)
+    SET (0x00); //nothing
+    SET (0x00); //nothing
+    SET (0x00); //nothing
+
+    unsigned short int  HeaderSize = 64; //std
+    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
+                        &HeaderSize, sizeof (unsigned short int));
+    Back->cnt +=2;
+
+    unsigned short int  ProgramHeaderSize = 56; //std
+    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
+                        &ProgramHeaderSize, sizeof (unsigned short int));
+    Back->cnt +=2;
+
+    unsigned short int  ProgramHeadersCnt = 1;
+    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
+                        &ProgramHeadersCnt, sizeof (unsigned short int));
+    Back->cnt +=2;
+
+    unsigned short int  SectionHeadersSize = 64; //std
+    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
+                        &SectionHeadersSize, sizeof (unsigned short int));
+    Back->cnt +=2;
+
+    unsigned short int  SectionHeadersCnt = 3; //TODO maybe not
+    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
+                        &SectionHeadersCnt, sizeof (unsigned short int));
+    Back->cnt +=2;
+
+    unsigned short int  ShstrTabIndex  = 2; //TODO maybe not
+    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
+                        &ShstrTabIndex, sizeof (unsigned short int));
+    Back->cnt +=2;
+
+    //=======================================================================
 
     return;
 }
 
-void elf_generate_code (SNode* Root, SBack* Back)
+//=============================================================================================================================================================================
+
+void elf_generate_code (BACK_FUNC_HEAD_PARAMETERS)
 {
     fprintf (Back->file, SEP_LINE "\n\n");
 
@@ -110,7 +179,7 @@ void elf_generate_code (SNode* Root, SBack* Back)
 
     fprintf (Back->file, SEP_LINE "\n\n");
 
-    elf_generate_statement (Root, Back);
+    elf_generate_statement (BACK_FUNC_PARAMETERS);
 
     //delete_var_table (Back);
 

@@ -1,6 +1,7 @@
 #pragma once
 //===================================================================================================================================================================
 
+#include <cstddef>
 typedef wchar_t CharT; //will not work with char
 
 // typedef struct
@@ -79,6 +80,7 @@ typedef struct
     SStack<SVarTable*>* VarStack        = NULL;
 
     char*               Array           = NULL;
+    size_t              cnt             = 0;
 }
 SBack;
 
@@ -135,6 +137,10 @@ SNode* read_node (SSrc* Tree);
 //===================================================================================================================================================================
 //Make ASM//
 //===================================================================================================================================================================
+
+SBack* back_constructor (FILE* ExFile, size_t ElfSize);
+
+void back_destructor (SBack* Back);
 
 void make_asm_file (SNode* Root, FILE* File);
 

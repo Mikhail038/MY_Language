@@ -105,7 +105,7 @@ void my_f_main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        make_gv_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump");
+        make_gv_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
         write_tree (Root, "FILES/ParsedSrc.tr");
 
@@ -1489,7 +1489,7 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
 //GraphViz//
 //===================================================================================================================================================================
 
-void make_gv_tree (SNode* Root, const char* FileName)
+void make_gv_tree (SNode* Root, const char* FileName, bool Display)
 {
     FILE* gvInputFile = fopen (FileName, "w");
     MLA (gvInputFile != NULL);
@@ -1507,7 +1507,7 @@ void make_gv_tree (SNode* Root, const char* FileName)
 
     fclose (gvInputFile);
 
-    show_gv_tree (FileName);
+    show_gv_tree (FileName, Display);
 
     return;
 }
@@ -1621,20 +1621,22 @@ void print_gv_node (FILE* File, SNode* Node)
     return;
 }
 
-void show_gv_tree (const char* FileName)
+void show_gv_tree (const char* FileName, bool Display)
 {
     size_t length = strlen (FileName) + 60;
 
     char* Command = (char*) calloc (sizeof (*FileName), length);
 
     sprintf (Command, "dot -Tpng %s -o %s.png", FileName, FileName);
-    //system ("dot -Tpng gvDiff.dot -o gvDiff.png");
+
     system (Command);
 
-    //sprintf (Command, "xdg-open %s.png", FileName);
+    if (Display)
+    {
+        sprintf (Command, "xdg-open %s.png", FileName);
 
-    //system ("xdg-open 1.png");
-    system (Command);
+        system (Command);
+    }
 
     free (Command);
 

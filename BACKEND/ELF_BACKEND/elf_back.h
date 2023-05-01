@@ -17,7 +17,9 @@ void create_elf_body (SNode* Root, FILE* ExFile);
 
 //==================================================================================================================================================================
 
-void elf_generate_code (SNode* Root, SBack* Back);
+void elf_generate_header (SNode* Root, SBack* Back);
+
+void elf_generate_code (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_main (BACK_FUNC_HEAD_PARAMETERS);
 

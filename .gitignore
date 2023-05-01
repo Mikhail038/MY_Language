@@ -6,3 +6,4 @@ front
 asm
 disasm
 proc
+.cache/*

@@ -1,5 +1,7 @@
 //=============================================================================================================================================================================
 
+#include <cstddef>
+#include <cstdlib>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -39,6 +41,8 @@ void my_b_main (int argc, char** argv)
         make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
         make_asm_file (Root, ExFile);
+
+        fclose (ExFile);
 
         delete_tree (&Root);
 
@@ -482,10 +486,8 @@ void show_gv_tree (const char* FileName, bool Display)
 //Make ASM//
 //=============================================================================================================================================================================
 
-void make_asm_file (SNode* Root, FILE* File)
+SBack* back_constructor (FILE* ExFile, size_t ElfSize)
 {
-    MLA (File != NULL);
-
     SBack* Back = (SBack*) calloc (1, sizeof (SBack));
 
     Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
@@ -494,29 +496,48 @@ void make_asm_file (SNode* Root, FILE* File)
 
     Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
-    Back->file = File;
+    Back->file = ExFile;
 
     Back->table_cond = none;
 
     stack_constructor (Back->VarStack, 4);
 
+    Back->Array = (char*) calloc(sizeof (char), ElfSize);
+    Back->cnt = 0;
+
+    return Back;
+}
+
+void back_destructor (SBack* Back)
+{
+    free_tables (Back->VarStack);
+
+    free (Back->Funcs->Table);
+    free (Back->Funcs);
+
+    free (Back->Array);
+
+    free (Back);
+
+    return;
+}
+
+void make_asm_file (SNode* Root, FILE* File)
+{
+    MLA (File != NULL);
+
+    SBack* Back = back_constructor (File, 0);
+
     //generate_user_functions (Root, Back);
 
     generate_code (Root, Back);
 
-    free_tables (Back->VarStack);
-
-    fclose (Back->file);
+    back_destructor (Back);
 
     // for (int i = 0; i < Back->Funcs->top_index; i++)
     // {
     //     printf ("'%ls'[%d]\n", Back->Funcs->Table[i]);
     // }
-
-    free (Back->Funcs->Table);
-    free (Back->Funcs);
-
-    free (Back);
 
     return;
 }

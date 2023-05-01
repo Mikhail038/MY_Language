@@ -40,7 +40,7 @@ int main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", true);
+        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
         FILE* ExFile = fopen ("EXAMPLES_ELF/code.elf", "w");
 
@@ -50,9 +50,11 @@ int main (int argc, char** argv)
 
         delete_tree (&Root);
 
-        system("chmod +rwx EXAMPLES_ELF/code.elf");
+        system ("chmod +rwx EXAMPLES_ELF/code.elf");
 
-        system("EXAMPLES_ELF/code.elf");
+        system ("hexdump EXAMPLES_ELF/code.elf");
+
+        //system("EXAMPLES_ELF/code.elf");
     }
 
     return 0;
