@@ -36,13 +36,36 @@
 
 #define SET(x) Back->Array[Back->cnt] = (x); Back->cnt++;
 
+#define SET_2(x)     \
+    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),    \
+                        &(x), sizeof (unsigned short int));  \
+    Back->cnt +=2;
+
 #define FILL_2  SET (0x00);
 
 #define FILL_4  SET (0x00); SET (0x00); SET (0x00);
 
 #define FILL_8  SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00);
 
+#define PASTE_8(x,y)  \
+    (x) = Back->cnt;    \
+    memcpy ((size_t*) &(Back->Array[(y)]), \
+    &(x), sizeof (size_t));
 
+#define PASTE_4(x,y)  \
+    (x) = Back->cnt;    \
+    memcpy ((unsigned int*) &(Back->Array[(y)]), \
+    &(x), sizeof (unsigned int));
+
+#define SKIP_8(x,y)   \
+    size_t (x) = 0; \
+    size_t (y) = Back->cnt;    \
+    Back->cnt += 8; //we ll skip it now
+
+#define SKIP_4(x,y)   \
+    unsigned int (x) = 0; \
+    size_t (y) = Back->cnt;    \
+    Back->cnt += 4; //we ll skip it now
 
 //=============================================================================================================================================================================
 
@@ -104,56 +127,36 @@ void generate_elf_array (SNode* Root, SBack* Back)
 
     size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
 
-    size_t EntryVA  = 0;
-    size_t addr_EntryVA = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(EntryVA, addr_EntryVA);
 
-    size_t ProgramHeadersStart = 0;
-    size_t addr_ProgramHeadersStart = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(ProgramHeadersStart, addr_ProgramHeadersStart);
 
-    size_t SectionHeadersStart = 0;
-    size_t addr_SectionHeadersStart = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(SectionHeadersStart, addr_SectionHeadersStart);
 
     SET (0x00); //Flags (no flags = 0)
     FILL_4;     //nothing
 
     unsigned short int  HeaderSize = 64; //std
-    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
-                        &HeaderSize, sizeof (unsigned short int));
-    Back->cnt +=2;
+    SET_2 (HeaderSize);
 
     unsigned short int  ProgramHeaderSize = 56; //std
-    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
-                        &ProgramHeaderSize, sizeof (unsigned short int));
-    Back->cnt +=2;
+    SET_2(ProgramHeaderSize);
 
     unsigned short int  ProgramHeadersCnt = 1;
-    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
-                        &ProgramHeadersCnt, sizeof (unsigned short int));
-    Back->cnt +=2;
+    SET_2(ProgramHeadersCnt);
 
     unsigned short int  SectionHeadersSize = 64; //std
-    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
-                        &SectionHeadersSize, sizeof (unsigned short int));
-    Back->cnt +=2;
+    SET_2(SectionHeadersSize);
 
     unsigned short int  SectionHeadersCnt = 3; //TODO maybe not
-    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
-                        &SectionHeadersCnt, sizeof (unsigned short int));
-    Back->cnt +=2;
+    SET_2(SectionHeadersCnt);
 
     unsigned short int  ShstrTabIndex  = 2; //TODO maybe not
-    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
-                        &ShstrTabIndex, sizeof (unsigned short int));
-    Back->cnt +=2;
+    SET_2(ShstrTabIndex);
 
     //=======================================================================
 
-    ProgramHeadersStart = Back->cnt;
-    memcpy ((size_t*) &(Back->Array[addr_ProgramHeadersStart]),
-    &ProgramHeadersStart, sizeof (size_t));
+    PASTE_8(ProgramHeadersStart, addr_ProgramHeadersStart);
 
     SET (0x01); //Segment type (load = 0)
     FILL_4;     //nothing
@@ -172,12 +175,9 @@ void generate_elf_array (SNode* Root, SBack* Back)
     &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
     Back->cnt += 8;
 
-    size_t SegmentSize = 0;
-    size_t addr_SegmentSize = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(SegmentSize, addr_SegmentSize);
 
-    size_t addr_SegmentFileSize = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(SegmentFileSize, addr_SegmentFileSize);
 
     SET (0x00);
     SET (0x00);
@@ -190,9 +190,10 @@ void generate_elf_array (SNode* Root, SBack* Back)
 
     //=======================================================================
 
-    SectionHeadersStart = Back->cnt;
-    memcpy ((size_t*) &(Back->Array[addr_SectionHeadersStart]),
-    &SectionHeadersStart, sizeof (size_t));
+    PASTE_8(SectionHeadersStart, addr_SectionHeadersStart);
+
+    //=======================================================================
+    //null
 
     for (int cnt_null_header = 0; cnt_null_header < 64; cnt_null_header++)
     {
@@ -202,9 +203,7 @@ void generate_elf_array (SNode* Root, SBack* Back)
     //=======================================================================
     //text
 
-    unsigned int TextNameOffset = 0;
-    size_t addr_TextNameOffset = Back->cnt;
-    Back->cnt += 4; //we ll skip it now
+    SKIP_4(TextNameOffset, addr_TextNameOffset);
 
     SET (0x01); //Section type (bits = 1)
     FILL_4;     //nothing
@@ -213,20 +212,11 @@ void generate_elf_array (SNode* Root, SBack* Back)
     FILL_8;     //nothing
 
     size_t addr_another_EntryVA = Back->cnt;
-    //memcpy ((size_t*) &(Back->Array[Back->cnt]),
-    //&EntryVA, sizeof (size_t));  //Virtual address
     Back->cnt += 8; //skip
 
-    size_t TextOffset = 0;
-    size_t addr_TextOffset = Back->cnt;
-    //SET (0x00); //Offset
-    //FILL_8;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(TextOffset, addr_TextOffset);
 
-
-    size_t TextSize = 0;
-    size_t addr_TextSize = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(TextSize, addr_TextSize);
 
     SET (0x00); //Section index
     FILL_4;
@@ -243,9 +233,7 @@ void generate_elf_array (SNode* Root, SBack* Back)
     //=======================================================================
     //strtable
 
-    unsigned int TableNameOffset = 0;
-    size_t addr_TableNameOffset = Back->cnt;
-    Back->cnt += 4; //we ll skip it now
+    SKIP_4(TableNameOffset, addr_TableNameOffset);
 
     SET (0x03); //Section type (strtable = 1)
     FILL_4;     //nothing
@@ -253,17 +241,11 @@ void generate_elf_array (SNode* Root, SBack* Back)
     SET (0x00);
     FILL_8;
 
-    size_t TableLoadAddress = 0;
-    size_t addr_TableLoadAddress = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(TableLoadAddress, addr_TableLoadAddress);
 
-    size_t TableAddress = 0;
-    size_t addr_TableAddress = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(TableAddress, addr_TableAddress);
 
-    size_t TableSize = 0;
-    size_t addr_TableSize = Back->cnt;
-    Back->cnt += 8; //we ll skip it now
+    SKIP_8(TableSize, addr_TableSize);
 
     SET (0x00); //Section index
     FILL_4;
@@ -283,38 +265,38 @@ void generate_elf_array (SNode* Root, SBack* Back)
     EntryVA = Back->cnt + FileVirtualAddress;
     memcpy ((size_t*) &(Back->Array[addr_EntryVA]),
     &EntryVA, sizeof (size_t));
+
     memcpy ((size_t*) &(Back->Array[addr_another_EntryVA]),
     &EntryVA, sizeof (size_t)); //TODO maybe remove
 
     //=======================================================================
+    //.code
 
-    TextOffset = Back->cnt;
-    memcpy ((size_t*) &(Back->Array[addr_TextOffset]),
-    &TextOffset, sizeof (size_t));
+    PASTE_8(TextOffset, addr_TextOffset);
+
+    //----------------------------------------------------------------------
 
     elf_generate_code (Root, Back);
 
+    //----------------------------------------------------------------------
 
     TextSize = Back->cnt - TextOffset;
     memcpy ((size_t*) &(Back->Array[addr_TextSize]),
     &TextSize, sizeof (size_t));
 
     //=======================================================================
+    //shstrtable
 
-    SegmentSize = Back->cnt;
-    memcpy ((size_t*) &(Back->Array[addr_SegmentSize]),
-    &SegmentSize, sizeof (size_t));
+    PASTE_8(SegmentSize, addr_SegmentSize);
 
-    memcpy ((size_t*) &(Back->Array[addr_SegmentFileSize]),
-    &SegmentSize, sizeof (size_t));
+    PASTE_8(SegmentFileSize, addr_SegmentFileSize);
 
-    TableAddress = Back->cnt;
-    memcpy ((size_t*) &(Back->Array[addr_TableAddress]),
-    &TableAddress, sizeof (size_t));
+    PASTE_8(TableAddress, addr_TableAddress);
 
     TableLoadAddress = TableAddress + FileVirtualAddress;
     memcpy ((size_t*) &(Back->Array[addr_TableLoadAddress]),
     &TableLoadAddress, sizeof (size_t));
+
 
     SET (0x00); //begin section header string table
 
@@ -344,7 +326,7 @@ void generate_elf_array (SNode* Root, SBack* Back)
     SET ('b');
     SET (0x00); //end
 
-    TableSize = (size_t) (Back->cnt - SegmentSize);
+    TableSize = Back->cnt - SegmentSize;
     memcpy ((size_t*) &(Back->Array[addr_TableSize]),
     &TableSize, sizeof (size_t));
 

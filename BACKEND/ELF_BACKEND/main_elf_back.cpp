@@ -52,9 +52,7 @@ int main (int argc, char** argv)
 
         system ("chmod +rwx EXAMPLES_ELF/code.elf");
 
-        system ("hexdump EXAMPLES_ELF/code.elf");
-
-        //system("EXAMPLES_ELF/code.elf");
+        system("EXAMPLES_ELF/code.elf");
     }
 
     return 0;
