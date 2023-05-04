@@ -36,6 +36,14 @@
 
 #define SET(x) Back->Array[Back->cnt] = (x); Back->cnt++;
 
+#define FILL_2  SET (0x00);
+
+#define FILL_4  SET (0x00); SET (0x00); SET (0x00);
+
+#define FILL_8  SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00);
+
+
+
 //=============================================================================================================================================================================
 
 void make_elf_file (SNode* Root, FILE* ExFile)
@@ -46,9 +54,7 @@ void make_elf_file (SNode* Root, FILE* ExFile)
 
     //generate_user_functions (Root, Back);
 
-    elf_generate_header (Root, Back);
-
-    //elf_generate_code (Root, Back);
+    generate_elf_array (Root, Back);
 
     fwrite (Back->Array, sizeof (char), Back->cnt, Back->file);
 
@@ -66,7 +72,7 @@ void make_elf_file (SNode* Root, FILE* ExFile)
 //Make ELF//
 //=============================================================================================================================================================================
 
-void elf_generate_header (SNode* Root, SBack* Back)
+void generate_elf_array (SNode* Root, SBack* Back)
 {
     SET (0x7f); //MAGIC SIGNATURE
 
@@ -84,43 +90,34 @@ void elf_generate_header (SNode* Root, SBack* Back)
 
     SET (0x00); //ABI version (none = 0)
 
-    for (int padding_bytes = 0; padding_bytes < 7; padding_bytes++)
-    {
-        SET (0x00);
-    }
+    FILL_8;     //7 padding bytes
 
     SET (0x02); //Type (executable = 2)
-    SET (0x00); //nothing
+    FILL_2;     //nothing
 
     SET (0x3e); //Machine (x86_64 = 3e)
-    SET (0x00); //nothing
+    FILL_2;     //nothing
 
     SET (0x01); //Version (only correct = 1)
-    SET (0x00); //nothing
-    SET (0x00); //nothing
-    SET (0x00); //nothing
+    FILL_4;     //nothing
+
 
     size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
 
     size_t EntryVA  = 0;
     size_t addr_EntryVA = Back->cnt;
-
     Back->cnt += 8; //we ll skip it now
 
     size_t ProgramHeadersStart = 0;
     size_t addr_ProgramHeadersStart = Back->cnt;
-
     Back->cnt += 8; //we ll skip it now
 
     size_t SectionHeadersStart = 0;
     size_t addr_SectionHeadersStart = Back->cnt;
-
     Back->cnt += 8; //we ll skip it now
 
     SET (0x00); //Flags (no flags = 0)
-    SET (0x00); //nothing
-    SET (0x00); //nothing
-    SET (0x00); //nothing
+    FILL_4;     //nothing
 
     unsigned short int  HeaderSize = 64; //std
     memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),
@@ -154,6 +151,203 @@ void elf_generate_header (SNode* Root, SBack* Back)
 
     //=======================================================================
 
+    ProgramHeadersStart = Back->cnt;
+    memcpy ((size_t*) &(Back->Array[addr_ProgramHeadersStart]),
+    &ProgramHeadersStart, sizeof (size_t));
+
+    SET (0x01); //Segment type (load = 0)
+    FILL_4;     //nothing
+
+    SET (0x05); //Segment flag (r w x = 0 1 2)
+    FILL_4;     //nothing
+
+    SET (0x00); //Segment offset (0)
+    FILL_8;     //nothing
+
+    memcpy ((size_t*) &(Back->Array[Back->cnt]),
+    &FileVirtualAddress, sizeof (size_t));  //Virtual address
+    Back->cnt += 8;
+
+    memcpy ((size_t*) &(Back->Array[Back->cnt]),
+    &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
+    Back->cnt += 8;
+
+    size_t SegmentSize = 0;
+    size_t addr_SegmentSize = Back->cnt;
+    Back->cnt += 8; //we ll skip it now
+
+    size_t addr_SegmentFileSize = Back->cnt;
+    Back->cnt += 8; //we ll skip it now
+
+    SET (0x00);
+    SET (0x00);
+    SET (0x20); //Alignment
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+
+    //=======================================================================
+
+    SectionHeadersStart = Back->cnt;
+    memcpy ((size_t*) &(Back->Array[addr_SectionHeadersStart]),
+    &SectionHeadersStart, sizeof (size_t));
+
+    for (int cnt_null_header = 0; cnt_null_header < 64; cnt_null_header++)
+    {
+        SET (0x00);
+    }
+
+    //=======================================================================
+    //text
+
+    unsigned int TextNameOffset = 0;
+    size_t addr_TextNameOffset = Back->cnt;
+    Back->cnt += 4; //we ll skip it now
+
+    SET (0x01); //Section type (bits = 1)
+    FILL_4;     //nothing
+
+    SET (0x06); //Section flags (r w x )
+    FILL_8;     //nothing
+
+    size_t addr_another_EntryVA = Back->cnt;
+    //memcpy ((size_t*) &(Back->Array[Back->cnt]),
+    //&EntryVA, sizeof (size_t));  //Virtual address
+    Back->cnt += 8; //skip
+
+    size_t TextOffset = 0;
+    size_t addr_TextOffset = Back->cnt;
+    //SET (0x00); //Offset
+    //FILL_8;
+    Back->cnt += 8; //we ll skip it now
+
+
+    size_t TextSize = 0;
+    size_t addr_TextSize = Back->cnt;
+    Back->cnt += 8; //we ll skip it now
+
+    SET (0x00); //Section index
+    FILL_4;
+
+    SET (0x00); //Dop info
+    FILL_4;
+
+    SET (0x10); //Alignment
+    FILL_8;
+
+    SET (0x00); //Dop sizes
+    FILL_8;
+
+    //=======================================================================
+    //strtable
+
+    unsigned int TableNameOffset = 0;
+    size_t addr_TableNameOffset = Back->cnt;
+    Back->cnt += 4; //we ll skip it now
+
+    SET (0x03); //Section type (strtable = 1)
+    FILL_4;     //nothing
+
+    SET (0x00);
+    FILL_8;
+
+    size_t TableLoadAddress = 0;
+    size_t addr_TableLoadAddress = Back->cnt;
+    Back->cnt += 8; //we ll skip it now
+
+    size_t TableAddress = 0;
+    size_t addr_TableAddress = Back->cnt;
+    Back->cnt += 8; //we ll skip it now
+
+    size_t TableSize = 0;
+    size_t addr_TableSize = Back->cnt;
+    Back->cnt += 8; //we ll skip it now
+
+    SET (0x00); //Section index
+    FILL_4;
+
+    SET (0x00); //Dop info
+    FILL_4;
+
+    SET (0x01); //Alignment
+    FILL_8;
+
+    SET (0x00); //Dop sizes
+    FILL_8;
+
+    //=======================================================================
+    //entry
+
+    EntryVA = Back->cnt + FileVirtualAddress;
+    memcpy ((size_t*) &(Back->Array[addr_EntryVA]),
+    &EntryVA, sizeof (size_t));
+    memcpy ((size_t*) &(Back->Array[addr_another_EntryVA]),
+    &EntryVA, sizeof (size_t)); //TODO maybe remove
+
+    //=======================================================================
+
+    TextOffset = Back->cnt;
+    memcpy ((size_t*) &(Back->Array[addr_TextOffset]),
+    &TextOffset, sizeof (size_t));
+
+    elf_generate_code (Root, Back);
+
+
+    TextSize = Back->cnt - TextOffset;
+    memcpy ((size_t*) &(Back->Array[addr_TextSize]),
+    &TextSize, sizeof (size_t));
+
+    //=======================================================================
+
+    SegmentSize = Back->cnt;
+    memcpy ((size_t*) &(Back->Array[addr_SegmentSize]),
+    &SegmentSize, sizeof (size_t));
+
+    memcpy ((size_t*) &(Back->Array[addr_SegmentFileSize]),
+    &SegmentSize, sizeof (size_t));
+
+    TableAddress = Back->cnt;
+    memcpy ((size_t*) &(Back->Array[addr_TableAddress]),
+    &TableAddress, sizeof (size_t));
+
+    TableLoadAddress = TableAddress + FileVirtualAddress;
+    memcpy ((size_t*) &(Back->Array[addr_TableLoadAddress]),
+    &TableLoadAddress, sizeof (size_t));
+
+    SET (0x00); //begin section header string table
+
+    TextNameOffset = Back->cnt - SegmentSize;
+    memcpy ((unsigned int*) &(Back->Array[addr_TextNameOffset]),
+    &TextNameOffset, sizeof (unsigned int));
+
+    SET ('.');
+    SET ('t');
+    SET ('e');
+    SET ('x');
+    SET ('t');
+    SET (0x00); //end
+
+    TableNameOffset = Back->cnt - SegmentSize;
+    memcpy ((unsigned int*) &(Back->Array[addr_TableNameOffset]),
+    &TableNameOffset, sizeof (unsigned int));
+
+    SET ('.');
+    SET ('s');
+    SET ('h');
+    SET ('s');
+    SET ('t');
+    SET ('r');
+    SET ('t');
+    SET ('a');
+    SET ('b');
+    SET (0x00); //end
+
+    TableSize = (size_t) (Back->cnt - SegmentSize);
+    memcpy ((size_t*) &(Back->Array[addr_TableSize]),
+    &TableSize, sizeof (size_t));
+
     return;
 }
 
@@ -161,6 +355,63 @@ void elf_generate_header (SNode* Root, SBack* Back)
 
 void elf_generate_code (BACK_FUNC_HEAD_PARAMETERS)
 {
+    SET (0xb8);
+    SET (0x01);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0xbf);
+    SET (0x01);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x48);
+    SET (0xbe);
+    SET (0x5f);
+    SET (0x81);
+    SET (0x02);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0xba);
+    SET (0x0f);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x0f);
+    SET (0x05);
+    SET (0xb8);
+    SET (0x3c);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0xbf);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x0f);
+    SET (0x05);
+
+    SET (0x48);
+    SET (0x65);
+    SET (0x6c);
+    SET (0x6c);
+    SET (0x6f);
+    SET (0x2c);
+    SET (0x20);
+    SET (0x77);
+    SET (0x6f);
+    SET (0x72);
+    SET (0x6c);
+    SET (0x64);
+    SET (0x21);
+    SET (0x0a);
+    SET (0x00);
+
+/*
     fprintf (Back->file, SEP_LINE "\n\n");
 
     PUT (push);
@@ -182,7 +433,7 @@ void elf_generate_code (BACK_FUNC_HEAD_PARAMETERS)
     elf_generate_statement (BACK_FUNC_PARAMETERS);
 
     //delete_var_table (Back);
-
+*/
     return;
 }
 
