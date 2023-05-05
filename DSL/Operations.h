@@ -292,7 +292,7 @@ L"noType",
 })
 
 DEF_OP (TInput,
-LEXEM_IS (L"ввод"),
+LEXEM_IS (L"in"),
 {
     TKN_IS_OP;
 },
@@ -302,7 +302,7 @@ L"INPUT",
 })
 
 DEF_OP (TOutput,
-LEXEM_IS (L"вывод"),
+LEXEM_IS (L"out"),
 {
     TKN_IS_OP;
 },

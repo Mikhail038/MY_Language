@@ -1,27 +1,27 @@
 var discriminant (var a, var b, var c)
 {
-    return b*b - 4*a*c ;
+    return b * b - 4 * a * c;
 }
 
-var main ( )
+var main ()
 {
     var a = 0;
     var b = 0;
     var c = 0;
 
-    ввод (a, b, c);
+    in (a, b, c);
 
     var x_1 = 0;
     var x_2 = 0;
 
     discriminant (a, b, c);
 
-    if (a > 0)
+    if (a != 0)
     {
-        if ( discriminant (a, b, c) < 0)
+        if (discriminant (a, b, c) < 0)
         {
-            x_1 = 0 - 111.7;
-            вывод (x_1);
+            x_1 = 1337;
+            out (x_1);
         }
         else
         {
@@ -31,10 +31,11 @@ var main ( )
     }
     else
     {
-        return 1;
+        x_1 = 0 - c/b;
+        out (x_1);
     }
 
-    вывод (x_1, x_2);
+    out (x_1, x_2);
 
     return 0;
 }

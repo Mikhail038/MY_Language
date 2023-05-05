@@ -46,9 +46,3 @@ var умн ( )
     return z;
 }
 
-<<<<<<< HEAD
-    a = a + b;
-#алёша
-    c = a + b;
-=======
->>>>>>> NewMain

@@ -33,10 +33,14 @@
 #define FUNC    Funcs->Arr[counter]
 
 //TODO think about add flag here
-#define FUNC_HEAD_ARGUMENTS STokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker
-#define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker
+#define FUNC_HEAD_ARGUMENTS STokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker, bool* PrintFlag
+#define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker, PrintFlag
 
-#define SHOUT wprintf (L"=[%d/%d] %s %s:%d\n", Tokens->number, Tokens->size, LOCATION)
+#define SHOUT   \
+    if (*PrintFlag) \
+    {   \
+        wprintf (L"=[%d/%d] %s %s:%d\n", Tokens->number, Tokens->size, LOCATION);    \
+    }
 
 #define LEXEM_IS(str) \
 (wcscmp (Lexem, str) == 0)
@@ -126,15 +130,15 @@ STokens;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-STokens* lex_src (SSrc* Source);
+STokens* lex_src (SSrc* Source, bool* PrintFlag);
 
 void make_lexem (SSrc* Source, CharT** Lexem);
 
-int do_token (SSrc* Source, STokens* Tokens);
+int do_token (SSrc* Source,  STokens* Tokens, bool* PrintFlag);
 
-int parse_token (CharT* Lexem, STokens* Tokens);
+int parse_token (CharT* Lexem, STokens* Tokens, bool* PrintFlag);
 
-void print_tokens (STokens* Tokens);
+void print_tokens (STokens* Tokens, bool* PrintFlag);
 
 // void print_token (SToken* Token);
 
@@ -218,32 +222,32 @@ SFuncs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void f_create_new_var_table (SStack<SVarTable*>* Vars);
+void f_create_new_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag);
 
-void f_delete_var_table (SStack<SVarTable*>* Vars);
+void f_delete_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag);
 
 bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars);
 
-bool f_find_in_table (CharT* Name, SVarTable* Table);
+bool f_find_in_table (CharT* Name, SVarTable* Table, bool* PrintFlag);
 
-void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars);
+void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SFuncs* construct_funcs_table (size_t Capacity);
 
-int add_to_funcs_table (CharT* Name, SFuncs* Funcs);
+int add_to_funcs_table (CharT* Name, SFuncs* Funcs, bool* PrintFlag);
 
-void add_parameters (int Number, SNode* Node, SFuncs* Funcs);
+void add_parameters (int Number, SNode* Node, SFuncs* Funcs, bool* PrintFlag);
 
 int count_parameters (SNode* Node);
 
-bool check_funcs_table (CharT* Name, SFuncs* Funcs);
+bool check_funcs_table (CharT* Name, SFuncs* Funcs, bool* PrintFlag);
 
-void show_funcs_table (SFuncs* Funcs);
+void show_funcs_table (SFuncs* Funcs, bool* PrintFlag);
 
-void destruct_funcs_table (SFuncs* Funcs);
+void destruct_funcs_table (SFuncs* Funcs, bool* PrintFlag);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

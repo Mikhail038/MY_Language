@@ -44,14 +44,25 @@ void my_f_main (int argc, char** argv)
 {
     setlocale(LC_CTYPE, "");
 
-    FILE* SourceText = (argc > 1) ? fopen (argv[1], "r") : fopen ("EXAMPLES/first_prog.ger", "r") ;
+    FILE* SourceText = ((argc > 1) && (strlen (argv[1]) > 3)) ? fopen (argv[1], "r") : fopen ("EXAMPLES/kvad.ger", "r") ;
+    if (argc > 2)
+    {
+        fopen (argv[2], "r");
+    }
+
+    bool PrintFlag = true;
+    if ((argc > 1) && (strcmp (argv[1],"-s") == 0))
+    {
+        PrintFlag = false;
+    }
+
     MLA (SourceText != NULL);
 
     SSrc Source = *(construct_source (&Source, SourceText));
 
     fclose (SourceText);
 
-    STokens* Tokens = lex_src (&Source);
+    STokens* Tokens = lex_src (&Source, &PrintFlag);
 
     //print_tokens (Tokens);
 
@@ -76,7 +87,7 @@ void my_f_main (int argc, char** argv)
     int* marker = (int*) calloc (1, sizeof (int));
     *marker = 0;
 
-    SNode* Root = get_All (FUNC_ARGUMENTS);
+    SNode* Root = get_All (Tokens, Vars, Funcs, marker, &PrintFlag);
 
     free (marker);
 
@@ -100,7 +111,7 @@ void my_f_main (int argc, char** argv)
 
     if (Funcs != NULL)
     {
-        destruct_funcs_table (Funcs);
+        destruct_funcs_table (Funcs, &PrintFlag);
     }
 
     if (Root != NULL)
@@ -174,7 +185,7 @@ void seek_out (SSrc* Source)
 //lexer//
 //=============================================================================================================================================================================
 
-STokens* lex_src (SSrc* Source)
+STokens* lex_src (SSrc* Source, bool* PrintFlag)
 {
     STokens* Tokens  = (STokens*) calloc (1, sizeof (*Tokens));
     Tokens->TokenArr = (SToken*)  calloc (Source->size, sizeof (*Tokens->TokenArr));
@@ -183,7 +194,7 @@ STokens* lex_src (SSrc* Source)
 
     while (Source->ip < Source->size)
     {
-        if (do_token (Source, Tokens) != NoErr)
+        if (do_token (Source, Tokens, PrintFlag) != NoErr)
         {
             free (Tokens->TokenArr);
 
@@ -191,12 +202,15 @@ STokens* lex_src (SSrc* Source)
         }
     }
 
-    wprintf (L"Created Tokens Array. size |%d|\n", Tokens->number);
+    if (*PrintFlag)
+    {
+        wprintf (L"Created Tokens Array. size |%d|\n", Tokens->number);
+    }
 
     return Tokens;
 }
 
-int do_token (SSrc* Source,  STokens* Tokens)
+int do_token (SSrc* Source,  STokens* Tokens, bool* PrintFlag)
 {
     seek (Source);
     CharT* Lexem = NULL;
@@ -223,7 +237,7 @@ int do_token (SSrc* Source,  STokens* Tokens)
     //wprintf (L"\n++%ls++\n", Lexem);
     //wprintf (L"\n++%lc++\n", *Lexem);
 
-    if (parse_token (Lexem, Tokens) != NoErr)
+    if (parse_token (Lexem, Tokens, PrintFlag) != NoErr)
     {
         free (Lexem);
 
@@ -274,6 +288,39 @@ void make_lexem (SSrc* Source, CharT** Lexem)
             break;
         }
 
+        if ((   Source->Arr[Source->ip] == '!'
+            ||  Source->Arr[Source->ip] == '<'
+            ||  Source->Arr[Source->ip] == '>'
+            ||  Source->Arr[Source->ip] == '=')
+            && (Source->Arr[Source->ip + 1] == '='))
+        {
+                RawLexem[i] = Source->Arr[Source->ip];
+                i++;
+                Source->ip++;
+
+                RawLexem[i] = Source->Arr[Source->ip];
+                i++;
+                Source->ip++;
+
+                break;
+        }
+
+        if ((   Source->Arr[Source->ip] == '&'
+            &&  Source->Arr[Source->ip + 1] == '&')
+            ||  (Source->Arr[Source->ip] == '|'
+            &&  Source->Arr[Source->ip + 1] == '|'))
+        {
+                RawLexem[i] = Source->Arr[Source->ip];
+                i++;
+                Source->ip++;
+
+                RawLexem[i] = Source->Arr[Source->ip];
+                i++;
+                Source->ip++;
+
+                break;
+        }
+
         if (    (Source->Arr[Source->ip] == L'\n')
              || (Source->Arr[Source->ip] == L' '))
         {
@@ -307,15 +354,21 @@ void make_lexem (SSrc* Source, CharT** Lexem)
 #define DEF_OP(d_type, d_condition, d_tokenize,...) \
 else if (d_condition) \
 { \
-    wprintf (L"It is:  " #d_type "\n"); \
+    if (*PrintFlag) \
+    {   \
+        wprintf (L"It is:  " #d_type "\n"); \
+    }   \
     d_tokenize \
     TKN.type = d_type; \
     Tokens->number++; \
 }
 
-int parse_token (CharT* Lexem, STokens* Tokens)
+int parse_token (CharT* Lexem, STokens* Tokens, bool* PrintFlag)
 {
-    wprintf (L"[%d]\n""I see: '%ls'\n", Tokens->number, Lexem);
+    if (*PrintFlag)
+    {
+        wprintf (L"[%d]\n""I see: '%ls'\n", Tokens->number, Lexem);
+    }
 
     if (0) {}
     #include "Operations.h"
@@ -330,17 +383,23 @@ int parse_token (CharT* Lexem, STokens* Tokens)
     return 0;
 }
 
-void print_tokens (STokens* Tokens)
+void print_tokens (STokens* Tokens, bool* PrintFlag)
 {
-    wprintf (L"==Tokens=array==\n");
+    if (*PrintFlag)
+    {
+        wprintf (L"==Tokens=array==\n");
+    }
 
     for (int counter = 0; counter < Tokens->number; ++counter)
     {
-        wprintf (L"[%.3d] %d %d", counter, Tokens->TokenArr[counter].category, Tokens->TokenArr[counter].type);
+        if (*PrintFlag)
+        {
+            wprintf (L"[%.3d] %d %d", counter, Tokens->TokenArr[counter].category, Tokens->TokenArr[counter].type);
+
+            wprintf (L"\n");
+        }
 
         //print_token (Tokens->TokenArr[counter]);
-
-        wprintf (L"\n");
     }
 
     return;
@@ -474,9 +533,12 @@ double parse_int (CharT* Lexem, int* Counter)
 //front stuff//
 //=============================================================================================================================================================================
 
-void f_create_new_var_table (SStack<SVarTable*>* Vars)
+void f_create_new_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag)
 {
-    wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
+    if (*PrintFlag)
+    {
+        wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
+    }
 
     SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
@@ -487,9 +549,12 @@ void f_create_new_var_table (SStack<SVarTable*>* Vars)
     return;
 }
 
-void f_delete_var_table (SStack<SVarTable*>* Vars)
+void f_delete_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag)
 {
-    wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
+    if (*PrintFlag)
+    {
+        wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
+    }
 
     SVarTable* Table = NULL;
 
@@ -502,7 +567,7 @@ void f_delete_var_table (SStack<SVarTable*>* Vars)
     return;
 }
 
-bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars)
+bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
 {
     SVarTable* Table = NULL;
 
@@ -512,28 +577,37 @@ bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars)
         Table = Vars->data[Vars->size - depth];
         depth++;
 
-        wprintf (L"!!%ls!!\n", Name);
+        if (*PrintFlag)
+        {
+            wprintf (L"!!%ls!!\n", Name);
+        }
 
-        if (f_find_in_table (Name, Table) == true)
+        if (f_find_in_table (Name, Table, PrintFlag) == true)
         {
             return true;
         }
 
-        wprintf (L"^^%ls^^\n", Name);
-
+        if (*PrintFlag)
+        {
+            wprintf (L"^^%ls^^\n", Name);
+        }
 
     } while (depth <= Vars->size);
 
     return false;
 }
 
-bool f_find_in_table (CharT* Name, SVarTable* Table)
+bool f_find_in_table (CharT* Name, SVarTable* Table, bool* PrintFlag)
 {
     MLA (Table != NULL);
 
     for (int counter = 0; counter < Table->size; ++counter)
     {
-        wprintf (L"%d--%d--%ls--\n", Table->size, counter, Table->Arr[counter].name);
+        if (*PrintFlag)
+        {
+            wprintf (L"%d--%d--%ls--\n", Table->size, counter, Table->Arr[counter].name);
+        }
+
         if (wcscmp (Name, Table->Arr[counter].name) == 0)
         {
             return true;
@@ -543,9 +617,12 @@ bool f_find_in_table (CharT* Name, SVarTable* Table)
     return false;
 }
 
-void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars)
+void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
 {
-    wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
+    if (*PrintFlag)
+    {
+        wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
+    }
 
     MLA (Name != NULL);
 
@@ -558,7 +635,12 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars)
     peek_from_stack (Vars, &Table);
 
     Table->Arr[Table->size].name = Name; //copy address from node
-    wprintf (L"added '%ls'\n", Table->Arr[Table->size].name);
+
+    if (*PrintFlag)
+    {
+        wprintf (L"added '%ls'\n", Table->Arr[Table->size].name);
+    }
+
     Table->size++;
 
     return;
@@ -639,22 +721,28 @@ bool check_funcs_table (CharT* Name, SFuncs* Funcs)
     return false;
 }
 
-void show_funcs_table (SFuncs* Funcs)
+void show_funcs_table (SFuncs* Funcs, bool* PrintFlag)
 {
-    wprintf (L"==Funcs Array== size %d\n", Funcs->size);
+    if (*PrintFlag)
+    {
+        wprintf (L"==Funcs Array== size %d\n", Funcs->size);
+    }
 
     for (int counter = 0; counter <= Funcs->size; ++counter)
     {
         if (FUNC.name != NULL)
         {
-            wprintf (L"[%d] %ls\n", counter, FUNC.name);
+            if (*PrintFlag)
+            {
+                wprintf (L"[%d] %ls\n", counter, FUNC.name);
+            }
         }
     }
 }
 
-void destruct_funcs_table (SFuncs* Funcs)
+void destruct_funcs_table (SFuncs* Funcs, bool* PrintFlag)
 {
-    show_funcs_table (Funcs);
+    show_funcs_table (Funcs, PrintFlag);
 
     for (int counter = 0; counter <= Funcs->size; ++counter)
     {
@@ -788,7 +876,7 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN; //Tokens->number++;
 
-        f_delete_var_table (Vars);
+        f_delete_var_table (Vars, PrintFlag);
 
         return NULL;
     }
@@ -806,7 +894,7 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
         }
         else
         {
-            f_create_new_var_table (Vars);
+            f_create_new_var_table (Vars, PrintFlag);
         }
 
         NEXT_TKN;
@@ -836,7 +924,7 @@ SNode* get_Function (FUNC_HEAD_ARGUMENTS)
         // {
         //     f_delete_var_table (Vars);
         // }
-        f_create_new_var_table (Vars);
+        f_create_new_var_table (Vars, PrintFlag);
 
         (*marker)++;
 
@@ -1113,7 +1201,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 
         MLA (Vars->size != 0);
 
-        if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1]) == true)
+        if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1], PrintFlag) == true)
         {
             wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
 
@@ -1121,7 +1209,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
         }
         else
         {
-            f_add_to_var_table (Node->left->data.var, Vars);
+            f_add_to_var_table (Node->left->data.var, Vars, PrintFlag);
         }
 
         //TODO do this in middle end later
@@ -1163,7 +1251,7 @@ SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
         // if (f_check_vars_table (Node->left->data.var, Vars) == true)
-        if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1]) == true)
+        if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1], PrintFlag) == true)
         {
             wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
 
@@ -1171,7 +1259,7 @@ SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
         }
         else
         {
-            f_add_to_var_table (Node->left->data.var, Vars);
+            f_add_to_var_table (Node->left->data.var, Vars, PrintFlag);
         }
 
 //         if (TKN_OP_AND_IS__ TAssign)
@@ -1215,7 +1303,7 @@ SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
     (Tokens->TokenArr[Tokens->number + 1].category == COperation &&
     Tokens->TokenArr[Tokens->number + 1].type == TAssign))
     {
-        if (f_check_vars_table (TKN.data.var, Vars) == true)
+        if (f_check_vars_table (TKN.data.var, Vars, PrintFlag) == true)
         {
             SNode* Node = construct_op_node (T_Equation);
 
@@ -1458,7 +1546,7 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
         }
 
 
-        if (f_check_vars_table (TKN.data.var, Vars) == true)
+        if (f_check_vars_table (TKN.data.var, Vars, PrintFlag) == true)
         {
             Node = construct_var_node (&TKN);
 
