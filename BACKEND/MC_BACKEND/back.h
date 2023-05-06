@@ -78,9 +78,6 @@ typedef struct
     FILE*               file            = NULL;
     SBackFuncTable*     Funcs           = NULL;
     SStack<SVarTable*>* VarStack        = NULL;
-
-    char*               Array           = NULL;
-    size_t              cnt             = 0;
 }
 SBack;
 
@@ -138,7 +135,7 @@ SNode* read_node (SSrc* Tree);
 //Make ASM//
 //===================================================================================================================================================================
 
-SBack* back_constructor (FILE* ExFile, size_t ElfSize);
+SBack* back_constructor (FILE* ExFile);
 
 void back_destructor (SBack* Back);
 

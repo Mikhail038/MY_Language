@@ -486,7 +486,7 @@ void show_gv_tree (const char* FileName, bool Display)
 //Make ASM//
 //=============================================================================================================================================================================
 
-SBack* back_constructor (FILE* ExFile, size_t ElfSize)
+SBack* back_constructor (FILE* ExFile)
 {
     SBack* Back = (SBack*) calloc (1, sizeof (SBack));
 
@@ -502,7 +502,7 @@ SBack* back_constructor (FILE* ExFile, size_t ElfSize)
 
     stack_constructor (Back->VarStack, 4);
 
-    Back->Array = (char*) calloc(sizeof (char), ElfSize);
+    // Back->Array = (char*) calloc(sizeof (char), ElfSize);
     Back->cnt = 0;
 
     return Back;
@@ -515,7 +515,7 @@ void back_destructor (SBack* Back)
     free (Back->Funcs->Table);
     free (Back->Funcs);
 
-    free (Back->Array);
+    // free (Back->Array);
 
     free (Back);
 
@@ -526,7 +526,7 @@ void make_asm_file (SNode* Root, FILE* File)
 {
     MLA (File != NULL);
 
-    SBack* Back = back_constructor (File, 0);
+    SBack* Back = back_constructor (File);
 
     //generate_user_functions (Root, Back);
 

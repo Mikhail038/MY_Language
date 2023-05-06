@@ -39,7 +39,12 @@
 #define SET_2(x)     \
     memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),    \
                         &(x), sizeof (unsigned short int));  \
-    Back->cnt +=2;
+    Back->cnt += 2;
+
+#define SET_4(x)     \
+    memcpy ((unsigned int*) &(Back->Array[Back->cnt]),    \
+                        &(x), sizeof (unsigned int));  \
+    Back->cnt += 4;
 
 #define FILL_2  SET (0x00);
 
@@ -69,11 +74,50 @@
 
 //=============================================================================================================================================================================
 
+SElfBack* elf_back_constructor (FILE* ExFile)
+{
+    SElfBack* Back = (SElfBack*) calloc (1, sizeof (SElfBack));
+
+    Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
+    Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
+    Back->Funcs->top_index = 0;
+
+    Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
+
+    Back->file = ExFile;
+
+    Back->table_cond = none;
+
+    stack_constructor (Back->VarStack, 4);
+
+    Back->Array = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
+    Back->cnt = 0;
+
+    return Back;
+}
+
+void elf_back_destructor (SElfBack* Back)
+{
+    free_tables (Back->VarStack);
+
+    free (Back->Funcs->Table);
+    free (Back->Funcs);
+
+    free (Back->Array);
+
+    free (Back);
+
+    return;
+}
+
+//=============================================================================================================================================================================
+
+
 void make_elf_file (SNode* Root, FILE* ExFile)
 {
     MLA (ExFile != NULL);
 
-    SBack* Back = back_constructor (ExFile, MAX_ELF_SIZE);
+    SElfBack* Back = elf_back_constructor (ExFile);
 
     //generate_user_functions (Root, Back);
 
@@ -81,7 +125,7 @@ void make_elf_file (SNode* Root, FILE* ExFile)
 
     fwrite (Back->Array, sizeof (char), Back->cnt, Back->file);
 
-    back_destructor(Back);
+    elf_back_destructor (Back);
 
     // for (int i = 0; i < Back->Funcs->top_index; i++)
     // {
@@ -95,7 +139,7 @@ void make_elf_file (SNode* Root, FILE* ExFile)
 //Make ELF//
 //=============================================================================================================================================================================
 
-void generate_elf_array (SNode* Root, SBack* Back)
+void generate_elf_array (SNode* Root, SElfBack* Back)
 {
     SET (0x7f); //MAGIC SIGNATURE
 
@@ -335,8 +379,30 @@ void generate_elf_array (SNode* Root, SBack* Back)
 
 //=============================================================================================================================================================================
 
-void elf_generate_code (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
+//     x86_push_imm (BACK_FUNC_PARAMETERS, 0);
+//
+//     fprintf (Back->file, " 0\n"); //TODO ask Danya maybe %d 0
+//     PUT (pop);
+//     fprintf (Back->file, " " SHIFT_REG "\n\n");
+//
+//
+//     PUT (push);
+//     fprintf (Back->file, " 0\n");
+//     PUT (pop);
+//     fprintf (Back->file, " " TOP_REG "\n\n");
+//
+//     PUT (jump);
+//     fprintf (Back->file, " " LABEL MAIN_JUMP "\n\n");
+//
+//     fprintf (Back->file, SEP_LINE "\n\n");
+
+    // elf_generate_statement (CurNode, Back);
+
+    x86_push_r(BACK_FUNC_PARAMETERS, rax);
+    x86_pop_r(BACK_FUNC_PARAMETERS, rax);
+
     SET (0xb8);
     SET (0x01);
     SET (0x00);
@@ -419,7 +485,7 @@ void elf_generate_code (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_statement (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_statement (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     if (CurNode->left != NULL)
     {
@@ -434,7 +500,7 @@ void elf_generate_statement (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_function (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_function (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     if (wcscmp (CurNode->left->data.var, MAIN_WORD) == 0)
     {
@@ -450,7 +516,7 @@ void elf_generate_function (BACK_FUNC_HEAD_PARAMETERS)
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
 
     Back->table_cond = none;
-    create_param_var_table (CurNode->left->right, Back);
+    elf_create_param_var_table (CurNode->left->right, Back);
 
     elf_pop_parameters (Back);
 
@@ -458,14 +524,14 @@ void elf_generate_function (BACK_FUNC_HEAD_PARAMETERS)
 
 
     elf_generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
-    CLEAN_TABLE;
+    ELF_CLEAN_TABLE;
 
     fprintf (Back->file, "\n\n" SEP_LINE "\n\n\n");
 
     return;
 }
 
-void elf_generate_node (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_node (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     if (CurNode->category == COperation)
     {
@@ -492,7 +558,7 @@ void elf_generate_node (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_op_node (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_op_node (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     switch (CurNode->type)
     {
@@ -501,7 +567,7 @@ void elf_generate_op_node (BACK_FUNC_HEAD_PARAMETERS)
             d_switch; \
             break;
 
-        #include "Operations.h"
+        #include "ELF_Operations.h"
 
         #undef DEF_OP
     }
@@ -509,11 +575,11 @@ void elf_generate_op_node (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_announce (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_announce (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     elf_generate_expression (BACK_RIGHT_SON_FUNC_PARAMETERS);
 
-    add_to_var_table (BACK_LEFT_SON_FUNC_PARAMETERS);
+    elf_add_to_var_table (BACK_LEFT_SON_FUNC_PARAMETERS);
 
     elf_generate_pop_var (BACK_LEFT_SON_FUNC_PARAMETERS);
 
@@ -525,7 +591,7 @@ void elf_generate_announce (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_equation (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_equation (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     elf_generate_expression (BACK_RIGHT_SON_FUNC_PARAMETERS);
 
@@ -534,7 +600,7 @@ void elf_generate_equation (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_input (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_input (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     SNode* Node = CurNode->left;
 
@@ -550,7 +616,7 @@ void elf_generate_input (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_output (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_output (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     SNode* Node = CurNode->left;
 
@@ -566,7 +632,7 @@ void elf_generate_output (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_if (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_if (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     elf_generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
 
@@ -582,7 +648,7 @@ void elf_generate_if (BACK_FUNC_HEAD_PARAMETERS)
 
     Back->table_cond = none;
     elf_generate_statement (BACK_LEFT_SON_FUNC_PARAMETERS);
-    CLEAN_TABLE;
+    ELF_CLEAN_TABLE;
 
     PUT (jump);
     fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
@@ -603,7 +669,7 @@ void elf_generate_if (BACK_FUNC_HEAD_PARAMETERS)
         {
             Back->table_cond = none;
             elf_generate_statement (BACK_FUNC_PARAMETERS);
-            CLEAN_TABLE;
+            ELF_CLEAN_TABLE;
         }
     }
     fprintf (Back->file,  LABEL "%d:\n", Label_2);
@@ -612,7 +678,7 @@ void elf_generate_if (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_while (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_while (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     int Label_1 = Back->label_cnt;
     fprintf (Back->file,  LABEL "%d:\n", Label_1);
@@ -630,7 +696,7 @@ void elf_generate_while (BACK_FUNC_HEAD_PARAMETERS)
 
     Back->table_cond = none;
     elf_generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
-    CLEAN_TABLE;
+    ELF_CLEAN_TABLE;
 
     PUT (jump);
     fprintf (Back->file, " " LABEL "%d\n", Label_1);
@@ -640,7 +706,7 @@ void elf_generate_while (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_call (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_call (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     fprintf (Back->file, ";++" "\n\n");
 
@@ -669,7 +735,7 @@ void elf_generate_call (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_return (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_return (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     if (Back->func_cond == main_f)
     {
@@ -688,14 +754,14 @@ void elf_generate_return (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_expression (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_expression (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     elf_generate_postorder (BACK_FUNC_PARAMETERS);
 
     return;
 }
 
-void elf_generate_postorder (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_postorder (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->left != NULL)
     {
@@ -712,9 +778,9 @@ void elf_generate_postorder (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_pop_var (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_pop_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
-    int Index = find_var (BACK_FUNC_PARAMETERS);
+    int Index = elf_find_var (BACK_FUNC_PARAMETERS);
 
     PUT (push);
     fprintf (Back->file, " %d\n", Index);
@@ -734,9 +800,9 @@ void elf_generate_pop_var (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_push_var (BACK_FUNC_HEAD_PARAMETERS)
+void elf_generate_push_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
-    int Index = find_var (BACK_FUNC_PARAMETERS);
+    int Index = elf_find_var (BACK_FUNC_PARAMETERS);
 
     PUT (push);
     fprintf (Back->file, " %d\n", Index);
@@ -757,7 +823,7 @@ void elf_generate_push_var (BACK_FUNC_HEAD_PARAMETERS)
 
 //=============================================================================================================================================================================
 
-void elf_push_parameters (BACK_FUNC_HEAD_PARAMETERS)
+void elf_push_parameters (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     if (CurNode->right != NULL)
     {
@@ -775,7 +841,7 @@ void elf_push_parameters (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_pop_parameters (SBack* Back)
+void elf_pop_parameters (SElfBack* Back)
 {
     PUT (push);
     fprintf (Back->file, " " SHIFT_REG "\n");
@@ -812,7 +878,7 @@ void elf_pop_parameters (SBack* Back)
     return;
 }
 
-void elf_incr_top_reg (SBack* Back)
+void elf_incr_top_reg (SElfBack* Back)
 {
     PUT (push);
     fprintf (Back->file, " " TOP_REG "\n");
@@ -828,7 +894,7 @@ void elf_incr_top_reg (SBack* Back)
     return;
 }
 
-void elf_standard_if_jump (SBack* Back)
+void elf_standard_if_jump (SElfBack* Back)
 {
     fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
     Back->label_cnt++;
@@ -899,3 +965,172 @@ void elf_write_command (ECommandNums eCommand, FILE* File)
 }
 
 //=============================================================================================================================================================================
+
+void elf_add_to_var_table (ELF_BACK_FUNC_HEAD_PARAMETERS)
+{
+    if (Back->table_cond == none)
+    {
+        elf_create_new_var_table (Back);
+    }
+
+    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+
+    SVarTable* Table = NULL;
+    peek_from_stack (Back->VarStack, &Table);
+
+    Table->Arr[Table->size].name  = CurNode->data.var; //copy address from node
+    Table->Arr[Table->size].index = Back->RAM_top_index;
+
+    Back->RAM_top_index++;
+    Table->size++;
+
+    return;
+}
+
+void elf_create_new_var_table (SElfBack* Back)
+{
+    ME;
+
+    SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
+    NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
+    NewTable->size = 0;
+
+    push_in_stack (Back->VarStack, NewTable);
+
+    Back->table_cond = exist;
+
+    return;
+}
+
+void elf_create_param_var_table (ELF_BACK_FUNC_HEAD_PARAMETERS)
+{
+    //ME;
+
+    Back->RAM_top_index = 1;
+
+    do
+    {
+        if (CurNode->left != NULL)
+        {
+            elf_add_to_var_table (CurNode->left->left, Back);
+            Back->Funcs->Table[Back->Funcs->top_index].parameters++;
+        }
+
+        CurNode = CurNode->right;
+    } while (CurNode != NULL);
+
+    return;
+}
+
+void elf_delete_var_table (SElfBack* Back)
+{
+    ME;
+
+    SVarTable* Table = NULL;
+
+    pop_from_stack (Back->VarStack, &Table);
+
+    free (Table->Arr);
+
+    free (Table);
+
+    return;
+}
+
+int elf_find_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
+{
+    int RetIndex = JUNK;
+
+    MLA (Back->VarStack->size != 0);
+    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+
+    SVarTable* Table = NULL;
+
+    int depth = 1;
+    do
+    {
+        Table = Back->VarStack->data[Back->VarStack->size - depth];
+        //printf ("=%p=%d/%d=\n", Table, depth, Back->VarStack->size);
+        depth++;
+    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth <= Back->VarStack->size));
+
+    if (RetIndex < 0)
+    {
+        printf ("==ERROR==\n""No '%ls' found!\n", CurNode->data.var);
+        MLA (0);
+    }
+
+    return RetIndex;
+}
+
+// bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex)
+// {
+//     MLA (Table != NULL);
+//
+//     for (int counter = 0; counter < Table->size; ++counter)
+//     {
+//         if (wcscmp (varName, Table->Arr[counter].name) == 0)
+//         {
+//             *RetIndex = Table->Arr[counter].index;
+//
+//             return true;
+//         }
+//     }
+//
+//     return false;
+// }
+
+// void free_tables (SStack<SVarTable*>* VarStack)
+// {
+//     for (int i = 0; VarStack->size - i > 0; i++)
+//     {
+//         free (VarStack->data[i]->Arr);
+//         VarStack->data[i]->Arr = NULL;
+//
+//         free (VarStack->data[i]);
+//         VarStack->data[i] = NULL;
+//     }
+//
+//     stack_destructor (VarStack);
+//
+//     return;
+// }
+
+//=============================================================================================================================================================================
+
+void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, char Number)
+{
+    SET(0x6a);
+    SET(Number);
+}
+
+void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, short Number)
+{
+    SET(0x68);
+    SET_2(Number);
+}
+
+void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number)
+{
+    SET(0x68);
+    SET_4(Number);
+}
+
+void x86_push_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+{
+    char opcode = 0x50;
+    opcode += (char) Register;
+
+    SET(opcode);
+}
+
+void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+{
+    char opcode = 0x58;
+    opcode += (char) Register;
+
+    SET(opcode);
+}
+
+//=============================================================================================================================================================================
+

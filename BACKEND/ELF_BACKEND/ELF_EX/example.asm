@@ -8,6 +8,10 @@
 global _start
 
 _start:
+
+    push 1230000000
+    pop rax
+
     mov rax, 60
     mov rdi, 0
     syscall
