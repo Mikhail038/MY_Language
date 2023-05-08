@@ -74,6 +74,13 @@
 
 //=============================================================================================================================================================================
 
+#define eSHIFT_REG   r12
+#define eCOUNT_REG   r13
+#define eTOP_REG     r14
+#define eFUNC_REG    r15
+
+//=============================================================================================================================================================================
+
 SElfBack* elf_back_constructor (FILE* ExFile)
 {
     SElfBack* Back = (SElfBack*) calloc (1, sizeof (SElfBack));
@@ -400,8 +407,8 @@ void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS)
 
     // elf_generate_statement (CurNode, Back);
 
-    x86_push_r(BACK_FUNC_PARAMETERS, rax);
-    x86_pop_r(BACK_FUNC_PARAMETERS, rax);
+    x86_push_r(BACK_FUNC_PARAMETERS, rcx);
+    x86_pop_r(BACK_FUNC_PARAMETERS, rcx);
 
     SET (0xb8);
     SET (0x01);

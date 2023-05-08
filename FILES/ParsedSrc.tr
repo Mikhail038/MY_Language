@@ -206,70 +206,40 @@ COperation _STATEMENT
                         {
                             COperation _STATEMENT
                             {
-                                COperation _ANNOUNCE
+                                COperation INPUT
                                 {
-                                    CLine TVariable d
+                                    COperation _PARAM
                                     {
+                                        CLine TVariable a
+                                        {
+                                        }
+                                        {
+                                        }
                                     }
                                     {
+                                        COperation _PARAM
+                                        {
+                                            CLine TVariable b
+                                            {
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                            COperation _PARAM
+                                            {
+                                                CLine TVariable c
+                                                {
+                                                }
+                                                {
+                                                }
+                                            }
+                                            {
+                                            }
+                                        }
                                     }
                                 }
                                 {
-                                    COperation ADD
-                                    {
-                                        CValue TValue 1
-                                        {
-                                        }
-                                        {
-                                        }
-                                    }
-                                    {
-                                        COperation SUB
-                                        {
-                                            CValue TValue 2
-                                            {
-                                            }
-                                            {
-                                            }
-                                        }
-                                        {
-                                            COperation MUL
-                                            {
-                                                CValue TValue 3
-                                                {
-                                                }
-                                                {
-                                                }
-                                            }
-                                            {
-                                                COperation DIV
-                                                {
-                                                    COperation ADD
-                                                    {
-                                                        CValue TValue 4
-                                                        {
-                                                        }
-                                                        {
-                                                        }
-                                                    }
-                                                    {
-                                                        CValue TValue 5
-                                                        {
-                                                        }
-                                                        {
-                                                        }
-                                                    }
-                                                }
-                                                {
-                                                    CValue TValue 6
-                                                    {
-                                                    }
-                                                    {
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
                                 }
                             }
                             {
@@ -277,78 +247,45 @@ COperation _STATEMENT
                                 {
                                     COperation _ANNOUNCE
                                     {
-                                        CLine TVariable e
+                                        CLine TVariable x_1
                                         {
                                         }
                                         {
                                         }
                                     }
                                     {
-                                        COperation AND
+                                        CValue TValue 0
                                         {
-                                            CLine TVariable a
-                                            {
-                                            }
-                                            {
-                                            }
                                         }
                                         {
-                                            COperation LESS
-                                            {
-                                                COperation ADD
-                                                {
-                                                    CValue TValue 7
-                                                    {
-                                                    }
-                                                    {
-                                                    }
-                                                }
-                                                {
-                                                    CValue TValue 8
-                                                    {
-                                                    }
-                                                    {
-                                                    }
-                                                }
-                                            }
-                                            {
-                                                COperation OR
-                                                {
-                                                    COperation NOT EQUAL
-                                                    {
-                                                        CValue TValue 9
-                                                        {
-                                                        }
-                                                        {
-                                                        }
-                                                    }
-                                                    {
-                                                        CValue TValue 10
-                                                        {
-                                                        }
-                                                        {
-                                                        }
-                                                    }
-                                                }
-                                                {
-                                                    CValue TValue 11
-                                                    {
-                                                    }
-                                                    {
-                                                    }
-                                                }
-                                            }
                                         }
                                     }
                                 }
                                 {
                                     COperation _STATEMENT
                                     {
-                                        COperation INPUT
+                                        COperation _ANNOUNCE
                                         {
-                                            COperation _PARAM
+                                            CLine TVariable x_2
                                             {
-                                                CLine TVariable a
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                            CValue TValue 0
+                                            {
+                                            }
+                                            {
+                                            }
+                                        }
+                                    }
+                                    {
+                                        COperation _STATEMENT
+                                        {
+                                            COperation _CALL
+                                            {
+                                                CLine TVariable discriminant
                                                 {
                                                 }
                                                 {
@@ -357,7 +294,7 @@ COperation _STATEMENT
                                             {
                                                 COperation _PARAM
                                                 {
-                                                    CLine TVariable b
+                                                    CLine TVariable a
                                                     {
                                                     }
                                                     {
@@ -366,64 +303,7 @@ COperation _STATEMENT
                                                 {
                                                     COperation _PARAM
                                                     {
-                                                        CLine TVariable c
-                                                        {
-                                                        }
-                                                        {
-                                                        }
-                                                    }
-                                                    {
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        {
-                                        }
-                                    }
-                                    {
-                                        COperation _STATEMENT
-                                        {
-                                            COperation _ANNOUNCE
-                                            {
-                                                CLine TVariable x_1
-                                                {
-                                                }
-                                                {
-                                                }
-                                            }
-                                            {
-                                                CValue TValue 0
-                                                {
-                                                }
-                                                {
-                                                }
-                                            }
-                                        }
-                                        {
-                                            COperation _STATEMENT
-                                            {
-                                                COperation _ANNOUNCE
-                                                {
-                                                    CLine TVariable x_2
-                                                    {
-                                                    }
-                                                    {
-                                                    }
-                                                }
-                                                {
-                                                    CValue TValue 0
-                                                    {
-                                                    }
-                                                    {
-                                                    }
-                                                }
-                                            }
-                                            {
-                                                COperation _STATEMENT
-                                                {
-                                                    COperation _CALL
-                                                    {
-                                                        CLine TVariable discriminant
+                                                        CLine TVariable b
                                                         {
                                                         }
                                                         {
@@ -432,26 +312,421 @@ COperation _STATEMENT
                                                     {
                                                         COperation _PARAM
                                                         {
-                                                            CLine TVariable a
+                                                            CLine TVariable c
                                                             {
                                                             }
                                                             {
                                                             }
                                                         }
                                                         {
-                                                            COperation _PARAM
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        {
+                                            COperation _STATEMENT
+                                            {
+                                                COperation IF
+                                                {
+                                                    COperation NOT EQUAL
+                                                    {
+                                                        CLine TVariable a
+                                                        {
+                                                        }
+                                                        {
+                                                        }
+                                                    }
+                                                    {
+                                                        CValue TValue 0
+                                                        {
+                                                        }
+                                                        {
+                                                        }
+                                                    }
+                                                }
+                                                {
+                                                    COperation _CROSSROADS
+                                                    {
+                                                        COperation _STATEMENT
+                                                        {
+                                                        }
+                                                        {
+                                                            COperation _STATEMENT
                                                             {
-                                                                CLine TVariable b
+                                                                COperation IF
                                                                 {
+                                                                    COperation LESS
+                                                                    {
+                                                                        COperation _CALL
+                                                                        {
+                                                                            CLine TVariable discriminant
+                                                                            {
+                                                                            }
+                                                                            {
+                                                                            }
+                                                                        }
+                                                                        {
+                                                                            COperation _PARAM
+                                                                            {
+                                                                                CLine TVariable a
+                                                                                {
+                                                                                }
+                                                                                {
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                COperation _PARAM
+                                                                                {
+                                                                                    CLine TVariable b
+                                                                                    {
+                                                                                    }
+                                                                                    {
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    COperation _PARAM
+                                                                                    {
+                                                                                        CLine TVariable c
+                                                                                        {
+                                                                                        }
+                                                                                        {
+                                                                                        }
+                                                                                    }
+                                                                                    {
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    {
+                                                                        CValue TValue 0
+                                                                        {
+                                                                        }
+                                                                        {
+                                                                        }
+                                                                    }
                                                                 }
                                                                 {
+                                                                    COperation _CROSSROADS
+                                                                    {
+                                                                        COperation _STATEMENT
+                                                                        {
+                                                                        }
+                                                                        {
+                                                                            COperation _STATEMENT
+                                                                            {
+                                                                                COperation _EQUATION
+                                                                                {
+                                                                                    CLine TVariable x_1
+                                                                                    {
+                                                                                    }
+                                                                                    {
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    CValue TValue 1337
+                                                                                    {
+                                                                                    }
+                                                                                    {
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                COperation _STATEMENT
+                                                                                {
+                                                                                    COperation OUTPUT
+                                                                                    {
+                                                                                        COperation _PARAM
+                                                                                        {
+                                                                                            CLine TVariable x_1
+                                                                                            {
+                                                                                            }
+                                                                                            {
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                        }
+                                                                                    }
+                                                                                    {
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    {
+                                                                        COperation _STATEMENT
+                                                                        {
+                                                                        }
+                                                                        {
+                                                                            COperation _STATEMENT
+                                                                            {
+                                                                                COperation _EQUATION
+                                                                                {
+                                                                                    CLine TVariable x_1
+                                                                                    {
+                                                                                    }
+                                                                                    {
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                    COperation DIV
+                                                                                    {
+                                                                                        COperation SUB
+                                                                                        {
+                                                                                            COperation SUB
+                                                                                            {
+                                                                                                CValue TValue 0
+                                                                                                {
+                                                                                                }
+                                                                                                {
+                                                                                                }
+                                                                                            }
+                                                                                            {
+                                                                                                CLine TVariable b
+                                                                                                {
+                                                                                                }
+                                                                                                {
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                            COperation UN_SQRT
+                                                                                            {
+                                                                                            }
+                                                                                            {
+                                                                                                COperation _CALL
+                                                                                                {
+                                                                                                    CLine TVariable discriminant
+                                                                                                    {
+                                                                                                    }
+                                                                                                    {
+                                                                                                    }
+                                                                                                }
+                                                                                                {
+                                                                                                    COperation _PARAM
+                                                                                                    {
+                                                                                                        CLine TVariable a
+                                                                                                        {
+                                                                                                        }
+                                                                                                        {
+                                                                                                        }
+                                                                                                    }
+                                                                                                    {
+                                                                                                        COperation _PARAM
+                                                                                                        {
+                                                                                                            CLine TVariable b
+                                                                                                            {
+                                                                                                            }
+                                                                                                            {
+                                                                                                            }
+                                                                                                        }
+                                                                                                        {
+                                                                                                            COperation _PARAM
+                                                                                                            {
+                                                                                                                CLine TVariable c
+                                                                                                                {
+                                                                                                                }
+                                                                                                                {
+                                                                                                                }
+                                                                                                            }
+                                                                                                            {
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                    {
+                                                                                        COperation MUL
+                                                                                        {
+                                                                                            CValue TValue 2
+                                                                                            {
+                                                                                            }
+                                                                                            {
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                            CLine TVariable a
+                                                                                            {
+                                                                                            }
+                                                                                            {
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            {
+                                                                                COperation _STATEMENT
+                                                                                {
+                                                                                    COperation _EQUATION
+                                                                                    {
+                                                                                        CLine TVariable x_2
+                                                                                        {
+                                                                                        }
+                                                                                        {
+                                                                                        }
+                                                                                    }
+                                                                                    {
+                                                                                        COperation DIV
+                                                                                        {
+                                                                                            COperation ADD
+                                                                                            {
+                                                                                                COperation SUB
+                                                                                                {
+                                                                                                    CValue TValue 0
+                                                                                                    {
+                                                                                                    }
+                                                                                                    {
+                                                                                                    }
+                                                                                                }
+                                                                                                {
+                                                                                                    CLine TVariable b
+                                                                                                    {
+                                                                                                    }
+                                                                                                    {
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                            {
+                                                                                                COperation UN_SQRT
+                                                                                                {
+                                                                                                }
+                                                                                                {
+                                                                                                    COperation _CALL
+                                                                                                    {
+                                                                                                        CLine TVariable discriminant
+                                                                                                        {
+                                                                                                        }
+                                                                                                        {
+                                                                                                        }
+                                                                                                    }
+                                                                                                    {
+                                                                                                        COperation _PARAM
+                                                                                                        {
+                                                                                                            CLine TVariable a
+                                                                                                            {
+                                                                                                            }
+                                                                                                            {
+                                                                                                            }
+                                                                                                        }
+                                                                                                        {
+                                                                                                            COperation _PARAM
+                                                                                                            {
+                                                                                                                CLine TVariable b
+                                                                                                                {
+                                                                                                                }
+                                                                                                                {
+                                                                                                                }
+                                                                                                            }
+                                                                                                            {
+                                                                                                                COperation _PARAM
+                                                                                                                {
+                                                                                                                    CLine TVariable c
+                                                                                                                    {
+                                                                                                                    }
+                                                                                                                    {
+                                                                                                                    }
+                                                                                                                }
+                                                                                                                {
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                        {
+                                                                                            COperation MUL
+                                                                                            {
+                                                                                                CValue TValue 2
+                                                                                                {
+                                                                                                }
+                                                                                                {
+                                                                                                }
+                                                                                            }
+                                                                                            {
+                                                                                                CLine TVariable a
+                                                                                                {
+                                                                                                }
+                                                                                                {
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                {
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                             {
-                                                                COperation _PARAM
+                                                            }
+                                                        }
+                                                    }
+                                                    {
+                                                        COperation _STATEMENT
+                                                        {
+                                                        }
+                                                        {
+                                                            COperation _STATEMENT
+                                                            {
+                                                                COperation _EQUATION
                                                                 {
-                                                                    CLine TVariable c
+                                                                    CLine TVariable x_1
                                                                     {
+                                                                    }
+                                                                    {
+                                                                    }
+                                                                }
+                                                                {
+                                                                    COperation SUB
+                                                                    {
+                                                                        CValue TValue 0
+                                                                        {
+                                                                        }
+                                                                        {
+                                                                        }
+                                                                    }
+                                                                    {
+                                                                        COperation DIV
+                                                                        {
+                                                                            CLine TVariable c
+                                                                            {
+                                                                            }
+                                                                            {
+                                                                            }
+                                                                        }
+                                                                        {
+                                                                            CLine TVariable b
+                                                                            {
+                                                                            }
+                                                                            {
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                            {
+                                                                COperation _STATEMENT
+                                                                {
+                                                                    COperation OUTPUT
+                                                                    {
+                                                                        COperation _PARAM
+                                                                        {
+                                                                            CLine TVariable x_1
+                                                                            {
+                                                                            }
+                                                                            {
+                                                                            }
+                                                                        }
+                                                                        {
+                                                                        }
                                                                     }
                                                                     {
                                                                     }
@@ -462,466 +737,51 @@ COperation _STATEMENT
                                                         }
                                                     }
                                                 }
+                                            }
+                                            {
+                                                COperation _STATEMENT
                                                 {
-                                                    COperation _STATEMENT
+                                                    COperation OUTPUT
                                                     {
-                                                        COperation IF
+                                                        COperation _PARAM
                                                         {
-                                                            COperation NOT EQUAL
+                                                            CLine TVariable x_1
                                                             {
-                                                                CLine TVariable a
-                                                                {
-                                                                }
-                                                                {
-                                                                }
                                                             }
                                                             {
-                                                                CValue TValue 0
-                                                                {
-                                                                }
-                                                                {
-                                                                }
                                                             }
                                                         }
                                                         {
-                                                            COperation _CROSSROADS
+                                                            COperation _PARAM
                                                             {
-                                                                COperation _STATEMENT
+                                                                CLine TVariable x_2
                                                                 {
                                                                 }
                                                                 {
-                                                                    COperation _STATEMENT
-                                                                    {
-                                                                        COperation IF
-                                                                        {
-                                                                            COperation LESS
-                                                                            {
-                                                                                COperation _CALL
-                                                                                {
-                                                                                    CLine TVariable discriminant
-                                                                                    {
-                                                                                    }
-                                                                                    {
-                                                                                    }
-                                                                                }
-                                                                                {
-                                                                                    COperation _PARAM
-                                                                                    {
-                                                                                        CLine TVariable a
-                                                                                        {
-                                                                                        }
-                                                                                        {
-                                                                                        }
-                                                                                    }
-                                                                                    {
-                                                                                        COperation _PARAM
-                                                                                        {
-                                                                                            CLine TVariable b
-                                                                                            {
-                                                                                            }
-                                                                                            {
-                                                                                            }
-                                                                                        }
-                                                                                        {
-                                                                                            COperation _PARAM
-                                                                                            {
-                                                                                                CLine TVariable c
-                                                                                                {
-                                                                                                }
-                                                                                                {
-                                                                                                }
-                                                                                            }
-                                                                                            {
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            {
-                                                                                CValue TValue 0
-                                                                                {
-                                                                                }
-                                                                                {
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                        {
-                                                                            COperation _CROSSROADS
-                                                                            {
-                                                                                COperation _STATEMENT
-                                                                                {
-                                                                                }
-                                                                                {
-                                                                                    COperation _STATEMENT
-                                                                                    {
-                                                                                        COperation _EQUATION
-                                                                                        {
-                                                                                            CLine TVariable x_1
-                                                                                            {
-                                                                                            }
-                                                                                            {
-                                                                                            }
-                                                                                        }
-                                                                                        {
-                                                                                            CValue TValue 1337
-                                                                                            {
-                                                                                            }
-                                                                                            {
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                    {
-                                                                                        COperation _STATEMENT
-                                                                                        {
-                                                                                            COperation OUTPUT
-                                                                                            {
-                                                                                                COperation _PARAM
-                                                                                                {
-                                                                                                    CLine TVariable x_1
-                                                                                                    {
-                                                                                                    }
-                                                                                                    {
-                                                                                                    }
-                                                                                                }
-                                                                                                {
-                                                                                                }
-                                                                                            }
-                                                                                            {
-                                                                                            }
-                                                                                        }
-                                                                                        {
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            {
-                                                                                COperation _STATEMENT
-                                                                                {
-                                                                                }
-                                                                                {
-                                                                                    COperation _STATEMENT
-                                                                                    {
-                                                                                        COperation _EQUATION
-                                                                                        {
-                                                                                            CLine TVariable x_1
-                                                                                            {
-                                                                                            }
-                                                                                            {
-                                                                                            }
-                                                                                        }
-                                                                                        {
-                                                                                            COperation DIV
-                                                                                            {
-                                                                                                COperation SUB
-                                                                                                {
-                                                                                                    COperation SUB
-                                                                                                    {
-                                                                                                        CValue TValue 0
-                                                                                                        {
-                                                                                                        }
-                                                                                                        {
-                                                                                                        }
-                                                                                                    }
-                                                                                                    {
-                                                                                                        CLine TVariable b
-                                                                                                        {
-                                                                                                        }
-                                                                                                        {
-                                                                                                        }
-                                                                                                    }
-                                                                                                }
-                                                                                                {
-                                                                                                    COperation UN_SQRT
-                                                                                                    {
-                                                                                                    }
-                                                                                                    {
-                                                                                                        COperation _CALL
-                                                                                                        {
-                                                                                                            CLine TVariable discriminant
-                                                                                                            {
-                                                                                                            }
-                                                                                                            {
-                                                                                                            }
-                                                                                                        }
-                                                                                                        {
-                                                                                                            COperation _PARAM
-                                                                                                            {
-                                                                                                                CLine TVariable a
-                                                                                                                {
-                                                                                                                }
-                                                                                                                {
-                                                                                                                }
-                                                                                                            }
-                                                                                                            {
-                                                                                                                COperation _PARAM
-                                                                                                                {
-                                                                                                                    CLine TVariable b
-                                                                                                                    {
-                                                                                                                    }
-                                                                                                                    {
-                                                                                                                    }
-                                                                                                                }
-                                                                                                                {
-                                                                                                                    COperation _PARAM
-                                                                                                                    {
-                                                                                                                        CLine TVariable c
-                                                                                                                        {
-                                                                                                                        }
-                                                                                                                        {
-                                                                                                                        }
-                                                                                                                    }
-                                                                                                                    {
-                                                                                                                    }
-                                                                                                                }
-                                                                                                            }
-                                                                                                        }
-                                                                                                    }
-                                                                                                }
-                                                                                            }
-                                                                                            {
-                                                                                                COperation MUL
-                                                                                                {
-                                                                                                    CValue TValue 2
-                                                                                                    {
-                                                                                                    }
-                                                                                                    {
-                                                                                                    }
-                                                                                                }
-                                                                                                {
-                                                                                                    CLine TVariable a
-                                                                                                    {
-                                                                                                    }
-                                                                                                    {
-                                                                                                    }
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                    {
-                                                                                        COperation _STATEMENT
-                                                                                        {
-                                                                                            COperation _EQUATION
-                                                                                            {
-                                                                                                CLine TVariable x_2
-                                                                                                {
-                                                                                                }
-                                                                                                {
-                                                                                                }
-                                                                                            }
-                                                                                            {
-                                                                                                COperation DIV
-                                                                                                {
-                                                                                                    COperation ADD
-                                                                                                    {
-                                                                                                        COperation SUB
-                                                                                                        {
-                                                                                                            CValue TValue 0
-                                                                                                            {
-                                                                                                            }
-                                                                                                            {
-                                                                                                            }
-                                                                                                        }
-                                                                                                        {
-                                                                                                            CLine TVariable b
-                                                                                                            {
-                                                                                                            }
-                                                                                                            {
-                                                                                                            }
-                                                                                                        }
-                                                                                                    }
-                                                                                                    {
-                                                                                                        COperation UN_SQRT
-                                                                                                        {
-                                                                                                        }
-                                                                                                        {
-                                                                                                            COperation _CALL
-                                                                                                            {
-                                                                                                                CLine TVariable discriminant
-                                                                                                                {
-                                                                                                                }
-                                                                                                                {
-                                                                                                                }
-                                                                                                            }
-                                                                                                            {
-                                                                                                                COperation _PARAM
-                                                                                                                {
-                                                                                                                    CLine TVariable a
-                                                                                                                    {
-                                                                                                                    }
-                                                                                                                    {
-                                                                                                                    }
-                                                                                                                }
-                                                                                                                {
-                                                                                                                    COperation _PARAM
-                                                                                                                    {
-                                                                                                                        CLine TVariable b
-                                                                                                                        {
-                                                                                                                        }
-                                                                                                                        {
-                                                                                                                        }
-                                                                                                                    }
-                                                                                                                    {
-                                                                                                                        COperation _PARAM
-                                                                                                                        {
-                                                                                                                            CLine TVariable c
-                                                                                                                            {
-                                                                                                                            }
-                                                                                                                            {
-                                                                                                                            }
-                                                                                                                        }
-                                                                                                                        {
-                                                                                                                        }
-                                                                                                                    }
-                                                                                                                }
-                                                                                                            }
-                                                                                                        }
-                                                                                                    }
-                                                                                                }
-                                                                                                {
-                                                                                                    COperation MUL
-                                                                                                    {
-                                                                                                        CValue TValue 2
-                                                                                                        {
-                                                                                                        }
-                                                                                                        {
-                                                                                                        }
-                                                                                                    }
-                                                                                                    {
-                                                                                                        CLine TVariable a
-                                                                                                        {
-                                                                                                        }
-                                                                                                        {
-                                                                                                        }
-                                                                                                    }
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                        {
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    {
-                                                                    }
                                                                 }
                                                             }
                                                             {
-                                                                COperation _STATEMENT
-                                                                {
-                                                                }
-                                                                {
-                                                                    COperation _STATEMENT
-                                                                    {
-                                                                        COperation _EQUATION
-                                                                        {
-                                                                            CLine TVariable x_1
-                                                                            {
-                                                                            }
-                                                                            {
-                                                                            }
-                                                                        }
-                                                                        {
-                                                                            COperation SUB
-                                                                            {
-                                                                                CValue TValue 0
-                                                                                {
-                                                                                }
-                                                                                {
-                                                                                }
-                                                                            }
-                                                                            {
-                                                                                COperation DIV
-                                                                                {
-                                                                                    CLine TVariable c
-                                                                                    {
-                                                                                    }
-                                                                                    {
-                                                                                    }
-                                                                                }
-                                                                                {
-                                                                                    CLine TVariable b
-                                                                                    {
-                                                                                    }
-                                                                                    {
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    {
-                                                                        COperation _STATEMENT
-                                                                        {
-                                                                            COperation OUTPUT
-                                                                            {
-                                                                                COperation _PARAM
-                                                                                {
-                                                                                    CLine TVariable x_1
-                                                                                    {
-                                                                                    }
-                                                                                    {
-                                                                                    }
-                                                                                }
-                                                                                {
-                                                                                }
-                                                                            }
-                                                                            {
-                                                                            }
-                                                                        }
-                                                                        {
-                                                                        }
-                                                                    }
-                                                                }
                                                             }
                                                         }
                                                     }
                                                     {
-                                                        COperation _STATEMENT
+                                                    }
+                                                }
+                                                {
+                                                    COperation _STATEMENT
+                                                    {
+                                                        COperation RETURN
                                                         {
-                                                            COperation OUTPUT
+                                                            CValue TValue 0
                                                             {
-                                                                COperation _PARAM
-                                                                {
-                                                                    CLine TVariable x_1
-                                                                    {
-                                                                    }
-                                                                    {
-                                                                    }
-                                                                }
-                                                                {
-                                                                    COperation _PARAM
-                                                                    {
-                                                                        CLine TVariable x_2
-                                                                        {
-                                                                        }
-                                                                        {
-                                                                        }
-                                                                    }
-                                                                    {
-                                                                    }
-                                                                }
                                                             }
                                                             {
                                                             }
                                                         }
                                                         {
-                                                            COperation _STATEMENT
-                                                            {
-                                                                COperation RETURN
-                                                                {
-                                                                    CValue TValue 0
-                                                                    {
-                                                                    }
-                                                                    {
-                                                                    }
-                                                                }
-                                                                {
-                                                                }
-                                                            }
-                                                            {
-                                                            }
                                                         }
+                                                    }
+                                                    {
                                                     }
                                                 }
                                             }
