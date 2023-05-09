@@ -139,7 +139,11 @@ void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number);
 
 void x86_push_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
 
+void x86_push_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
+
 void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
+
+void x86_pop_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
 
 //===================================================================================================================================================================
 

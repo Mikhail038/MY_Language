@@ -407,6 +407,9 @@ void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS)
 
     // elf_generate_statement (CurNode, Back);
 
+    x86_push_r64(BACK_FUNC_PARAMETERS, eSHIFT_REG);
+    x86_pop_r64(BACK_FUNC_PARAMETERS, eSHIFT_REG);  //TODO strange BUG
+
     x86_push_r(BACK_FUNC_PARAMETERS, rcx);
     x86_pop_r(BACK_FUNC_PARAMETERS, rcx);
 
@@ -1131,8 +1134,28 @@ void x86_push_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
     SET(opcode);
 }
 
+void x86_push_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+{
+    SET(0x41);
+
+    char opcode = 0x50;
+    opcode += (char) Register;
+
+    SET(opcode);
+}
+
 void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
 {
+    char opcode = 0x58;
+    opcode += (char) Register;
+
+    SET(opcode);
+}
+
+void x86_pop_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+{
+    SET(0x41);
+
     char opcode = 0x58;
     opcode += (char) Register;
 
