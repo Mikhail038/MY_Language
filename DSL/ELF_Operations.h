@@ -37,7 +37,7 @@ LEXEM_IS (L"+"),
 },
 L"ADD",
 {
-    PUTLN (add);
+    x86_add_stack();
 })
 
 DEF_OP (TaSub,
@@ -47,7 +47,7 @@ LEXEM_IS (L"-"),
 },
 L"SUB",
 {
-    PUTLN (sub);
+    x86_sub_stack();
 })
 
 DEF_OP (TaMul,
@@ -77,7 +77,7 @@ LEXEM_IS (L"^"),
 },
 L"POW",
 {
-
+    //TODO SMTH
 })
 
 DEF_OP (TcLess,
@@ -89,7 +89,7 @@ L"LESS",
 {
     PUT (ja);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ( );
 })
 
 DEF_OP (TcMore,
@@ -101,7 +101,7 @@ L"MORE",
 {
     PUT (jb);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ();
 })
 
 DEF_OP (TcLessEq,
@@ -113,7 +113,7 @@ L"LESS OR EQUAL",
 {
     PUT (jae);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ();
 })
 
 DEF_OP (TcMoreEq,
@@ -125,7 +125,7 @@ L"MORE OR EQUAL",
 {
     PUT (jbe);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ();
 })
 
 DEF_OP (TcEqual,
@@ -137,7 +137,7 @@ L"EQUAL",
 {
     PUT (je);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ();
 })
 
 DEF_OP (TcNotEq,
@@ -149,7 +149,7 @@ L"NOT EQUAL",
 {
     PUT (jne);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ();
 })
 
 DEF_OP (TcNot,
@@ -171,11 +171,11 @@ L"AND",
     PUTLN (mul);
 
     PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
+    // fprintf (file, " %d\n", FALSE);
 
     PUT (jne);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ();
 })
 
 //TODO ABS ERROR THINK LATER
@@ -189,11 +189,11 @@ L"OR",
     PUTLN (add);
 
     PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
+    // fprintf (file, " %d\n", FALSE);
 
     PUT (jne);
 
-    elf_standard_if_jump (Back);
+    elf_standard_if_jump ();
 })
 
 DEF_OP (TOpenRoundBracket,
@@ -248,7 +248,7 @@ LEXEM_IS (L"if"),
 },
 L"IF",
 {
-    elf_generate_if (BACK_FUNC_PARAMETERS);
+    elf_generate_if (CurNode);
 })
 
 DEF_OP (TElse,
@@ -267,7 +267,7 @@ LEXEM_IS (L"while"),
 },
 L"WHILE",
 {
-    elf_generate_while (BACK_FUNC_PARAMETERS);
+    elf_generate_while (CurNode);
 })
 
 DEF_OP (TstdType,
@@ -295,7 +295,7 @@ LEXEM_IS (L"in"),
 },
 L"INPUT",
 {
-    elf_generate_input (BACK_FUNC_PARAMETERS);
+    elf_generate_input (CurNode);
 })
 
 DEF_OP (TOutput,
@@ -305,7 +305,7 @@ LEXEM_IS (L"out"),
 },
 L"OUTPUT",
 {
-    elf_generate_output (BACK_FUNC_PARAMETERS);
+    elf_generate_output (CurNode);
 })
 
 DEF_OP (TReturn,
@@ -315,7 +315,7 @@ LEXEM_IS (L"return"),
 },
 L"RETURN",
 {
-    elf_generate_return (BACK_FUNC_PARAMETERS);
+    elf_generate_return (CurNode);
 })
 
 DEF_OP (T_Statement,
@@ -334,7 +334,7 @@ DEF_OP (T_Function,
 },
 L"_FUNC",
 {
-    elf_generate_function (BACK_FUNC_PARAMETERS);
+    elf_generate_function (CurNode);
 })
 
 DEF_OP (T_Call,
@@ -344,7 +344,7 @@ DEF_OP (T_Call,
 },
 L"_CALL",
 {
-    elf_generate_call (BACK_FUNC_PARAMETERS);
+    elf_generate_call (CurNode);
 })
 
 DEF_OP (T_Parameters,
@@ -381,7 +381,7 @@ DEF_OP (T_Announce,
 },
 L"_ANNOUNCE",
 {
-    elf_generate_announce (BACK_FUNC_PARAMETERS);
+    elf_generate_announce (CurNode);
 })
 
 DEF_OP (T_Equation,
@@ -391,7 +391,7 @@ DEF_OP (T_Equation,
 },
 L"_EQUATION",
 {
-    elf_generate_equation (BACK_FUNC_PARAMETERS);
+    elf_generate_equation (CurNode);
 })
 
 DEF_OP (T_func_Announce,

@@ -4,8 +4,11 @@
 //==================================================================================================================================================================
 
 #include "back.h"
+#include <cstddef>
+#include <cstdlib>
 
 //==================================================================================================================================================================
+
 enum ERegisters
 {
     rax = 0,
@@ -18,19 +21,33 @@ enum ERegisters
     rdi = 7
 };
 
+#define DELTA 10
+
 enum ERegisters_64
 {
-    r8  = 0,
-    r9  = 1,
-    r10 = 2,
-    r11 = 3,
-    r12 = 4,
-    r13 = 5,
-    r14 = 6,
-    r15 = 7
+    r8  = DELTA + 0,
+    r9  = DELTA + 1,
+    r10 = DELTA + 2,
+    r11 = DELTA + 3,
+    r12 = DELTA + 4,
+    r13 = DELTA + 5,
+    r14 = DELTA + 6,
+    r15 = DELTA + 7
 };
 
-typedef struct
+//DO NOT MAKE THEM RAX
+#define A_REG  rbx
+#define B_REG  rcx
+
+#define eSHIFT_REG  r12
+#define eTOP_REG    r14
+#define eFUNC_REG   r15
+
+#define eCOUNT_REG  rax //TODO maybe not
+
+//==================================================================================================================================================================
+
+typedef struct SElfBack
 {
     EFuncConditions     func_cond       = any_f;
     EVarTableConditions table_cond      = none;
@@ -42,129 +59,128 @@ typedef struct
 
     char*               Array           = NULL;
     size_t              cnt             = 0;
-}
-SElfBack;
+
+    public:
+
+    SElfBack(FILE* ExFile, SNode* CurNode);
+
+    ~SElfBack();
+
+    SElfBack(SElfBack& Another) = delete;
+    SElfBack(SElfBack&&  Another) = delete;
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_push_i (int Number);
+
+    void x86_push_r (int Register);
+    // void x86_push_r64 (int Register);
+
+    void x86_push_IrI (int Register);
+    // void x86_push_Ir64I (int Register);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_pop_r (int Register);
+    // void x86_pop_r64 (int Register);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_nop ();
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_mov_r_r (int dstReg, int srcReg);
+    // void x86_mov_r64_r (int dstReg, int srcReg);
+    // void x86_mov_r_r64 (int dstReg, int srcReg);
+    // void x86_mov_r64_r64 (int dstReg, int srcReg);
+
+    void x86_mov_r_i (int dstReg, int Number);
+    // void x86_mov_r64_i (int dstReg, int Number);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_add_stack ();
+    void x86_sub_stack ();
+    void x86_imul_stack ();
+    void x86_idiv_stack ();
+
+    void x86_add_i (int Register, int Number);
+    void x86_sub_i (int Register, int Number);
+
+    void x86_inc (int Reg);
+    void x86_dec (int Reg);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void set_hex_int (const int Number);
+
+    void x86___DstSrc_config (int& dstReg, int& srcReg);
+    void x86___Dst_config (int& dstReg);
+
+    void x86___Regs_config (const int dstReg, const int srcReg);
+    void x86___Reg_config(const int Reg, const int ZeroPoint);
+
+    void x86___End ();
+
+    //==================================================================================================================================================================
+
+    void generate_elf_array (SNode* Root);
+    void elf_generate_code (SNode* Root);
+    void generate_main ();
+
+    void elf_generate_statement (SNode* CurNode);
+    void elf_generate_function (SNode* CurNode);
+    void elf_generate_node (SNode* CurNode);
+    void elf_generate_op_node (SNode* CurNode);
+    void elf_generate_input (SNode* CurNode);
+    void elf_generate_output (SNode* CurNode);
+    void elf_generate_if (SNode* CurNode);
+    void elf_generate_while (SNode* CurNode);
+    void elf_generate_call (SNode* CurNode);
+    void elf_generate_return (SNode* CurNode);
+    void elf_generate_announce (SNode* CurNode);
+    void elf_generate_equation (SNode* CurNode);
+    void elf_generate_expression (SNode* CurNode);
+    void elf_generate_postorder (SNode* CurNode);
+
+    void elf_generate_pop_var (SNode* CurNode);
+    void elf_generate_push_var (SNode* CurNode);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void elf_push_parameters (SNode* CurNode);
+    void elf_pop_parameters ();
+
+    void elf_incr_top_reg ();
+
+    void elf_standard_if_jump ();
+
+    void elf_write_command (ECommandNums eCommand, FILE* File);
+
+    void elf_add_to_var_table (SNode* CurNode);
+    void elf_create_new_var_table ();
+    void elf_create_param_var_table (SNode* CurNode);
+    void elf_delete_var_table ();
+
+    int elf_find_var (SNode* CurNode);
+};
 
 //==================================================================================================================================================================
 
 #define ELF_BACK_FUNC_HEAD_PARAMETERS SNode* CurNode, SElfBack* Back
 
-#define ELF_CLEAN_TABLE if (Back->table_cond != none) { elf_delete_var_table (Back); Back->table_cond = exist; }
+#define ELF_CLEAN_TABLE if (table_cond != none) { elf_delete_var_table (); table_cond = exist; }
 
 //==================================================================================================================================================================
 
 void make_elf_file (SNode* Root, FILE* ExFile);
-
-SElfBack* elf_back_constructor (FILE* ExFile);
-
-void elf_back_destructor (SElfBack* Back);
 
 //==================================================================================================================================================================
 
 void create_elf_header (SNode* Root, FILE* ExFile);
 
 void create_elf_body (SNode* Root, FILE* ExFile);
-
-//==================================================================================================================================================================
-
-void generate_elf_array (SNode* Root, SElfBack* Back);
-
-void elf_generate_end_header (SNode* Root, SElfBack* Back);
-
-void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void generate_main (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_statement (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_function (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_node (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_op_node (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_input (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_output (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_if (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_while (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_call (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_return (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_announce (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_equation (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_expression (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_postorder (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_pop_var (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_generate_push_var (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-//===================================================================================================================================================================
-
-void elf_push_parameters (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_pop_parameters (SElfBack* Back);
-
-void elf_incr_top_reg (SElfBack* Back);
-
-void elf_standard_if_jump (SElfBack* Back);
-
-void elf_write_command (ECommandNums eCommand, FILE* File);
-
-void elf_add_to_var_table (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_create_new_var_table (SElfBack* Back);
-
-void elf_create_param_var_table (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-void elf_delete_var_table (SElfBack* Back);
-
-int elf_find_var (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-//===================================================================================================================================================================
-
-void set_hex_int (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number);
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86_push_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number);
-
-void x86_push_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
-void x86_push_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
-
-void x86_push_IrI (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
-void x86_push_Ir64I (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
-void x86_pop_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86_nop (ELF_BACK_FUNC_HEAD_PARAMETERS);
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86_mov_r_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
-void x86_mov_r64_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
-void x86_mov_r_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
-void x86_mov_r64_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
-
-void x86_mov_r_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number);
-void x86_mov_r64_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number);
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86___end (ELF_BACK_FUNC_HEAD_PARAMETERS);
 
 //===================================================================================================================================================================
 

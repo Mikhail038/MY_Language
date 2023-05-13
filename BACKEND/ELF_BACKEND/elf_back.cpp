@@ -34,17 +34,17 @@
 
 #define MAX_ELF_SIZE 100000
 
-#define SET(x) Back->Array[Back->cnt] = (x); Back->cnt++;
+#define SET(x) Array[cnt] = (x); cnt++;
 
 #define SET_2(x)     \
-    memcpy ((unsigned short int*) &(Back->Array[Back->cnt]),    \
+    memcpy ((unsigned short int*) &(Array[cnt]),    \
                         &(x), sizeof (unsigned short int));  \
-    Back->cnt += 2;
+    cnt += 2;
 
 #define SET_4(x)     \
-    memcpy ((unsigned int*) &(Back->Array[Back->cnt]),    \
+    memcpy ((unsigned int*) &(Array[cnt]),    \
                         &(x), sizeof (unsigned int));  \
-    Back->cnt += 4;
+    cnt += 4;
 
 #define FILL_2  SET (0x00);
 
@@ -53,86 +53,70 @@
 #define FILL_8  SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00);
 
 #define PASTE_8(x,y)  \
-    (x) = Back->cnt;    \
-    memcpy ((size_t*) &(Back->Array[(y)]), \
+    (x) = cnt;    \
+    memcpy ((size_t*) &(Array[(y)]), \
     &(x), sizeof (size_t));
 
 #define PASTE_4(x,y)  \
-    (x) = Back->cnt;    \
-    memcpy ((unsigned int*) &(Back->Array[(y)]), \
+    (x) = cnt;    \
+    memcpy ((unsigned int*) &(Array[(y)]), \
     &(x), sizeof (unsigned int));
 
 #define SKIP_8(x,y)   \
     size_t (x) = 0; \
-    size_t (y) = Back->cnt;    \
-    Back->cnt += 8; //we ll skip it now
+    size_t (y) = cnt;    \
+    cnt += 8; //we ll skip it now
 
 #define SKIP_4(x,y)   \
     unsigned int (x) = 0; \
-    size_t (y) = Back->cnt;    \
-    Back->cnt += 4; //we ll skip it now
+    size_t (y) = cnt;    \
+    cnt += 4; //we ll skip it now
 
 //=============================================================================================================================================================================
 
-#define eSHIFT_REG   r12
-#define eCOUNT_REG   r13
-#define eTOP_REG     r14
-#define eFUNC_REG    r15
 
 //=============================================================================================================================================================================
 
-SElfBack* elf_back_constructor (FILE* ExFile)
+SElfBack::SElfBack(FILE* ExFile, SNode* Root)
 {
-    SElfBack* Back = (SElfBack*) calloc (1, sizeof (SElfBack));
+    Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
+    Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
+    Funcs->top_index = 0;
 
-    Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
-    Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
-    Back->Funcs->top_index = 0;
+    VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
-    Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
+    file = ExFile;
 
-    Back->file = ExFile;
+    table_cond = none;
 
-    Back->table_cond = none;
+    stack_constructor (VarStack, 4);
 
-    stack_constructor (Back->VarStack, 4);
-
-    Back->Array = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
-    Back->cnt = 0;
-
-    return Back;
+    Array = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
+    cnt = 0;
 }
 
-void elf_back_destructor (SElfBack* Back)
+SElfBack::~SElfBack()
 {
-    free_tables (Back->VarStack);
+    free_tables (VarStack);
 
-    free (Back->Funcs->Table);
-    free (Back->Funcs);
+    free (Funcs->Table);
+    free (Funcs);
 
-    free (Back->Array);
-
-    free (Back);
-
-    return;
+    free (Array);
 }
-
-//=============================================================================================================================================================================
 
 
 void make_elf_file (SNode* Root, FILE* ExFile)
 {
     MLA (ExFile != NULL);
 
-    SElfBack* Back = elf_back_constructor (ExFile);
+    SElfBack Back {ExFile, Root};
 
     //generate_user_functions (Root, Back);
 
-    generate_elf_array (Root, Back);
+    Back.generate_elf_array(Root);
 
-    fwrite (Back->Array, sizeof (char), Back->cnt, Back->file);
-
-    elf_back_destructor (Back);
+    fwrite (Back.Array, sizeof (char), Back.cnt, Back.file);
 
     // for (int i = 0; i < Back->Funcs->top_index; i++)
     // {
@@ -146,7 +130,7 @@ void make_elf_file (SNode* Root, FILE* ExFile)
 //Make ELF//
 //=============================================================================================================================================================================
 
-void generate_elf_array (SNode* Root, SElfBack* Back)
+void SElfBack::generate_elf_array (SNode* Root)
 {
     SET (0x7f); //MAGIC SIGNATURE
 
@@ -218,13 +202,13 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
     SET (0x00); //Segment offset (0)
     FILL_8;     //nothing
 
-    memcpy ((size_t*) &(Back->Array[Back->cnt]),
+    memcpy ((size_t*) &(Array[cnt]),
     &FileVirtualAddress, sizeof (size_t));  //Virtual address
-    Back->cnt += 8;
+    cnt += 8;
 
-    memcpy ((size_t*) &(Back->Array[Back->cnt]),
+    memcpy ((size_t*) &(Array[cnt]),
     &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
-    Back->cnt += 8;
+    cnt += 8;
 
     SKIP_8(SegmentSize, addr_SegmentSize);
 
@@ -262,8 +246,8 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
     SET (0x06); //Section flags (r w x )
     FILL_8;     //nothing
 
-    size_t addr_another_EntryVA = Back->cnt;
-    Back->cnt += 8; //skip
+    size_t addr_another_EntryVA = cnt;
+    cnt += 8; //skip
 
     SKIP_8(TextOffset, addr_TextOffset);
 
@@ -313,11 +297,11 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
     //=======================================================================
     //entry
 
-    EntryVA = Back->cnt + FileVirtualAddress;
-    memcpy ((size_t*) &(Back->Array[addr_EntryVA]),
+    EntryVA = cnt + FileVirtualAddress;
+    memcpy ((size_t*) &(Array[addr_EntryVA]),
     &EntryVA, sizeof (size_t));
 
-    memcpy ((size_t*) &(Back->Array[addr_another_EntryVA]),
+    memcpy ((size_t*) &(Array[addr_another_EntryVA]),
     &EntryVA, sizeof (size_t)); //TODO maybe remove
 
     //=======================================================================
@@ -327,12 +311,12 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
 
     //----------------------------------------------------------------------
 
-    elf_generate_code (Root, Back);
+    elf_generate_code (Root);
 
     //----------------------------------------------------------------------
 
-    TextSize = Back->cnt - TextOffset;
-    memcpy ((size_t*) &(Back->Array[addr_TextSize]),
+    TextSize = cnt - TextOffset;
+    memcpy ((size_t*) &(Array[addr_TextSize]),
     &TextSize, sizeof (size_t));
 
     //=======================================================================
@@ -345,14 +329,14 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
     PASTE_8(TableAddress, addr_TableAddress);
 
     TableLoadAddress = TableAddress + FileVirtualAddress;
-    memcpy ((size_t*) &(Back->Array[addr_TableLoadAddress]),
+    memcpy ((size_t*) &(Array[addr_TableLoadAddress]),
     &TableLoadAddress, sizeof (size_t));
 
 
     SET (0x00); //begin section header string table
 
-    TextNameOffset = Back->cnt - SegmentSize;
-    memcpy ((unsigned int*) &(Back->Array[addr_TextNameOffset]),
+    TextNameOffset = cnt - SegmentSize;
+    memcpy ((unsigned int*) &(Array[addr_TextNameOffset]),
     &TextNameOffset, sizeof (unsigned int));
 
     SET ('.');
@@ -362,8 +346,8 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
     SET ('t');
     SET (0x00); //end
 
-    TableNameOffset = Back->cnt - SegmentSize;
-    memcpy ((unsigned int*) &(Back->Array[addr_TableNameOffset]),
+    TableNameOffset = cnt - SegmentSize;
+    memcpy ((unsigned int*) &(Array[addr_TableNameOffset]),
     &TableNameOffset, sizeof (unsigned int));
 
     SET ('.');
@@ -377,8 +361,8 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
     SET ('b');
     SET (0x00); //end
 
-    TableSize = Back->cnt - SegmentSize;
-    memcpy ((size_t*) &(Back->Array[addr_TableSize]),
+    TableSize = cnt - SegmentSize;
+    memcpy ((size_t*) &(Array[addr_TableSize]),
     &TableSize, sizeof (size_t));
 
     return;
@@ -386,7 +370,7 @@ void generate_elf_array (SNode* Root, SElfBack* Back)
 
 //=============================================================================================================================================================================
 
-void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_code (SNode* Root)
 {
 //     x86_push_imm (BACK_FUNC_PARAMETERS, 0);
 //
@@ -405,14 +389,19 @@ void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS)
 //
 //     fprintf (Back->file, SEP_LINE "\n\n");
 
-    x86_mov_r64_i(BACK_FUNC_PARAMETERS, eSHIFT_REG, 0);
-    x86_mov_r64_i(BACK_FUNC_PARAMETERS, eTOP_REG, 0);
+    x86_mov_r_i(eSHIFT_REG, 0);
+    x86_mov_r_i(eTOP_REG, 0);
+
+    x86_push_i(38*13);
+    x86_push_i(13);
+    x86_idiv_stack();
+    x86_pop_r(r10);
 
     //TODO JUMP MAIN SOMEHOW
 
-    elf_generate_statement (CurNode, Back);
+    //elf_generate_statement (Root);
 
-    x86___end(BACK_FUNC_PARAMETERS);
+    x86___End();
 
 //     SET (0xb8);
 //     SET (0x01);
@@ -496,80 +485,71 @@ void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_statement (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_statement (SNode* CurNode)
 {
     if (CurNode->left != NULL)
     {
-        elf_generate_op_node (BACK_LEFT_SON_FUNC_PARAMETERS);
+        elf_generate_op_node (CurNode->left);
     }
 
     if (CurNode->right != NULL)
     {
-        elf_generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
+        elf_generate_statement (CurNode->right);
     }
 
     return;
 }
 
-void elf_generate_function (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_function (SNode* CurNode)
 {
     if (wcscmp (CurNode->left->data.var, MAIN_WORD) == 0)
     {
-        Back->func_cond = main_f;
+        func_cond = main_f;
     }
     else
     {
-        Back->func_cond = any_f;
+        func_cond = any_f;
     }
 
-    fprintf (Back->file, LABEL "%ls:\n", CurNode->left->data.var);
+    fprintf (file, LABEL "%ls:\n", CurNode->left->data.var);
 
-    Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
+    Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
 
-    Back->table_cond = none;
-    elf_create_param_var_table (CurNode->left->right, Back);
+    table_cond = none;
+    elf_create_param_var_table (CurNode->left->right);
 
-    elf_pop_parameters (Back);
+    elf_pop_parameters ();
 
-    Back->Funcs->top_index++;
+    Funcs->top_index++;
 
 
-    elf_generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    elf_generate_statement (CurNode->right);
     ELF_CLEAN_TABLE;
-
-    fprintf (Back->file, "\n\n" SEP_LINE "\n\n\n");
 
     return;
 }
 
-void elf_generate_node (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_node (SNode* CurNode)
 {
     if (CurNode->category == COperation)
     {
-        elf_generate_op_node (BACK_FUNC_PARAMETERS);
+        elf_generate_op_node (CurNode);
     }
 
     if (CurNode->category == CValue)
     {
-        elf_write_command (push, Back->file);
-
-        fprintf (Back->file, " %lg\n", CurNode->data.val);
+        x86_push_i(CurNode->data.val);
     }
 
     if (CurNode->category == CLine && CurNode->type == TVariable)
     {
-        elf_generate_push_var (BACK_FUNC_PARAMETERS);
-//         write_command (push, Back->file);
-//
-//         int Index = find_var (BACK_FUNC_PARAMETERS);
-//
-//         fprintf (Back->file, " [%d]\n", Index);
+        elf_generate_push_var (CurNode);
     }
 
     return;
 }
 
-void elf_generate_op_node (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_op_node (SNode* CurNode)
 {
     switch (CurNode->type)
     {
@@ -586,40 +566,37 @@ void elf_generate_op_node (ELF_BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_announce (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_announce (SNode* CurNode)
 {
-    elf_generate_expression (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    elf_generate_expression (CurNode->right);
 
-    elf_add_to_var_table (BACK_LEFT_SON_FUNC_PARAMETERS);
+    elf_add_to_var_table (CurNode->left);
 
-    elf_generate_pop_var (BACK_LEFT_SON_FUNC_PARAMETERS);
+    elf_generate_pop_var (CurNode->left);
 
-    elf_incr_top_reg (Back);
-//     write_command (pop, Back->file);
-//
-//     fprintf (Back->file, " [%d]\n\n", Back->RAM_top_index - 1);
+    elf_incr_top_reg ();
 
     return;
 }
 
-void elf_generate_equation (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_equation (SNode* CurNode)
 {
-    elf_generate_expression (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    elf_generate_expression (CurNode->right);
 
-    elf_generate_pop_var (BACK_LEFT_SON_FUNC_PARAMETERS);
+    elf_generate_pop_var (CurNode->left);
 
     return;
 }
 
-void elf_generate_input (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_input (SNode* CurNode)
 {
     SNode* Node = CurNode->left;
 
     do
     {
-        writeln_command (inp, Back->file);
+        writeln_command (inp, file);
 
-        elf_generate_pop_var (Node->left, Back);
+        elf_generate_pop_var (Node->left);
 
         Node = Node->right;
     } while (Node != NULL);
@@ -627,15 +604,15 @@ void elf_generate_input (ELF_BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_output (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_output (SNode* CurNode)
 {
     SNode* Node = CurNode->left;
 
     do
     {
-        elf_generate_push_var (Node->left, Back);
+        elf_generate_push_var (Node->left);
 
-        writeln_command (out, Back->file);
+        writeln_command (out, file);
 
         Node = Node->right;
     } while (Node != NULL);
@@ -643,30 +620,29 @@ void elf_generate_output (ELF_BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_if (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_if (SNode* CurNode)
 {
-    elf_generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
+    elf_generate_postorder (CurNode->left);
 
-    PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
+    x86_push_i(FALSE);
 
     PUT (je);
-    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
-    int Label_1 = Back->label_cnt;
-    Back->label_cnt++;
+    fprintf (file, " " LABEL "%d\n", label_cnt);
+    int Label_1 = label_cnt;
+    label_cnt++;
 
     CurNode = CurNode->right;
 
-    Back->table_cond = none;
-    elf_generate_statement (BACK_LEFT_SON_FUNC_PARAMETERS);
+    table_cond = none;
+    elf_generate_statement (CurNode->left);
     ELF_CLEAN_TABLE;
 
     PUT (jump);
-    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
-    int Label_2 = Back->label_cnt;
-    Back->label_cnt++;
+    fprintf (file, " " LABEL "%d\n", label_cnt);
+    int Label_2 = label_cnt;
+    label_cnt++;
 
-    fprintf (Back->file,  LABEL "%d:\n", Label_1);
+    fprintf (file,  LABEL "%d:\n", Label_1);
 
     CurNode = CurNode->right;
 
@@ -674,90 +650,81 @@ void elf_generate_if (ELF_BACK_FUNC_HEAD_PARAMETERS)
     {
         if (CurNode->category == COperation && CurNode->type == TIf)
         {
-            elf_generate_if (BACK_FUNC_PARAMETERS);
+            elf_generate_if (CurNode);
         }
         else
         {
-            Back->table_cond = none;
-            elf_generate_statement (BACK_FUNC_PARAMETERS);
+            table_cond = none;
+            elf_generate_statement (CurNode);
             ELF_CLEAN_TABLE;
         }
     }
-    fprintf (Back->file,  LABEL "%d:\n", Label_2);
+    fprintf (file,  LABEL "%d:\n", Label_2);
 
 
     return;
 }
 
-void elf_generate_while (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_while (SNode* CurNode)
 {
-    int Label_1 = Back->label_cnt;
-    fprintf (Back->file,  LABEL "%d:\n", Label_1);
-    Back->label_cnt++;
+    int Label_1 = label_cnt;
+    fprintf (file,  LABEL "%d:\n", Label_1);
+    label_cnt++;
 
-    elf_generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
+    elf_generate_postorder (CurNode->left);
 
-    PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
+    x86_push_i(FALSE);
 
     PUT (je);
-    int Label_2 = Back->label_cnt;
-    fprintf (Back->file, " " LABEL "%d\n", Label_2);
-    Back->label_cnt++;
+    int Label_2 = label_cnt;
+    fprintf (file, " " LABEL "%d\n", Label_2);
+    label_cnt++;
 
-    Back->table_cond = none;
-    elf_generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    table_cond = none;
+    elf_generate_statement (CurNode->right);
     ELF_CLEAN_TABLE;
 
     PUT (jump);
-    fprintf (Back->file, " " LABEL "%d\n", Label_1);
+    fprintf (file, " " LABEL "%d\n", Label_1);
 
-    fprintf (Back->file,  LABEL "%d:\n", Label_2);
+    fprintf (file,  LABEL "%d:\n", Label_2);
 
     return;
 }
 
-void elf_generate_call (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_call (SNode* CurNode)
 {
-    fprintf (Back->file, ";++" "\n\n");
+    x86_push_r(eTOP_REG);
 
-    PUT (push);
-    fprintf (Back->file, " " TOP_REG "\n");
+    elf_push_parameters (CurNode->right);
 
-    elf_push_parameters (BACK_RIGHT_SON_FUNC_PARAMETERS);
+    x86_push_r(eTOP_REG);
 
-    PUT (push);
-    fprintf (Back->file, " " TOP_REG "\n");
+    x86_pop_r(eSHIFT_REG);
 
-    PUT (pop);
-    fprintf (Back->file, " " SHIFT_REG "\n\n");
 
     PUT (call);
-    fprintf (Back->file, " " LABEL "%ls\n", CurNode->left->data.var);
+    fprintf (file, " " LABEL "%ls\n", CurNode->left->data.var);
 
-    PUT (pop);
-    fprintf (Back->file, " " TOP_REG "\n");
+    x86_pop_r(eTOP_REG);
 
-    fprintf (Back->file, ";++" "\n\n");
-
-    PUT (push);
-    fprintf (Back->file, " " FUNC_REG "\n");
+    x86_push_r(eFUNC_REG);
 
     return;
 }
 
-void elf_generate_return (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_return (SNode* CurNode)
 {
-    if (Back->func_cond == main_f)
+    if (func_cond == main_f)
     {
-        writeln_command (hlt, Back->file);
+        x86___End();
     }
     else
     {
-        elf_generate_expression (BACK_LEFT_SON_FUNC_PARAMETERS);
+        elf_generate_expression (CurNode->left);
 
         PUT (pop);
-        fprintf (Back->file, " " FUNC_REG "\n");
+        fprintf (file, " " FUNC_REG "\n");
 
         PUTLN (ret);
     }
@@ -765,192 +732,121 @@ void elf_generate_return (ELF_BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_generate_expression (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_expression (SNode* CurNode)
 {
-    elf_generate_postorder (BACK_FUNC_PARAMETERS);
+    elf_generate_postorder (CurNode);
 
     return;
 }
 
-void elf_generate_postorder (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_postorder (SNode* CurNode)
 {
     if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->left != NULL)
     {
-        elf_generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
+        elf_generate_postorder (CurNode->left);
     }
 
     if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->right != NULL)
     {
-        elf_generate_postorder (BACK_RIGHT_SON_FUNC_PARAMETERS);
+        elf_generate_postorder (CurNode->right);
     }
 
-    elf_generate_node (BACK_FUNC_PARAMETERS);
+    elf_generate_node (CurNode);
 
     return;
 }
 
-void elf_generate_pop_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_pop_var (SNode* CurNode)
 {
-    int Index = elf_find_var (BACK_FUNC_PARAMETERS);
+    int Index = elf_find_var (CurNode);
 
-    PUT (push);
-    fprintf (Back->file, " %d\n", Index);
+    x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
+    x86_add_i(eCOUNT_REG, Index);
 
-    PUT (push);
-    fprintf (Back->file, " " SHIFT_REG "\n");
-
-    PUTLN (add);
-
-    PUT (pop);
-    fprintf (Back->file, " " COUNT_REG "\n");
-
-
-    PUT (pop);
-    fprintf (Back->file, " [" COUNT_REG "]\n\n");
+    // PUT (pop);
+    // fprintf (file, " [" COUNT_REG "]\n\n"); //TODO this
 
     return;
 }
 
-void elf_generate_push_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_generate_push_var (SNode* CurNode)
 {
-    int Index = elf_find_var (BACK_FUNC_PARAMETERS);
+    int Index = elf_find_var (CurNode);
 
-    x86_push_i(BACK_FUNC_PARAMETERS, Index);
+    x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
+    x86_add_i(eCOUNT_REG, Index);
 
-    x86_push_r64(BACK_FUNC_PARAMETERS, eSHIFT_REG);
-
-    PUTLN (add);    //TODO remove
-
-    x86_pop_r64(BACK_FUNC_PARAMETERS, eCOUNT_REG);
-
-    x86_push_Ir64I(BACK_FUNC_PARAMETERS, eCOUNT_REG);
+    x86_push_IrI(eCOUNT_REG);
 
     return;
 }
 
 //=============================================================================================================================================================================
 
-void elf_push_parameters (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_push_parameters (SNode* CurNode)
 {
     if (CurNode->right != NULL)
     {
-        elf_push_parameters (BACK_RIGHT_SON_FUNC_PARAMETERS);
+        elf_push_parameters (CurNode->right);
     }
 
     if (CurNode != NULL)
     {
-        elf_generate_expression (BACK_LEFT_SON_FUNC_PARAMETERS);
+        elf_generate_expression (CurNode->left);
     }
-
-    // PUT (push);
-    // fprintf (Back->file, " " TOP_REG "\n");
 
     return;
 }
 
-void elf_pop_parameters (SElfBack* Back)
+void SElfBack::elf_pop_parameters ()
 {
-    PUT (push);
-    fprintf (Back->file, " " SHIFT_REG "\n");
+    x86_push_r(eSHIFT_REG);
 
-    // PUTLN (m_dup);
-    // PUTLN (out);
+    x86_pop_r(eCOUNT_REG);
 
-    PUT (pop);
-    fprintf (Back->file, " " COUNT_REG "\n\n");
-
-    for (int i = 0; i < Back->Funcs->Table[Back->Funcs->top_index].parameters ; i++)
+    for (int i = 0; i < Funcs->Table[Funcs->top_index].parameters ; i++)
     {
-        PUT (push);
-        fprintf (Back->file, " " COUNT_REG "\n");
+        x86_inc(eCOUNT_REG);
 
-        PUT (push);
-        fprintf (Back->file, " 1\n");
-
-        PUTLN (add);
-
-        PUT (pop);
-        fprintf (Back->file, " " COUNT_REG "\n");
-
-        PUT (pop);
-        fprintf (Back->file, " [" COUNT_REG "]\n\n");
+        // PUT (pop);
+        // fprintf (file, " [" COUNT_REG "]\n\n");  //TODO this
     }
 
+    return;
+}
+
+void SElfBack::elf_incr_top_reg ()
+{
+    x86_inc(eTOP_REG);
+
+    return;
+}
+
+// TODO uncomment
+void SElfBack::elf_standard_if_jump ()
+{
+//     fprintf (file, " " LABEL "%d\n", label_cnt);
+//     label_cnt++;
+//
 //     PUT (push);
-//     fprintf (Back->file, " " COUNT_REG "\n");
+//     fprintf (file, " %d\n", FALSE);
 //
-//     PUT (pop);
-//     fprintf (Back->file, " " SHIFT_REG "\n");
+//     PUT (jump);
+//     fprintf (file, " " LABEL "%d\n", label_cnt);
+//
+//     fprintf (file, LABEL "%d:\n", label_cnt - 1);
+//
+//     PUT (push);
+//     fprintf (file, " %d\n", TRUE);
+//
+//     fprintf (file, LABEL "%d:\n", label_cnt);
+//
+//     label_cnt++;
 
     return;
 }
 
-void elf_incr_top_reg (SElfBack* Back)
-{
-    PUT (push);
-    fprintf (Back->file, " " TOP_REG "\n");
-
-    PUT (push);
-    fprintf (Back->file, " 1\n");
-
-    PUTLN (add);
-
-    PUT (pop);
-    fprintf (Back->file, " " TOP_REG "\n\n");
-
-    return;
-}
-
-void elf_standard_if_jump (SElfBack* Back)
-{
-    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
-    Back->label_cnt++;
-
-    PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
-
-    PUT (jump);
-    fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
-
-    fprintf (Back->file, LABEL "%d:\n", Back->label_cnt - 1);
-
-    PUT (push);
-    fprintf (Back->file, " %d\n", TRUE);
-
-    fprintf (Back->file, LABEL "%d:\n", Back->label_cnt);
-
-    Back->label_cnt++;
-
-    return;
-}
-
-// SNode* find_main (SNode* Node)
-// {
-//     if (NODE_IS_OP_AND__ T_Function)
-//     {
-//         if (Node->left != NULL &&
-//         Node->left->category == CLine && (wcscmp (MAIN_WORD, Node->left->data.var) == 0))
-//         {
-//             return Node->right->right;
-//         }
-//     }
-//
-//     SNode* Main = NULL;
-//
-//     if (Node->left != NULL)
-//     {
-//         Main = find_main (Node->left);
-//     }
-//
-//     if ((Node->right != NULL) && (Main == NULL))
-//     {
-//         Main = find_main (Node->right);
-//     }
-//
-//     return Main;
-// }
-
-void elf_write_command (ECommandNums eCommand, FILE* File)
+void SElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
 {
     #define DEF_CMD(def_line, def_enum, ...) \
     else if (eCommand == def_enum) \
@@ -973,28 +869,28 @@ void elf_write_command (ECommandNums eCommand, FILE* File)
 
 //=============================================================================================================================================================================
 
-void elf_add_to_var_table (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_add_to_var_table (SNode* CurNode)
 {
-    if (Back->table_cond == none)
+    if (table_cond == none)
     {
-        elf_create_new_var_table (Back);
+        elf_create_new_var_table ();
     }
 
     MLA (CurNode->category == CLine && CurNode->type == TVariable);
 
     SVarTable* Table = NULL;
-    peek_from_stack (Back->VarStack, &Table);
+    peek_from_stack (VarStack, &Table);
 
     Table->Arr[Table->size].name  = CurNode->data.var; //copy address from node
-    Table->Arr[Table->size].index = Back->RAM_top_index;
+    Table->Arr[Table->size].index = RAM_top_index;
 
-    Back->RAM_top_index++;
+    RAM_top_index++;
     Table->size++;
 
     return;
 }
 
-void elf_create_new_var_table (SElfBack* Back)
+void SElfBack::elf_create_new_var_table ()
 {
     ME;
 
@@ -1002,25 +898,25 @@ void elf_create_new_var_table (SElfBack* Back)
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
     NewTable->size = 0;
 
-    push_in_stack (Back->VarStack, NewTable);
+    push_in_stack (VarStack, NewTable);
 
-    Back->table_cond = exist;
+    table_cond = exist;
 
     return;
 }
 
-void elf_create_param_var_table (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::elf_create_param_var_table (SNode* CurNode)
 {
     //ME;
 
-    Back->RAM_top_index = 1;
+    RAM_top_index = 1;
 
     do
     {
         if (CurNode->left != NULL)
         {
-            elf_add_to_var_table (CurNode->left->left, Back);
-            Back->Funcs->Table[Back->Funcs->top_index].parameters++;
+            elf_add_to_var_table (CurNode->left->left);
+            Funcs->Table[Funcs->top_index].parameters++;
         }
 
         CurNode = CurNode->right;
@@ -1029,13 +925,13 @@ void elf_create_param_var_table (ELF_BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void elf_delete_var_table (SElfBack* Back)
+void SElfBack::elf_delete_var_table ()
 {
     ME;
 
     SVarTable* Table = NULL;
 
-    pop_from_stack (Back->VarStack, &Table);
+    pop_from_stack (VarStack, &Table);
 
     free (Table->Arr);
 
@@ -1044,11 +940,11 @@ void elf_delete_var_table (SElfBack* Back)
     return;
 }
 
-int elf_find_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
+int SElfBack::elf_find_var (SNode* CurNode)
 {
     int RetIndex = JUNK;
 
-    MLA (Back->VarStack->size != 0);
+    MLA (VarStack->size != 0);
     MLA (CurNode->category == CLine && CurNode->type == TVariable);
 
     SVarTable* Table = NULL;
@@ -1056,10 +952,10 @@ int elf_find_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
     int depth = 1;
     do
     {
-        Table = Back->VarStack->data[Back->VarStack->size - depth];
-        //printf ("=%p=%d/%d=\n", Table, depth, Back->VarStack->size);
+        Table = VarStack->data[VarStack->size - depth];
+        //printf ("=%p=%d/%d=\n", Table, depth, VarStack->size);
         depth++;
-    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth <= Back->VarStack->size));
+    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth <= VarStack->size));
 
     if (RetIndex < 0)
     {
@@ -1072,14 +968,14 @@ int elf_find_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
 
 //=============================================================================================================================================================================
 
-void set_hex_int (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number)
+void SElfBack::set_hex_int (int Number)
 {
     SET_4(Number);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void x86_push_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number)
+void SElfBack::x86_push_i (int Number)
 {
     if (Number <= 127)
     {
@@ -1092,83 +988,56 @@ void x86_push_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number)
 
     SET(0x68);
 
-    set_hex_int (BACK_FUNC_PARAMETERS, Number);
+    set_hex_int (Number);
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86_push_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+void SElfBack::x86_push_r (int Register)
 {
-    char opcode = 0x50;
-    opcode += (char) Register;
+    if (Register >= DELTA)
+    {
+        SET(0x41);
+        Register-= DELTA;
+    }
 
-    SET(opcode);
+    x86___Reg_config(Register, 0x50);
 }
 
-void x86_push_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+void SElfBack::x86_push_IrI (int Register)
 {
-    SET(0x41);
+    if (Register >= DELTA)
+    {
+        SET(0x41);
+        Register-= DELTA;
+    }
 
-    char opcode = 0x50;
-    opcode += (char) Register;
-
-    SET(opcode);
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86_push_IrI (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
-{
     SET(0xff);
 
-    char opcode = 0x30;
-    opcode += (char) Register;
-
-    SET(opcode);
-}
-
-void x86_push_Ir64I (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
-{
-    SET(0x41);
-    SET(0xff);
-
-    char opcode = 0x30;
-    opcode += (char) Register;
-
-    SET(opcode);
+    x86___Reg_config(Register, 0x30);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+void SElfBack::x86_pop_r (int Register)
 {
-    char opcode = 0x58;
-    opcode += (char) Register;
+    if (Register >= DELTA)
+    {
+        SET(0x41);
+        Register-= DELTA;
+    }
 
-    SET(opcode);
-}
-
-void x86_pop_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
-{
-    SET(0x41);
-
-    char opcode = 0x58;
-    opcode += (char) Register;
-
-    SET(opcode);
+    x86___Reg_config(Register, 0x58);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void x86_nop (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::x86_nop ()
 {
     SET(0x90);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void x86___end (ELF_BACK_FUNC_HEAD_PARAMETERS)
+void SElfBack::x86___End ()
 {
     SET (0xb8);
     SET (0x3c);
@@ -1187,11 +1056,45 @@ void x86___end (ELF_BACK_FUNC_HEAD_PARAMETERS)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void x86_mov_r_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
+void SElfBack::x86___DstSrc_config (int& dstReg, int& srcReg)
 {
-    SET(0x48);
-    SET(0x89);
+    if ((srcReg >= DELTA) && (dstReg >= DELTA))
+    {
+        SET(0x4d);
+        srcReg-= DELTA;
+        dstReg-= DELTA;
+    }
+    else if (srcReg >= DELTA)
+    {
+        SET(0x4c);
+        srcReg-= DELTA;
+    }
+    else if (dstReg >= DELTA)
+    {
+        SET(0x49);
+        dstReg-= DELTA;
+    }
+    else
+    {
+        SET(0x48);
+    }
+}
 
+void SElfBack::x86___Dst_config (int& dstReg)
+{
+    if (dstReg >= DELTA)
+    {
+        SET(0x49);
+        dstReg-= DELTA;
+    }
+    else
+    {
+        SET(0x48);
+    }
+}
+
+void SElfBack::x86___Regs_config(const int dstReg, const int srcReg)
+{
     char opcode = 0xc0;
     opcode += (char) dstReg;
     opcode += (char) srcReg * 8;
@@ -1199,70 +1102,196 @@ void x86_mov_r_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
     SET(opcode);
 }
 
-void x86_mov_r64_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
+void SElfBack::x86___Reg_config(const int Reg, const int ZeroPoint)
 {
-    SET(0x49);
-    SET(0x89);
-
-    char opcode = 0xc0;
-    opcode += (char) dstReg;
-    opcode += (char) srcReg * 8;
+    char opcode = ZeroPoint;
+    opcode += (char) Reg;
 
     SET(opcode);
-}
-
-void x86_mov_r_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
-{
-    SET(0x4c);
-    SET(0x89);
-
-    char opcode = 0xc0;
-    opcode += (char) dstReg;
-    opcode += (char) srcReg * 8;
-
-    SET(opcode);
-}
-
-void x86_mov_r64_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
-{
-    SET(0x4d);
-    SET(0x89);
-
-    char opcode = 0xc0;
-    opcode += (char) dstReg;
-    opcode += (char) srcReg * 8;
-
-    SET(opcode);
-}
-
-void x86_mov_r_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number)
-{
-    SET(0x48);
-    SET(0xc7);
-
-    char opcode = 0xc0;
-    opcode += (char) dstReg;
-
-    SET(opcode);
-
-    set_hex_int(BACK_FUNC_PARAMETERS, Number);
-}
-
-void x86_mov_r64_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number)
-{
-    SET(0x49);
-    SET(0xc7);
-
-    char opcode = 0xc0;
-    opcode += (char) dstReg;
-
-    SET(opcode);
-
-    set_hex_int(BACK_FUNC_PARAMETERS, Number);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void SElfBack::x86_mov_r_r (int dstReg, int srcReg)
+{
+    x86___DstSrc_config(dstReg, srcReg);
+
+    SET(0x89);
+
+    x86___Regs_config(dstReg, srcReg);
+}
+
+// void SElfBack::x86_mov_r64_r (int dstReg, int srcReg)
+// {
+//     SET(0x49);
+//     SET(0x89);
+//
+//     char opcode = 0xc0;
+//     opcode += (char) dstReg;
+//     opcode += (char) srcReg * 8;
+//
+//     SET(opcode);
+// }
+
+// void SElfBack::x86_mov_r_r64 (int dstReg, int srcReg)
+// {
+//     SET(0x4c);
+//     SET(0x89);
+//
+//     char opcode = 0xc0;
+//     opcode += (char) dstReg;
+//     opcode += (char) srcReg * 8;
+//
+//     SET(opcode);
+// }
+
+// void SElfBack::x86_mov_r64_r64 (int dstReg, int srcReg)
+// {
+//     SET(0x4d);
+//     SET(0x89);
+//
+//     char opcode = 0xc0;
+//     opcode += (char) dstReg;
+//     opcode += (char) srcReg * 8;
+//
+//     SET(opcode);
+// }
+
+void SElfBack::x86_mov_r_i (int dstReg, int Number)
+{
+    if (dstReg >= DELTA)
+    {
+        SET(0x49);
+        dstReg-= DELTA;
+    }
+    else
+    {
+        SET(0x48);
+    }
+
+    SET(0xc7);
+
+    char opcode = 0xc0;
+    opcode += (char) dstReg;
+
+    SET(opcode);
+
+    set_hex_int(Number);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86_add_stack ()
+{
+    int a_reg = A_REG;
+    int b_reg = B_REG;
+
+    x86_pop_r(b_reg);
+    x86_pop_r(a_reg);
+
+    x86___DstSrc_config(a_reg, b_reg);
+
+    SET(0x01);
+
+    x86___Regs_config(a_reg, b_reg);
+
+    x86_push_i(a_reg);
+}
+
+void SElfBack::x86_sub_stack ()
+{
+    int a_reg = A_REG;
+    int b_reg = B_REG;
+
+    x86_pop_r(b_reg);
+    x86_pop_r(a_reg);
+
+    x86___DstSrc_config(a_reg, b_reg);
+
+    SET(0x29);
+
+    x86___Regs_config(a_reg, b_reg);
+
+    x86_push_i(a_reg);
+}
+
+void SElfBack::x86_imul_stack ()
+{
+    int a_reg = A_REG;
+
+    x86_pop_r(a_reg);
+    x86_pop_r(rax);
+
+    x86___Dst_config(a_reg);
+
+    SET(0xf7);
+
+    x86___Reg_config(a_reg, 0xe8);
+
+    x86_push_i(rax);
+}
+
+void SElfBack::x86_idiv_stack ()
+{
+    x86_mov_r_i(rdx, 0);
+
+    int a_reg = A_REG;
+
+    x86_pop_r(a_reg);
+    x86_pop_r(rax);
+
+    x86___Dst_config(a_reg);
+
+    SET(0xf7);
+
+    x86___Reg_config(a_reg, 0xf8);
+
+    x86_push_r(rax);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86_add_i (int Register, int Number)
+{
+    x86___Dst_config(Register);
+
+    SET(0x83);
+
+    x86___Reg_config(Register, 0xc0);
+
+    set_hex_int(Number);
+}
+
+void SElfBack::x86_sub_i (int Register, int Number)
+{
+    x86___Dst_config(Register);
+
+    SET(0x83);
+
+    x86___Reg_config(Register, 0xe8);
+
+    set_hex_int(Number);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86_inc (int Register)
+{
+    x86___Dst_config(Register);
+
+    SET(0xff);
+
+    x86___Reg_config(Register, 0xc0);
+}
+
+void SElfBack::x86_dec (int Register)
+{
+    x86___Dst_config(Register);
+
+    SET(0xff);
+
+    x86___Reg_config(Register, 0xc8);
+}
 
 //=============================================================================================================================================================================
 
