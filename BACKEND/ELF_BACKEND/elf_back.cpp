@@ -32,7 +32,7 @@
 
 //=============================================================================================================================================================================
 
-#define MAX_ELF_SIZE 10000
+#define MAX_ELF_SIZE 100000
 
 #define SET(x) Back->Array[Back->cnt] = (x); Back->cnt++;
 
@@ -405,69 +405,70 @@ void elf_generate_code (ELF_BACK_FUNC_HEAD_PARAMETERS)
 //
 //     fprintf (Back->file, SEP_LINE "\n\n");
 
-    // elf_generate_statement (CurNode, Back);
+    x86_mov_r64_i(BACK_FUNC_PARAMETERS, eSHIFT_REG, 0);
+    x86_mov_r64_i(BACK_FUNC_PARAMETERS, eTOP_REG, 0);
 
-    x86_push_r64(BACK_FUNC_PARAMETERS, eSHIFT_REG);
-    x86_pop_r64(BACK_FUNC_PARAMETERS, eSHIFT_REG);  //TODO strange BUG
+    //TODO JUMP MAIN SOMEHOW
 
-    x86_push_r(BACK_FUNC_PARAMETERS, rcx);
-    x86_pop_r(BACK_FUNC_PARAMETERS, rcx);
+    elf_generate_statement (CurNode, Back);
 
-    SET (0xb8);
-    SET (0x01);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0xbf);
-    SET (0x01);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0x48);
-    SET (0xbe);
-    SET (0x5f);
-    SET (0x81);
-    SET (0x02);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0xba);
-    SET (0x0f);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0x0f);
-    SET (0x05);
-    SET (0xb8);
-    SET (0x3c);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0xbf);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0x0f);
-    SET (0x05);
+    x86___end(BACK_FUNC_PARAMETERS);
 
-    SET (0x48);
-    SET (0x65);
-    SET (0x6c);
-    SET (0x6c);
-    SET (0x6f);
-    SET (0x2c);
-    SET (0x20);
-    SET (0x77);
-    SET (0x6f);
-    SET (0x72);
-    SET (0x6c);
-    SET (0x64);
-    SET (0x21);
-    SET (0x0a);
-    SET (0x00);
+//     SET (0xb8);
+//     SET (0x01);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0xbf);
+//     SET (0x01);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x48);
+//     SET (0xbe);
+//     SET (0x5f);
+//     SET (0x81);
+//     SET (0x02);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0xba);
+//     SET (0x0f);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x0f);
+//     SET (0x05);
+//     SET (0xb8);
+//     SET (0x3c);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0xbf);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x00);
+//     SET (0x0f);
+//     SET (0x05);
+//
+//     SET (0x48);
+//     SET (0x65);
+//     SET (0x6c);
+//     SET (0x6c);
+//     SET (0x6f);
+//     SET (0x2c);
+//     SET (0x20);
+//     SET (0x77);
+//     SET (0x6f);
+//     SET (0x72);
+//     SET (0x6c);
+//     SET (0x64);
+//     SET (0x21);
+//     SET (0x0a);
+//     SET (0x00);
 
 /*
     fprintf (Back->file, SEP_LINE "\n\n");
@@ -814,19 +815,15 @@ void elf_generate_push_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
 {
     int Index = elf_find_var (BACK_FUNC_PARAMETERS);
 
-    PUT (push);
-    fprintf (Back->file, " %d\n", Index);
+    x86_push_i(BACK_FUNC_PARAMETERS, Index);
 
-    PUT (push);
-    fprintf (Back->file, " " SHIFT_REG "\n");
+    x86_push_r64(BACK_FUNC_PARAMETERS, eSHIFT_REG);
 
-    PUTLN (add);
+    PUTLN (add);    //TODO remove
 
-    PUT (pop);
-    fprintf (Back->file, " " COUNT_REG "\n");
+    x86_pop_r64(BACK_FUNC_PARAMETERS, eCOUNT_REG);
 
-    PUT (push);
-    fprintf (Back->file, " [" COUNT_REG "]\n\n");
+    x86_push_Ir64I(BACK_FUNC_PARAMETERS, eCOUNT_REG);
 
     return;
 }
@@ -1073,58 +1070,32 @@ int elf_find_var (ELF_BACK_FUNC_HEAD_PARAMETERS)
     return RetIndex;
 }
 
-// bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex)
-// {
-//     MLA (Table != NULL);
-//
-//     for (int counter = 0; counter < Table->size; ++counter)
-//     {
-//         if (wcscmp (varName, Table->Arr[counter].name) == 0)
-//         {
-//             *RetIndex = Table->Arr[counter].index;
-//
-//             return true;
-//         }
-//     }
-//
-//     return false;
-// }
-
-// void free_tables (SStack<SVarTable*>* VarStack)
-// {
-//     for (int i = 0; VarStack->size - i > 0; i++)
-//     {
-//         free (VarStack->data[i]->Arr);
-//         VarStack->data[i]->Arr = NULL;
-//
-//         free (VarStack->data[i]);
-//         VarStack->data[i] = NULL;
-//     }
-//
-//     stack_destructor (VarStack);
-//
-//     return;
-// }
-
 //=============================================================================================================================================================================
 
-void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, char Number)
+void set_hex_int (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number)
 {
-    SET(0x6a);
-    SET(Number);
-}
-
-void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, short Number)
-{
-    SET(0x68);
-    SET_2(Number);
-}
-
-void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number)
-{
-    SET(0x68);
     SET_4(Number);
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_push_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number)
+{
+    if (Number <= 127)
+    {
+        SET(0x6a);
+
+        SET((char) Number);
+
+        return;
+    }
+
+    SET(0x68);
+
+    set_hex_int (BACK_FUNC_PARAMETERS, Number);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void x86_push_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
 {
@@ -1144,6 +1115,32 @@ void x86_push_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
     SET(opcode);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_push_IrI (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+{
+    SET(0xff);
+
+    char opcode = 0x30;
+    opcode += (char) Register;
+
+    SET(opcode);
+}
+
+void x86_push_Ir64I (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
+{
+    SET(0x41);
+    SET(0xff);
+
+    char opcode = 0x30;
+    opcode += (char) Register;
+
+    SET(opcode);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
 {
     char opcode = 0x58;
@@ -1161,6 +1158,111 @@ void x86_pop_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register)
 
     SET(opcode);
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_nop (ELF_BACK_FUNC_HEAD_PARAMETERS)
+{
+    SET(0x90);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86___end (ELF_BACK_FUNC_HEAD_PARAMETERS)
+{
+    SET (0xb8);
+    SET (0x3c);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+
+    SET (0xbf);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x00);
+    SET (0x0f);
+    SET (0x05);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_mov_r_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
+{
+    SET(0x48);
+    SET(0x89);
+
+    char opcode = 0xc0;
+    opcode += (char) dstReg;
+    opcode += (char) srcReg * 8;
+
+    SET(opcode);
+}
+
+void x86_mov_r64_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
+{
+    SET(0x49);
+    SET(0x89);
+
+    char opcode = 0xc0;
+    opcode += (char) dstReg;
+    opcode += (char) srcReg * 8;
+
+    SET(opcode);
+}
+
+void x86_mov_r_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
+{
+    SET(0x4c);
+    SET(0x89);
+
+    char opcode = 0xc0;
+    opcode += (char) dstReg;
+    opcode += (char) srcReg * 8;
+
+    SET(opcode);
+}
+
+void x86_mov_r64_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg)
+{
+    SET(0x4d);
+    SET(0x89);
+
+    char opcode = 0xc0;
+    opcode += (char) dstReg;
+    opcode += (char) srcReg * 8;
+
+    SET(opcode);
+}
+
+void x86_mov_r_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number)
+{
+    SET(0x48);
+    SET(0xc7);
+
+    char opcode = 0xc0;
+    opcode += (char) dstReg;
+
+    SET(opcode);
+
+    set_hex_int(BACK_FUNC_PARAMETERS, Number);
+}
+
+void x86_mov_r64_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number)
+{
+    SET(0x49);
+    SET(0xc7);
+
+    char opcode = 0xc0;
+    opcode += (char) dstReg;
+
+    SET(opcode);
+
+    set_hex_int(BACK_FUNC_PARAMETERS, Number);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 //=============================================================================================================================================================================
 

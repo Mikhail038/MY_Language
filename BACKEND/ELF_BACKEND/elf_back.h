@@ -131,19 +131,40 @@ int elf_find_var (ELF_BACK_FUNC_HEAD_PARAMETERS);
 
 //===================================================================================================================================================================
 
-void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, char Number);
+void set_hex_int (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number);
 
-void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, short Number);
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void x86_push_imm (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number);
+void x86_push_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int Number);
 
 void x86_push_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
-
 void x86_push_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
 
-void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
+void x86_push_IrI (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
+void x86_push_Ir64I (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_pop_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
 void x86_pop_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int Register);
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_nop (ELF_BACK_FUNC_HEAD_PARAMETERS);
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_mov_r_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
+void x86_mov_r64_r (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
+void x86_mov_r_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
+void x86_mov_r64_r64 (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int srcReg);
+
+void x86_mov_r_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number);
+void x86_mov_r64_i (ELF_BACK_FUNC_HEAD_PARAMETERS, int dstReg, int Number);
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86___end (ELF_BACK_FUNC_HEAD_PARAMETERS);
 
 //===================================================================================================================================================================
 
