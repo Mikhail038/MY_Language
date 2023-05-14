@@ -103,10 +103,8 @@ SBack;
 #define ME printf ("==%s %s:%d\n", LOCATION);
 #define ME
 
-#define PUTLN(d_command)
-//  writeln_command ( d_command , Back->file)
-#define PUT(d_command)
-// write_command   ( d_command , Back->file)
+#define PUTLN(d_command) writeln_command ( d_command , Back->file)
+#define PUT(d_command) write_command   ( d_command , Back->file)
 
 #define CLEAN_TABLE if (Back->table_cond != none) { delete_var_table (Back); Back->table_cond = exist; }
 
