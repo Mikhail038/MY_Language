@@ -502,9 +502,6 @@ SBack* back_constructor (FILE* ExFile)
 
     stack_constructor (Back->VarStack, 4);
 
-    // Back->Array = (char*) calloc(sizeof (char), ElfSize);
-    Back->cnt = 0;
-
     return Back;
 }
 

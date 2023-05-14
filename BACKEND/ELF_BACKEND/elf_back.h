@@ -6,6 +6,7 @@
 #include "back.h"
 #include <cstddef>
 #include <cstdlib>
+#include <unordered_map>
 
 //==================================================================================================================================================================
 
@@ -35,17 +36,23 @@ enum ERegisters_64
     r15 = DELTA + 7
 };
 
-//DO NOT MAKE THEM RAX
+//DO NOT MAKE THEM RAX or RDX
 #define A_REG  rbx
 #define B_REG  rcx
 
 #define eSHIFT_REG  r12
+#define eCOUNT_REG  r13
 #define eTOP_REG    r14
 #define eFUNC_REG   r15
 
-#define eCOUNT_REG  rax //TODO maybe not
 
 //==================================================================================================================================================================
+
+typedef struct TLabel
+{
+    size_t start;
+    size_t finish;
+};
 
 typedef struct SElfBack
 {
@@ -60,8 +67,9 @@ typedef struct SElfBack
     char*               Array           = NULL;
     size_t              cnt             = 0;
 
-    public:
+    std::unordered_map<char*, TLabel> Labels;
 
+public:
     SElfBack(FILE* ExFile, SNode* CurNode);
 
     ~SElfBack();
@@ -71,18 +79,13 @@ typedef struct SElfBack
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_push_i (int Number);
-
-    void x86_push_r (int Register);
-    // void x86_push_r64 (int Register);
-
-    void x86_push_IrI (int Register);
-    // void x86_push_Ir64I (int Register);
+    void x86_push_i (const int Number);
+    void x86_push_r (const int Register);
+    void x86_push_IrI (const int Register);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     void x86_pop_r (int Register);
-    // void x86_pop_r64 (int Register);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -90,36 +93,54 @@ typedef struct SElfBack
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_mov_r_r (int dstReg, int srcReg);
-    // void x86_mov_r64_r (int dstReg, int srcReg);
-    // void x86_mov_r_r64 (int dstReg, int srcReg);
-    // void x86_mov_r64_r64 (int dstReg, int srcReg);
+    void x86_call_label (char* Name);
+    void x86_ret ();
 
-    void x86_mov_r_i (int dstReg, int Number);
-    // void x86_mov_r64_i (int dstReg, int Number);
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_syscall ();
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_cmp_r_r    (int dstReg, int srcReg);
+    void x86_cmp_stack  ();
+
+    //------------------------  -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_jump (int Shift, int JmpMode);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_mov_r_r    (const int dstReg, const int srcReg);
+    void x86_mov_r_i    (const int dstReg, const int Number);
+    void x86_mov_r_IrI  (const int dstReg, const int srcReg);
+    void x86_mov_r_Ir_iI(const int dstReg, const int srcReg, int Shift);
+    void x86_mov_IrI_r  (const int dstReg, const int srcReg);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     void x86_add_stack ();
+    void x86_add_i (const int Register, const int Number);
+
     void x86_sub_stack ();
+    void x86_sub_i (const int Register, const int Number);
+
     void x86_imul_stack ();
     void x86_idiv_stack ();
 
-    void x86_add_i (int Register, int Number);
-    void x86_sub_i (int Register, int Number);
-
-    void x86_inc (int Reg);
-    void x86_dec (int Reg);
+    void x86_inc (const int Reg);
+    void x86_dec (const int Reg);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void set_hex_int (const int Number);
+    void set_hex_int    (const int Number);
+    void set_hex_long   (const long Address);
 
-    void x86___DstSrc_config (int& dstReg, int& srcReg);
-    void x86___Dst_config (int& dstReg);
+    void x86___DstSrc_config    (int& dstReg, int& srcReg);
+    void x86___Dst_config       (int& dstReg);
 
-    void x86___Regs_config (const int dstReg, const int srcReg);
-    void x86___Reg_config(const int Reg, const int ZeroPoint);
+    void x86___Regs_config  (const int dstReg, const int srcReg);
+    void x86___Reg_config   (const int Reg, const int ZeroPoint);
 
     void x86___End ();
 
@@ -154,7 +175,7 @@ typedef struct SElfBack
 
     void elf_incr_top_reg ();
 
-    void elf_standard_if_jump ();
+    void elf_standard_if_jump (int JumpMode);
 
     void elf_write_command (ECommandNums eCommand, FILE* File);
 

@@ -46,6 +46,11 @@
                         &(x), sizeof (unsigned int));  \
     cnt += 4;
 
+#define SET_8(x)     \
+    memcpy ((size_t*) &(Array[cnt]),    \
+                        &(x), sizeof (size_t));  \
+    cnt += 8;
+
 #define FILL_2  SET (0x00);
 
 #define FILL_4  SET (0x00); SET (0x00); SET (0x00);
@@ -74,6 +79,22 @@
 
 //=============================================================================================================================================================================
 
+enum EJumpModes
+{
+    jmp_    = 0,
+    ja_     = 1,
+    jae_    = 2,
+    jb_     = 3,
+    jbe_    = 5,
+    je_     = 6,
+    jne_    = 7,
+    jl_     = 8,
+    jle_    = 9,
+    jg_     = 10,
+    jge_    = 11
+};
+
+#define QUADWORD_SIZE 32
 
 //=============================================================================================================================================================================
 
@@ -105,6 +126,7 @@ SElfBack::~SElfBack()
     free (Array);
 }
 
+//=============================================================================================================================================================================
 
 void make_elf_file (SNode* Root, FILE* ExFile)
 {
@@ -372,36 +394,34 @@ void SElfBack::generate_elf_array (SNode* Root)
 
 void SElfBack::elf_generate_code (SNode* Root)
 {
-//     x86_push_imm (BACK_FUNC_PARAMETERS, 0);
-//
-//     fprintf (Back->file, " 0\n"); //TODO ask Danya maybe %d 0
-//     PUT (pop);
-//     fprintf (Back->file, " " SHIFT_REG "\n\n");
-//
-//
-//     PUT (push);
-//     fprintf (Back->file, " 0\n");
-//     PUT (pop);
-//     fprintf (Back->file, " " TOP_REG "\n\n");
-//
-//     PUT (jump);
-//     fprintf (Back->file, " " LABEL MAIN_JUMP "\n\n");
-//
-//     fprintf (Back->file, SEP_LINE "\n\n");
+    size_t CodeStart = cnt;
 
     x86_mov_r_i(eSHIFT_REG, 0);
-    x86_mov_r_i(eTOP_REG, 0);
 
-    x86_push_i(38*13);
-    x86_push_i(13);
-    x86_idiv_stack();
-    x86_pop_r(r10);
+    x86_mov_r_i(eTOP_REG, cnt - CodeStart); // TODO maybe not
+
+    // Labels["main"] = {cnt, 0};
+    // x86_jump (8, jmp_);
+
+    //x86_call_label ("main");
+
+    elf_standard_if_jump(jl_);
+
+    x86___End();
+
+    SET(0x00);
+    FILL_8;
+
+//     x86_push_i(38*13);
+//     x86_push_i(13);
+//     x86_idiv_stack();
+//     x86_pop_r(r10);
+//
+//     x86_mov_IrI_r(r9, rdx);
 
     //TODO JUMP MAIN SOMEHOW
 
     //elf_generate_statement (Root);
-
-    x86___End();
 
 //     SET (0xb8);
 //     SET (0x01);
@@ -459,29 +479,6 @@ void SElfBack::elf_generate_code (SNode* Root)
 //     SET (0x0a);
 //     SET (0x00);
 
-/*
-    fprintf (Back->file, SEP_LINE "\n\n");
-
-    PUT (push);
-    fprintf (Back->file, " 0\n"); //TODO ask Danya maybe %d 0
-    PUT (pop);
-    fprintf (Back->file, " " SHIFT_REG "\n\n");
-
-
-    PUT (push);
-    fprintf (Back->file, " 0\n");
-    PUT (pop);
-    fprintf (Back->file, " " TOP_REG "\n\n");
-
-    PUT (jump);
-    fprintf (Back->file, " " LABEL MAIN_JUMP "\n\n");
-
-    fprintf (Back->file, SEP_LINE "\n\n");
-
-    elf_generate_statement (BACK_FUNC_PARAMETERS);
-
-    //delete_var_table (Back);
-*/
     return;
 }
 
@@ -521,7 +518,6 @@ void SElfBack::elf_generate_function (SNode* CurNode)
     elf_pop_parameters ();
 
     Funcs->top_index++;
-
 
     elf_generate_statement (CurNode->right);
     ELF_CLEAN_TABLE;
@@ -715,19 +711,11 @@ void SElfBack::elf_generate_call (SNode* CurNode)
 
 void SElfBack::elf_generate_return (SNode* CurNode)
 {
-    if (func_cond == main_f)
-    {
-        x86___End();
-    }
-    else
-    {
-        elf_generate_expression (CurNode->left);
+    elf_generate_expression (CurNode->left);
 
-        PUT (pop);
-        fprintf (file, " " FUNC_REG "\n");
+    x86_pop_r(eFUNC_REG);
 
-        PUTLN (ret);
-    }
+    x86_ret();
 
     return;
 }
@@ -763,8 +751,11 @@ void SElfBack::elf_generate_pop_var (SNode* CurNode)
     x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
     x86_add_i(eCOUNT_REG, Index);
 
+    x86_pop_r(A_REG);
+    x86_mov_IrI_r(eCOUNT_REG, A_REG);
+
     // PUT (pop);
-    // fprintf (file, " [" COUNT_REG "]\n\n"); //TODO this
+    // fprintf (file, " [" COUNT_REG "]\n\n"); // this was
 
     return;
 }
@@ -808,8 +799,11 @@ void SElfBack::elf_pop_parameters ()
     {
         x86_inc(eCOUNT_REG);
 
+        x86_pop_r(A_REG);
+        x86_mov_IrI_r(eCOUNT_REG, A_REG);
+
         // PUT (pop);
-        // fprintf (file, " [" COUNT_REG "]\n\n");  //TODO this
+        // fprintf (file, " [" COUNT_REG "]\n\n");  // this was
     }
 
     return;
@@ -822,23 +816,38 @@ void SElfBack::elf_incr_top_reg ()
     return;
 }
 
-// TODO uncomment
-void SElfBack::elf_standard_if_jump ()
+#define STD_JUMP_FIRST_SHIFT    4   //DO NOT change
+#define STD_JUMP_SECOND_SHIFT   2   //DO NOT change
+
+void SElfBack::elf_standard_if_jump (int JumpMode)
 {
-//     fprintf (file, " " LABEL "%d\n", label_cnt);
-//     label_cnt++;
-//
-//     PUT (push);
-//     fprintf (file, " %d\n", FALSE);
-//
-//     PUT (jump);
-//     fprintf (file, " " LABEL "%d\n", label_cnt);
-//
-//     fprintf (file, LABEL "%d:\n", label_cnt - 1);
-//
-//     PUT (push);
-//     fprintf (file, " %d\n", TRUE);
-//
+    if (JumpMode != jmp_)
+    {
+        x86_cmp_stack ();
+    }
+
+    x86_jump(STD_JUMP_FIRST_SHIFT, JumpMode);
+
+    // fprintf (file, " " LABEL "%d\n", label_cnt);
+    // label_cnt++;
+
+    x86_push_i(FALSE);
+
+    // PUT (push);
+    // fprintf (file, " %d\n", FALSE);
+
+    x86_jump(STD_JUMP_SECOND_SHIFT, jmp_);
+
+    // PUT (jump);
+    // fprintf (file, " " LABEL "%d\n", label_cnt);
+
+    // fprintf (file, LABEL "%d:\n", label_cnt - 1);
+
+    x86_push_i(TRUE);
+
+    // PUT (push);
+    // fprintf (file, " %d\n", TRUE);
+
 //     fprintf (file, LABEL "%d:\n", label_cnt);
 //
 //     label_cnt++;
@@ -907,7 +916,7 @@ void SElfBack::elf_create_new_var_table ()
 
 void SElfBack::elf_create_param_var_table (SNode* CurNode)
 {
-    //ME;
+    ME;
 
     RAM_top_index = 1;
 
@@ -971,6 +980,11 @@ int SElfBack::elf_find_var (SNode* CurNode)
 void SElfBack::set_hex_int (int Number)
 {
     SET_4(Number);
+}
+
+void SElfBack::set_hex_long (long Address)
+{
+    SET_8(Address);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1037,21 +1051,108 @@ void SElfBack::x86_nop ()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86___End ()
+void SElfBack::x86_ret ()
 {
-    SET (0xb8);
-    SET (0x3c);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
+    SET (0xc3);
+}
 
-    SET (0xbf);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
-    SET (0x00);
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86_syscall ()
+{
     SET (0x0f);
     SET (0x05);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86_cmp_r_r (int dstReg, int srcReg)
+{
+    x86___DstSrc_config(dstReg, srcReg);
+
+    SET(0x39);
+
+    x86___Regs_config(dstReg, srcReg);
+}
+
+void SElfBack::x86_cmp_stack ()
+{
+    x86_pop_r(A_REG); //TODO maybe other order
+    x86_pop_r(B_REG);
+
+    x86_cmp_r_r (A_REG, B_REG);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86_jump (int Shift, int JumpMode)
+{
+    switch (JumpMode)
+    {
+        case jmp_:
+            SET(0xeb);
+            break;
+
+        case ja_:
+            SET(0x77);
+            break;
+
+        case jae_:
+            SET(0x73);
+            break;
+
+        case jb_:
+            SET(0x72);
+            break;
+
+        case jbe_:
+            SET(0x76);
+            break;
+
+        case je_:
+            SET(0x74);
+            break;
+
+        case jne_:
+            SET(0x75);
+            break;
+
+        case jl_:
+            SET(0x7c);
+            break;
+
+        case jle_:
+            SET(0x7e);
+            break;
+
+        case jg_:
+            SET(0x7f);
+            break;
+
+        case jge_:
+            SET(0x7d);
+            break;
+
+        default:
+            MLA(0);
+    }
+
+
+    char offset = 0x00;
+
+    offset += Shift;
+
+    SET(offset);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86___End ()
+{
+    x86_mov_r_i(rax, 0x3c);
+    x86_mov_r_i(rdi, 0);
+
+    x86_syscall ();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1121,62 +1222,115 @@ void SElfBack::x86_mov_r_r (int dstReg, int srcReg)
     x86___Regs_config(dstReg, srcReg);
 }
 
-// void SElfBack::x86_mov_r64_r (int dstReg, int srcReg)
-// {
-//     SET(0x49);
-//     SET(0x89);
-//
-//     char opcode = 0xc0;
-//     opcode += (char) dstReg;
-//     opcode += (char) srcReg * 8;
-//
-//     SET(opcode);
-// }
-
-// void SElfBack::x86_mov_r_r64 (int dstReg, int srcReg)
-// {
-//     SET(0x4c);
-//     SET(0x89);
-//
-//     char opcode = 0xc0;
-//     opcode += (char) dstReg;
-//     opcode += (char) srcReg * 8;
-//
-//     SET(opcode);
-// }
-
-// void SElfBack::x86_mov_r64_r64 (int dstReg, int srcReg)
-// {
-//     SET(0x4d);
-//     SET(0x89);
-//
-//     char opcode = 0xc0;
-//     opcode += (char) dstReg;
-//     opcode += (char) srcReg * 8;
-//
-//     SET(opcode);
-// }
-
 void SElfBack::x86_mov_r_i (int dstReg, int Number)
 {
-    if (dstReg >= DELTA)
-    {
-        SET(0x49);
-        dstReg-= DELTA;
-    }
-    else
-    {
-        SET(0x48);
-    }
+    x86___Dst_config(dstReg);
 
     SET(0xc7);
 
-    char opcode = 0xc0;
-    opcode += (char) dstReg;
-
-    SET(opcode);
+    x86___Reg_config(dstReg, 0xc0);
 
     set_hex_int(Number);
+}
+
+void SElfBack::x86_mov_r_IrI (int dstReg, int srcReg)
+{
+    x86___DstSrc_config(dstReg, srcReg);
+
+    SET(0x8b);
+
+    if ((srcReg == rsp) || (srcReg == r12))
+    {
+        char opcode = 0x04;
+        opcode += (char) dstReg * 8;
+
+        SET(opcode);
+
+        SET(0x24);
+
+        return;
+    }
+    if ((srcReg == rbp) || (srcReg == r13))
+    {
+        char opcode = 0x45;
+        opcode += (char) dstReg * 8;
+
+        SET(opcode);
+
+        SET(0x00);
+
+        return;
+    }
+
+    char opcode = 0x00;
+    opcode += (char) dstReg;
+    opcode += (char) srcReg * 8;
+
+    SET(opcode);
+}
+
+void SElfBack::x86_mov_IrI_r (int dstReg, int srcReg)
+{
+    x86___DstSrc_config(dstReg, srcReg);
+
+    SET(0x89);
+
+    char opcode = 0x00;
+    opcode += (char) dstReg;
+    opcode += (char) srcReg * 8;
+
+    SET(opcode);
+}
+
+void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
+{
+    x86___DstSrc_config(dstReg, srcReg);
+
+    SET(0x8b);
+
+    if ((srcReg == rsp) || (srcReg == r12))
+    {
+        char opcode = 0x44;
+        opcode += (char) dstReg * 8;
+
+        SET(opcode);
+
+        SET(0x24);
+
+        set_hex_int(Shift);
+
+        return;
+    }
+    if ((srcReg == rbp) || (srcReg == r13))
+    {
+        char opcode = 0x45;
+        opcode += (char) dstReg * 8;
+
+        SET(opcode);
+
+        set_hex_int(Shift);
+
+        return;
+    }
+
+    if (Shift != 0)
+    {
+        char opcode = 0x40;
+        opcode += (char) dstReg;
+        opcode += (char) srcReg * 8;
+
+        SET(opcode);
+
+        set_hex_int(Shift);
+    }
+    else
+    {
+        char opcode = 0x00;
+        opcode += (char) dstReg;
+        opcode += (char) srcReg * 8;
+
+        SET(opcode);
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

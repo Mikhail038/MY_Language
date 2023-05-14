@@ -1,3 +1,4 @@
+#include "back.h"
 #define ERR "YOU ARE NOT SUPPOSED TO SEE THAT!"
 
 DEF_OP (TValue,
@@ -57,7 +58,7 @@ LEXEM_IS (L"*"),
 },
 L"MUL",
 {
-    PUTLN (mul);
+    x86_imul_stack();
 })
 
 DEF_OP (TaDiv,
@@ -67,7 +68,7 @@ LEXEM_IS (L"/"),
 },
 L"DIV",
 {
-    PUTLN (m_div);
+    x86_idiv_stack();
 })
 
 DEF_OP (TaPow,
@@ -87,9 +88,7 @@ LEXEM_IS (L"<"),
 },
 L"LESS",
 {
-    PUT (ja);
-
-    elf_standard_if_jump ( );
+    elf_standard_if_jump (jg_);
 })
 
 DEF_OP (TcMore,
@@ -99,9 +98,7 @@ LEXEM_IS (L">"),
 },
 L"MORE",
 {
-    PUT (jb);
-
-    elf_standard_if_jump ();
+    elf_standard_if_jump (jl_);
 })
 
 DEF_OP (TcLessEq,
@@ -111,9 +108,7 @@ LEXEM_IS (L"<="),
 },
 L"LESS OR EQUAL",
 {
-    PUT (jae);
-
-    elf_standard_if_jump ();
+    elf_standard_if_jump (jge_);
 })
 
 DEF_OP (TcMoreEq,
@@ -123,9 +118,7 @@ LEXEM_IS (L">="),
 },
 L"MORE OR EQUAL",
 {
-    PUT (jbe);
-
-    elf_standard_if_jump ();
+    elf_standard_if_jump (jle_);
 })
 
 DEF_OP (TcEqual,
@@ -135,9 +128,7 @@ LEXEM_IS (L"=="),
 },
 L"EQUAL",
 {
-    PUT (je);
-
-    elf_standard_if_jump ();
+    elf_standard_if_jump (je_);
 })
 
 DEF_OP (TcNotEq,
@@ -147,11 +138,10 @@ LEXEM_IS (L"!="),
 },
 L"NOT EQUAL",
 {
-    PUT (jne);
-
-    elf_standard_if_jump ();
+    elf_standard_if_jump (jne_);
 })
 
+//TODO not work
 DEF_OP (TcNot,
 LEXEM_IS (L"!"),
 {
@@ -168,14 +158,11 @@ LEXEM_IS (L"&&"),
 },
 L"AND",
 {
-    PUTLN (mul);
+    x86_imul_stack();
 
-    PUT (push);
-    // fprintf (file, " %d\n", FALSE);
+    x86_push_i(FALSE);
 
-    PUT (jne);
-
-    elf_standard_if_jump ();
+    elf_standard_if_jump (jne_);
 })
 
 //TODO ABS ERROR THINK LATER
@@ -186,14 +173,11 @@ LEXEM_IS (L"||"),
 },
 L"OR",
 {
-    PUTLN (add);
+    x86_add_stack();
 
-    PUT (push);
-    // fprintf (file, " %d\n", FALSE);
+    x86_push_i(FALSE);
 
-    PUT (jne);
-
-    elf_standard_if_jump ();
+    elf_standard_if_jump (jne_);
 })
 
 DEF_OP (TOpenRoundBracket,
