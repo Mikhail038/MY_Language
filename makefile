@@ -50,8 +50,8 @@ BUILD_FRONTEND:  $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o
 BUILD_BACKEND_MC:  	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o
 	$(VR_COMPILER) 	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o -o back_mc $(VR_FLAGS)
 
-BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
-	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
+BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
+	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
 
 
 # EXTRA/STACK/OBJECTS/stack.o: EXTRA/STACK/stack.cpp
@@ -84,6 +84,10 @@ $(VR_OBJ_MC_B)/back.o: $(VR_SRC_MC_B)/back.cpp
 
 $(VR_OBJ_MC_B)/main_back.o: $(VR_SRC_MC_B)/main_back.cpp
 	$(VR_COMPILER) -c -o $(VR_OBJ_MC_B)/main_back.o $(VR_SRC_MC_B)/main_back.cpp $(VR_FLAGS)
+
+
+$(VR_OBJ_ELF_B)/elf_byte_ops.o: $(VR_SRC_ELF_B)/elf_byte_ops.cpp
+	$(VR_COMPILER) -c -o  $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_SRC_ELF_B)/elf_byte_ops.cpp $(VR_FLAGS)
 
 $(VR_OBJ_ELF_B)/elf_back.o: $(VR_SRC_ELF_B)/elf_back.cpp
 	$(VR_COMPILER) -c -o  $(VR_OBJ_ELF_B)/elf_back.o $(VR_SRC_ELF_B)/elf_back.cpp $(VR_FLAGS)

@@ -3,7 +3,9 @@
 //29.04.2023
 //==================================================================================================================================================================
 
+#include "TLabel.h"
 #include "back.h"
+
 #include <cstddef>
 #include <cstdlib>
 #include <list>
@@ -13,6 +15,75 @@
 #define PUTLN(d_command)
 #define PUT(d_command)
 
+
+//=============================================================================================================================================================================
+
+enum EJumpModes
+{
+    jmp_    = 0,
+    ja_     = 1,
+    jae_    = 2,
+    jb_     = 3,
+    jbe_    = 5,
+    je_     = 6,
+    jne_    = 7,
+    jl_     = 8,
+    jle_    = 9,
+    jg_     = 10,
+    jge_    = 11
+};
+
+#define QUADWORD_SIZE 32
+
+#define CALL_SIZE 5
+
+
+//==================================================================================================================================================================
+
+#define MAX_ELF_SIZE 100000
+
+#define SET(x) Array[cur_addr] = (x); cur_addr++;
+
+#define SET_2(x)     \
+    memcpy ((unsigned short int*) &(Array[cur_addr]),    \
+                        &(x), sizeof (unsigned short int));  \
+    cur_addr += 2;
+
+#define SET_4(x)     \
+    memcpy ((unsigned int*) &(Array[cur_addr]),    \
+                        &(x), sizeof (unsigned int));  \
+    cur_addr += 4;
+
+#define SET_8(x)     \
+    memcpy ((size_t*) &(Array[cur_addr]),    \
+                        &(x), sizeof (size_t));  \
+    cur_addr += 8;
+
+#define FILL_2  SET (0x00);
+
+#define FILL_4  SET (0x00); SET (0x00); SET (0x00);
+
+#define FILL_8  SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00);
+
+#define PASTE_8(x,y)  \
+    (x) = cur_addr;    \
+    memcpy ((size_t*) &(Array[(y)]), \
+    &(x), sizeof (size_t));
+
+#define PASTE_4(x,y)  \
+    (x) = cur_addr;    \
+    memcpy ((unsigned int*) &(Array[(y)]), \
+    &(x), sizeof (unsigned int));
+
+#define SKIP_8(x,y)   \
+    size_t (x) = 0; \
+    size_t (y) = cur_addr;    \
+    cur_addr += 8; //we ll skip it now
+
+#define SKIP_4(x,y)   \
+    unsigned int (x) = 0; \
+    size_t (y) = cur_addr;    \
+    cur_addr += 4; //we ll skip it now
 
 //==================================================================================================================================================================
 
@@ -51,53 +122,13 @@ enum ERegisters_64
 #define eTOP_REG    r10
 #define eFUNC_REG   r11
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#define MAIN_LBL    L"main"
+#define INP_LBL     L"inp"
+#define OUT_LBL     L"out"
 
 //==================================================================================================================================================================
-#define MAX_CALLS_OF_ONE_FUNC 50
-#define NULL_FINISH 0
-
-typedef struct TLabel
-{
-    size_t  cnt = 0;
-    size_t* start;
-    // std::list<size_t> start;
-    size_t finish = NULL_FINISH;
-
-    TLabel()
-    {
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
-    }
-
-    TLabel(size_t Finish)
-    {
-        finish = Finish;
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
-        cnt = 0;
-    }
-
-    TLabel(size_t FirstStart, size_t Finish)
-    {
-        finish = Finish;
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
-
-        start[0] = FirstStart;
-        cnt = 1;
-    }
-
-//     TLabel (TLabel&& other)
-//     {
-//         finish = other.finish;
-//         cnt = other.cnt;
-//         start = other.start;
-//
-//         other.start = nullptr;
-//     }
-
-    ~TLabel()
-    {
-        free (start);
-    }
-};
 
 typedef struct SElfBack
 {
@@ -109,7 +140,7 @@ typedef struct SElfBack
     SStack<SVarTable*>* VarStack        = NULL;
 
     char*               Array           = NULL;
-    size_t              cnt             = 0;
+    size_t              cur_addr        = 0;
     size_t              start_cnt       = 0;
 
 
@@ -196,7 +227,13 @@ public:
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86___paste_label (const wchar_t* Name);
+    void x86___paste_call_label (const wchar_t* Name);
+    void x86___paste_jump_label (const wchar_t* Name, int JumpMode);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86___make_inp_func ();
+    void x86___make_out_func ();
 
     //==================================================================================================================================================================
 
