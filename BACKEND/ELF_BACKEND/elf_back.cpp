@@ -394,18 +394,21 @@ void SElfBack::generate_elf_array (SNode* Root)
 
 void SElfBack::elf_generate_code (SNode* Root)
 {
-    size_t CodeStart = cnt;
-
     x86_mov_r_i(eSHIFT_REG, 0);
 
-    x86_mov_r_i(eTOP_REG, cnt - CodeStart); // TODO maybe not
+    x86_mov_r_i(eTOP_REG, cnt - start_cnt); // TODO maybe not
 
     // Labels["main"] = {cnt, 0};
     // x86_jump (8, jmp_);
 
-    //x86_call_label ("main");
+    x86_call_label (L"main");
 
-    elf_standard_if_jump(jl_);
+    x86_nop();
+    x86_nop();
+    x86_nop();
+    x86_nop();
+
+    x86___paste_label(L"main");
 
     x86___End();
 
@@ -499,16 +502,8 @@ void SElfBack::elf_generate_statement (SNode* CurNode)
 
 void SElfBack::elf_generate_function (SNode* CurNode)
 {
-    if (wcscmp (CurNode->left->data.var, MAIN_WORD) == 0)
-    {
-        func_cond = main_f;
-    }
-    else
-    {
-        func_cond = any_f;
-    }
-
-    fprintf (file, LABEL "%ls:\n", CurNode->left->data.var);
+    x86___paste_label(CurNode->left->data.var);
+    // fprintf (file, LABEL "%ls:\n", CurNode->left->data.var);
 
     Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
 
@@ -698,9 +693,10 @@ void SElfBack::elf_generate_call (SNode* CurNode)
 
     x86_pop_r(eSHIFT_REG);
 
+    x86_call_label(CurNode->left->data.var);
 
-    PUT (call);
-    fprintf (file, " " LABEL "%ls\n", CurNode->left->data.var);
+    // PUT (call);
+    // fprintf (file, " " LABEL "%ls\n", CurNode->left->data.var);
 
     x86_pop_r(eTOP_REG);
 
@@ -1051,6 +1047,39 @@ void SElfBack::x86_nop ()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void SElfBack::x86_call (int Shift)
+{
+    SET(0xe8);
+
+    set_hex_int(Shift);
+}
+
+void SElfBack::x86_call_label (const wchar_t* Name)
+{
+    if (Labels.find(Name) != Labels.end())
+    {
+        if (Labels[Name].finish != NULL_FINISH)
+        {
+            x86_call (Labels[Name].finish - cnt);
+        }
+        else
+        {
+            Labels[Name].start[Labels[Name].cnt] = cnt;
+            Labels[Name].cnt++;
+
+            for (size_t i = 0; i < 5; ++i)
+            {
+                x86_nop();
+            }
+        }
+    }
+    else
+    {
+        Labels.insert({Name, {cnt, 0}});
+    }
+}
+
+
 void SElfBack::x86_ret ()
 {
     SET (0xc3);
@@ -1153,6 +1182,29 @@ void SElfBack::x86___End ()
     x86_mov_r_i(rdi, 0);
 
     x86_syscall ();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SElfBack::x86___paste_label (const wchar_t* Name)
+{
+    if (Labels.find(Name) != Labels.end())
+    {
+        Labels[Name].finish = cnt;
+
+        for (size_t i = 0; i < Labels[Name].cnt; ++i)
+        {
+            cnt = Labels[Name].start[i];   // go there
+
+            x86_call (Labels[Name].finish - Labels[Name].start[i]); //paste code
+
+            cnt = Labels[Name].finish;  // go back
+        }
+    }
+    else
+    {
+        Labels.insert({Name, {cnt}});   //TODO fix this
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
