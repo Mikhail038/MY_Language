@@ -13,7 +13,7 @@ void main ( )
     var ю = 11;
     var ы = 3 + 4;
 
-    input ( ) ;
+    in ( ) ;
 
     if ( 6 * ю > 6 && ( 0 > 2 ) )
     {

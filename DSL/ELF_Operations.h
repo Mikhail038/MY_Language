@@ -88,7 +88,7 @@ LEXEM_IS (L"<"),
 },
 L"LESS",
 {
-    elf_standard_if_jump (jg_);
+    elf_standard_if_jump (jl_);
 })
 
 DEF_OP (TcMore,
@@ -98,7 +98,7 @@ LEXEM_IS (L">"),
 },
 L"MORE",
 {
-    elf_standard_if_jump (jl_);
+    elf_standard_if_jump (jg_);
 })
 
 DEF_OP (TcLessEq,
@@ -108,7 +108,7 @@ LEXEM_IS (L"<="),
 },
 L"LESS OR EQUAL",
 {
-    elf_standard_if_jump (jge_);
+    elf_standard_if_jump (jle_);
 })
 
 DEF_OP (TcMoreEq,
@@ -118,7 +118,7 @@ LEXEM_IS (L">="),
 },
 L"MORE OR EQUAL",
 {
-    elf_standard_if_jump (jle_);
+    elf_standard_if_jump (jge_);
 })
 
 DEF_OP (TcEqual,

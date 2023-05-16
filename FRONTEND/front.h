@@ -275,7 +275,7 @@ SNode* get_Parameters   (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_headParam    (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Param        (FUNC_HEAD_ARGUMENTS);
+SNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
 SNode* get_IfElse       (FUNC_HEAD_ARGUMENTS);
 
@@ -299,19 +299,19 @@ SNode* get_Equation     (FUNC_HEAD_ARGUMENTS);
 
 SNode* get_Variable     (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Expression   (FUNC_HEAD_ARGUMENTS);
+SNode* get_Expression   (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_Logic        (FUNC_HEAD_ARGUMENTS);
+SNode* get_Logic        (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_Compare      (FUNC_HEAD_ARGUMENTS);
+SNode* get_Compare      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_AddSub       (FUNC_HEAD_ARGUMENTS);
+SNode* get_AddSub       (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_MulDiv       (FUNC_HEAD_ARGUMENTS);
+SNode* get_MulDiv       (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_Pow          (FUNC_HEAD_ARGUMENTS);
+SNode* get_Pow          (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_Bracket      (FUNC_HEAD_ARGUMENTS);
+SNode* get_Bracket      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
 //===================================================================================================================================================================
 //GraphViz//

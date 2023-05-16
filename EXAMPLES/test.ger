@@ -3,6 +3,13 @@ var sum ( var a , var b )
     return a + b;
 }
 
+var ded ()
+{
+    var z = 1;
+
+    return z;
+}
+
 var main ( )
 {
     var x = sum ( 1 , 2 ) ;
@@ -11,38 +18,34 @@ var main ( )
 
     x = ( 3 >= 4 ) && ( 2 ) ;
 
-    output ( x ) ;
+    out ( x ) ;
 
-    input ( ы , x ) ;
+    in ( ы , x ) ;
 
     if ( x == 2 )
     {
         var t = 7;
         x = 6;
-        output ( t ) ;
+        out ( t ) ;
     }
     else if ( 0 )
     {
-        output ( x ) ;
+        out ( x ) ;
     }
     else
     {
-        output ( ы ) ;
+        out ( ы ) ;
     }
 
     var ч = 5 * ( 7 - 4 ) + ы + ceil ( ы ) ;
 
     x = ( ч - ы + 7 + sum ( x , sum ( x , 1 ) ) ) / 5 ;
 
-    output ( x ) ;
+    out ( x ) ;
+
+    x = ded ();
 
     return 2 - 4 ;
 }
 
-var умн ( )
-{
-    var z = 1;
-
-    return z;
-}
 

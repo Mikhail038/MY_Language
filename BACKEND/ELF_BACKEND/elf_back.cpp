@@ -4,6 +4,8 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <iostream>
+#include <iterator>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -333,80 +335,34 @@ void SElfBack::elf_generate_code (SNode* Root)
     x86_mov_r_i(eTOP_REG, cur_addr - start_cnt); // TODO maybe not
 
 
-    x86___make_inp_func ();
-
-    x86___make_out_func ();
-
-
     x86_call_label (MAIN_LBL);
 
     x86___End();
 
+    x86___make_inp_func ();
 
-    elf_generate_statement (Root);
+    x86___make_out_func ();
 
-//     x86_push_i(38*13);
-//     x86_push_i(13);
-//     x86_idiv_stack();
-//     x86_pop_r(r10);
+    x86___paste_call_label(MAIN_LBL);
+
+    // x86_push_i(3);
+    // x86_push_i(1);
+    // elf_standard_if_jump(jl_);
+
+//     wchar_t* Label_1_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+//     x86_jump_label(Label_1_name, jmp_);
 //
-//     x86_mov_IrI_r(r9, rdx);
-
-//     SET (0xb8);
-//     SET (0x01);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0xbf);
-//     SET (0x01);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x48);
-//     SET (0xbe);
-//     SET (0x5f);
-//     SET (0x81);
-//     SET (0x02);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0xba);
-//     SET (0x0f);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x0f);
-//     SET (0x05);
-//     SET (0xb8);
-//     SET (0x3c);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0xbf);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x00);
-//     SET (0x0f);
-//     SET (0x05);
+//     x86_nop();
+//     x86_nop();
 //
-//     SET (0x48);
-//     SET (0x65);
-//     SET (0x6c);
-//     SET (0x6c);
-//     SET (0x6f);
-//     SET (0x2c);
-//     SET (0x20);
-//     SET (0x77);
-//     SET (0x6f);
-//     SET (0x72);
-//     SET (0x6c);
-//     SET (0x64);
-//     SET (0x21);
-//     SET (0x0a);
-//     SET (0x00);
+//     x86___paste_jump_label(Label_1_name);
+//     free(Label_1_name);
+//
+//     x86_nop();
+
+    elf_generate_statement(Root);
+
+   // elf_generate_statement (Root);
 
     return;
 }
@@ -584,27 +540,43 @@ void SElfBack::elf_generate_if (SNode* CurNode)
 
 void SElfBack::elf_generate_while (SNode* CurNode)
 {
-    int Label_1 = label_cnt;
-    fprintf (file,  LABEL "%d:\n", Label_1);
-    label_cnt++;
+    wchar_t* Label_1_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    make_label_to_jump (Label_1_name, cur_addr);
 
+    x86___paste_jump_label(Label_1_name);
+    // int Label_1 = label_cnt;
+    // fprintf (file,  LABEL "%d:\n", Label_1);
+    // label_cnt++;
+
+    x86_nop();
     elf_generate_postorder (CurNode->left);
+    x86_nop();
 
     x86_push_i(FALSE);
 
-    PUT (je);
-    int Label_2 = label_cnt;
-    fprintf (file, " " LABEL "%d\n", Label_2);
-    label_cnt++;
+    wchar_t* Label_2_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    make_label_to_jump (Label_2_name, cur_addr);
 
+    x86_cmp_stack();
+    x86_jump_label(Label_2_name, je_);
+
+    // PUT (je);
+    // int Label_2 = label_cnt;
+    // fprintf (file, " " LABEL "%d\n", Label_2);
+    // label_cnt++;
+
+    x86_nop();
     table_cond = none;
     elf_generate_statement (CurNode->right);
     ELF_CLEAN_TABLE;
+    x86_nop();
 
-    PUT (jump);
-    fprintf (file, " " LABEL "%d\n", Label_1);
+    x86_jump_label(Label_1_name, jmp_);
 
-    fprintf (file,  LABEL "%d:\n", Label_2);
+    x86___paste_jump_label(Label_2_name);
+
+    free (Label_1_name);
+    free (Label_2_name);
 
     return;
 }
@@ -635,7 +607,7 @@ void SElfBack::elf_generate_return (SNode* CurNode)
 {
     elf_generate_expression (CurNode->left);
 
-    x86_pop_r(eFUNC_REG);
+    // x86_pop_r(eFUNC_REG);
 
     x86_ret();
 
@@ -703,7 +675,7 @@ void SElfBack::elf_push_parameters (SNode* CurNode)
         elf_push_parameters (CurNode->right);
     }
 
-    if (CurNode != NULL)
+    if (CurNode != NULL && CurNode->left != NULL)
     {
         elf_generate_expression (CurNode->left);
     }
@@ -748,7 +720,7 @@ void SElfBack::elf_standard_if_jump (int JumpMode)
         x86_cmp_stack ();
     }
 
-    x86_jump(STD_JUMP_FIRST_SHIFT, JumpMode);
+    x86_jump_any(STD_JUMP_FIRST_SHIFT, JumpMode);
 
     // fprintf (file, " " LABEL "%d\n", label_cnt);
     // label_cnt++;
@@ -758,7 +730,7 @@ void SElfBack::elf_standard_if_jump (int JumpMode)
     // PUT (push);
     // fprintf (file, " %d\n", FALSE);
 
-    x86_jump(STD_JUMP_SECOND_SHIFT, jmp_);
+    x86_jump_any(STD_JUMP_SECOND_SHIFT, jmp_);
 
     // PUT (jump);
     // fprintf (file, " " LABEL "%d\n", label_cnt);
@@ -895,6 +867,43 @@ int SElfBack::elf_find_var (SNode* CurNode)
     }
 
     return RetIndex;
+}
+
+//=============================================================================================================================================================================
+
+void make_label_to_jump (wchar_t* Label_name, size_t Address)
+{
+    std::cout << Address << std::endl;
+
+    Address += 1;
+
+    size_t cnt = 0;
+    while (Address >= 10)
+    {
+        Label_name[cnt] = (wchar_t) (Address % 10);
+
+        Address /= 10;
+
+        ++cnt;
+    }
+
+    Label_name[cnt] = (wchar_t) (Address % 10);
+    cnt++;
+
+    Label_name[cnt] = L'\0';
+
+
+    Label_name = wcscat(Label_name, L"_w_1");
+
+//     for (int i = 0; i < cnt + 4; ++i)
+//     {
+//         printf("[%x]", Label_name[i]);
+//     }
+//
+//     std::cout << Address << std::endl;
+//     std::cout << cnt << std::endl;
+//     std::cout << Label_name << std::endl;
+//     printf ("|%ls|\n", Label_name);
 }
 
 //=============================================================================================================================================================================

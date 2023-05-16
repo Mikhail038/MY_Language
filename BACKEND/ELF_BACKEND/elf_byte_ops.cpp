@@ -35,6 +35,14 @@
 
 //=============================================================================================================================================================================
 
+#define CALL_SIZE 5
+
+#define NEAR_JUMP_SIZE 2
+
+#define NORM_JUMP_SIZE 6
+
+//=============================================================================================================================================================================
+
 void SElfBack::set_hex_int (int Number)
 {
     SET_4(Number);
@@ -341,7 +349,7 @@ void SElfBack::x86_dec (int Register)
 
 void SElfBack::x86_call (int Shift)
 {
-    std::cout << Shift << std::endl;
+    // std::cout << Shift << std::endl;
 
     SET(0xe8);
 
@@ -371,10 +379,39 @@ void SElfBack::x86_call_label (const wchar_t* Name)
         Labels.insert({Name, {cur_addr, 0}});
     }
 
-    for (size_t i = 0; i < 5; ++i)
+    for (size_t i = 0; i < CALL_SIZE; ++i)
     {
         x86_nop();
     }
+}
+
+void SElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
+{
+    if (Labels.find(Name) != Labels.end())
+    {
+        if (Labels[Name].finish != NULL_FINISH)
+        {
+            x86_jump_norm (Labels[Name].finish - cur_addr, JumpMode);
+
+            return;
+        }
+        else
+        {
+            Labels[Name].start[Labels[Name].amount] = cur_addr;
+            Labels[Name].amount++;
+        }
+    }
+    else
+    {
+        Labels.insert({Name, {cur_addr, 0}});
+    }
+
+    if (JumpMode == jmp_)
+    {
+        x86_nop();
+    }
+
+    x86_jump_norm(0, JumpMode); // fake
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -412,15 +449,101 @@ void SElfBack::x86_cmp_r_r (int dstReg, int srcReg)
 
 void SElfBack::x86_cmp_stack ()
 {
-    x86_pop_r(A_REG); //TODO maybe other order
-    x86_pop_r(B_REG);
+    x86_pop_r(B_REG); //TODO maybe other order
+    x86_pop_r(A_REG);   // definitely other
 
     x86_cmp_r_r (A_REG, B_REG);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_jump (int Shift, int JumpMode)
+void SElfBack::x86_jump_any (int Shift, int JumpMode)
+{
+    if ((Shift < 100) && (Shift > -100))
+    {
+        x86_jump_near(Shift, JumpMode);
+
+        return;
+    }
+    else
+    {
+        x86_jump_norm(Shift, JumpMode);
+    }
+}
+
+void SElfBack::x86_jump_norm (int Shift, int JumpMode)
+{
+    switch (JumpMode)
+    {
+        case jmp_:
+            SET(0xe9);
+            break;
+
+        case ja_:
+            SET(0x0f);
+            SET(0x87);
+            break;
+
+        case jae_:
+            SET(0x0f);
+            SET(0x83);
+            break;
+
+        case jb_:
+            SET(0x0f);
+            SET(0x82);
+            break;
+
+        case jbe_:
+            SET(0x0f);
+            SET(0x86);
+            break;
+
+        case je_:
+            SET(0x0f);
+            SET(0x84);
+            break;
+
+        case jne_:
+            SET(0x0f);
+            SET(0x85);
+            break;
+
+        case jl_:
+            SET(0x0f);
+            SET(0x8c);
+            break;
+
+        case jle_:
+            SET(0x0f);
+            SET(0x8e);
+            break;
+
+        case jg_:
+            SET(0x0f);
+            SET(0x8f);
+            break;
+
+        case jge_:
+            SET(0x0f);
+            SET(0x8d);
+            break;
+
+        default:
+            MLA(0);
+    }
+
+    // int current_jump_size = NORM_JUMP_SIZE;
+    // if (JumpMode == jmp_)
+    // {
+    //     current_jump_size -= 1; // Stupid jumps have different size of opcode
+    // }
+
+    set_hex_int(Shift);
+}
+
+
+void SElfBack::x86_jump_near (int Shift, int JumpMode)
 {
     switch (JumpMode)
     {
@@ -472,7 +595,6 @@ void SElfBack::x86_jump (int Shift, int JumpMode)
             MLA(0);
     }
 
-
     char offset = 0x00;
 
     offset += Shift;
@@ -522,7 +644,7 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
     }
 }
 
-void SElfBack::x86___paste_jump_label (const wchar_t* Name, int JumpMode)
+void SElfBack::x86___paste_jump_label (const wchar_t* Name)
 {
     if (Labels.find(Name) != Labels.end())
     {
@@ -533,7 +655,10 @@ void SElfBack::x86___paste_jump_label (const wchar_t* Name, int JumpMode)
             cur_addr = Labels[Name].start[i];   // go there
 
             //std::cout << Labels[Name].finish << std::endl << Labels[Name].start[i] << std::endl;
-            x86_jump (Labels[Name].finish - Labels[Name].start[i], JumpMode); //paste code
+
+            cur_addr += 2; //skip JUMP syntax
+
+            set_hex_int(Labels[Name].finish - Labels[Name].start[i] - NORM_JUMP_SIZE); //paste addr
 
             cur_addr = Labels[Name].finish;  // go back
         }

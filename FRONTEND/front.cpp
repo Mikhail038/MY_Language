@@ -1,5 +1,6 @@
 //=============================================================================================================================================================================
 
+#include <cstddef>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -7,12 +8,14 @@
 #include <math.h>
 
 #include <locale.h>
+#include <type_traits>
 #include <wctype.h>
 #include <wchar.h>
 
 //===================================================================================================================================================================
 
 #include "MYassert.h"
+#include "back.h"
 #include "colors.h"
 
 //=============================================================================================================================================================================
@@ -1013,7 +1016,7 @@ SNode* get_headParam (FUNC_HEAD_ARGUMENTS)
     return Node;
 }
 
-SNode* get_Param (FUNC_HEAD_ARGUMENTS)
+SNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
@@ -1021,13 +1024,13 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS)
 
     //MLA (f_check_vars_table (TKN.data.var, Vars) == true);
 
-    Node->left = get_Expression (FUNC_ARGUMENTS);
+    Node->left = get_Expression (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if (TKN_OP_AND_IS__ TComma)
     {
         NEXT_TKN; //Tokens->number++;
 
-        Node->right = get_Param (FUNC_ARGUMENTS);
+        Node->right = get_Param (FUNC_ARGUMENTS, false);
 
         //NEXT_TKN;
 
@@ -1051,7 +1054,7 @@ SNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
 
         CHECK_SYNTAX (TOpenRoundBracket);
 
-        Node->left  = get_Expression (FUNC_ARGUMENTS);
+        Node->left  = get_Expression (FUNC_ARGUMENTS, false);
 
         CHECK_SYNTAX (TCloseRoundBracket);
 
@@ -1100,7 +1103,7 @@ SNode* get_While (FUNC_HEAD_ARGUMENTS)
 
         CHECK_SYNTAX (TOpenRoundBracket);
 
-        Node->left  = get_Expression (FUNC_ARGUMENTS);
+        Node->left  = get_Expression (FUNC_ARGUMENTS, false);
 
         CHECK_SYNTAX (TCloseRoundBracket);
 
@@ -1123,7 +1126,7 @@ SNode* get_Input (FUNC_HEAD_ARGUMENTS)
 
         CHECK_SYNTAX (TOpenRoundBracket);
 
-        Node->left = get_Param (FUNC_ARGUMENTS);
+        Node->left = get_Param (FUNC_ARGUMENTS, false);
 
         CHECK_SYNTAX (TCloseRoundBracket);
 
@@ -1146,7 +1149,7 @@ SNode* get_Output (FUNC_HEAD_ARGUMENTS)
 
         CHECK_SYNTAX (TOpenRoundBracket);
 
-        Node->left = get_Param (FUNC_ARGUMENTS);
+        Node->left = get_Param (FUNC_ARGUMENTS, false);
 
         CHECK_SYNTAX (TCloseRoundBracket);
 
@@ -1167,7 +1170,7 @@ SNode* get_Return (FUNC_HEAD_ARGUMENTS)
         SNode* Node = construct_op_node (TKN.type);
         NEXT_TKN;
 
-        Node->left  = get_Expression (FUNC_ARGUMENTS);
+        Node->left  = get_Expression (FUNC_ARGUMENTS, false);
 
         Node->right = NULL;
 
@@ -1193,7 +1196,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
         {
             NEXT_TKN;
 
-            Node->right = get_Expression (FUNC_ARGUMENTS);
+            Node->right = get_Expression (FUNC_ARGUMENTS, false);
         }
 
         // if (f_add_to_var_table (Node->left->data.var, Vars) == false)
@@ -1313,7 +1316,7 @@ SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
             //here is TAssign
             NEXT_TKN;
 
-            Node->right = get_Expression (FUNC_ARGUMENTS);
+            Node->right = get_Expression (FUNC_ARGUMENTS, false);
 
             CHECK_SYNTAX (TFinish);
 
@@ -1344,7 +1347,7 @@ SNode* get_Call (FUNC_HEAD_ARGUMENTS)
 
         CHECK_SYNTAX (TOpenRoundBracket);
 
-        Node->right = get_Param (FUNC_ARGUMENTS);
+        Node->right = get_Param (FUNC_ARGUMENTS, true);
 
         CHECK_SYNTAX (TCloseRoundBracket);
 
@@ -1366,20 +1369,20 @@ SNode* get_Call (FUNC_HEAD_ARGUMENTS)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SNode* get_Expression (FUNC_HEAD_ARGUMENTS)
+SNode* get_Expression (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
-    SNode* Node = get_Logic (FUNC_ARGUMENTS);
+    SNode* Node = get_Logic (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     return Node;
 }
 
-SNode* get_Logic (FUNC_HEAD_ARGUMENTS)
+SNode* get_Logic (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
-    SNode* LeftSon = get_Compare (FUNC_ARGUMENTS);
+    SNode* LeftSon = get_Compare (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if
     (
@@ -1395,7 +1398,7 @@ SNode* get_Logic (FUNC_HEAD_ARGUMENTS)
 
         Node->left = LeftSon;
 
-        Node->right = get_Logic (FUNC_ARGUMENTS);
+        Node->right = get_Logic (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
         return Node;
     }
@@ -1403,11 +1406,11 @@ SNode* get_Logic (FUNC_HEAD_ARGUMENTS)
     return LeftSon;
 }
 
-SNode* get_Compare (FUNC_HEAD_ARGUMENTS)
+SNode* get_Compare (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
-    SNode* LeftSon = get_AddSub (FUNC_ARGUMENTS);
+    SNode* LeftSon = get_AddSub (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if
     (
@@ -1426,7 +1429,7 @@ SNode* get_Compare (FUNC_HEAD_ARGUMENTS)
 
         Node->left = LeftSon;
 
-        Node->right = get_Compare (FUNC_ARGUMENTS);
+        Node->right = get_Compare (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
         return Node;
     }
@@ -1434,11 +1437,11 @@ SNode* get_Compare (FUNC_HEAD_ARGUMENTS)
     return LeftSon;
 }
 
-SNode* get_AddSub (FUNC_HEAD_ARGUMENTS)
+SNode* get_AddSub (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
-    SNode* LeftSon = get_MulDiv (FUNC_ARGUMENTS);
+    SNode* LeftSon = get_MulDiv (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if ((TKN_OP_AND_IS__ TaAdd)|| (TKN_OP_AND_IS__ TaSub))
     {
@@ -1449,7 +1452,7 @@ SNode* get_AddSub (FUNC_HEAD_ARGUMENTS)
 
         Node->left = LeftSon;
 
-        Node->right = get_AddSub (FUNC_ARGUMENTS);
+        Node->right = get_AddSub (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
         return Node;
     }
@@ -1457,11 +1460,11 @@ SNode* get_AddSub (FUNC_HEAD_ARGUMENTS)
     return LeftSon;
 }
 
-SNode* get_MulDiv (FUNC_HEAD_ARGUMENTS)
+SNode* get_MulDiv (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
-    SNode* LeftSon =  get_Pow (FUNC_ARGUMENTS);
+    SNode* LeftSon =  get_Pow (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if ((TKN_OP_AND_IS__ TaMul)|| (TKN_OP_AND_IS__ TaDiv))
     {
@@ -1472,7 +1475,7 @@ SNode* get_MulDiv (FUNC_HEAD_ARGUMENTS)
 
         Node->left = LeftSon;
 
-        Node->right =  get_MulDiv (FUNC_ARGUMENTS);
+        Node->right =  get_MulDiv (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
         return Node;
     }
@@ -1480,11 +1483,11 @@ SNode* get_MulDiv (FUNC_HEAD_ARGUMENTS)
     return LeftSon;
 }
 
-SNode* get_Pow (FUNC_HEAD_ARGUMENTS)
+SNode* get_Pow (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
-    SNode* LeftSon = get_Bracket (FUNC_ARGUMENTS);
+    SNode* LeftSon = get_Bracket (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if (TKN_OP_AND_IS__ TaPow)
     {
@@ -1495,7 +1498,7 @@ SNode* get_Pow (FUNC_HEAD_ARGUMENTS)
 
         Node->left = LeftSon;
 
-        Node->right = get_Pow (FUNC_ARGUMENTS);
+        Node->right = get_Pow (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
         return Node;
     }
@@ -1503,7 +1506,7 @@ SNode* get_Pow (FUNC_HEAD_ARGUMENTS)
     return LeftSon;
 }
 
-SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
+SNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     SHOUT;
 
@@ -1513,7 +1516,7 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN;
 
-        Node = get_Expression (FUNC_ARGUMENTS); //CHANGE IT ON GET_LOGIC IF CHANGES EXPRESSION
+        Node = get_Expression (FUNC_ARGUMENTS, ZeroRetPermisiion); //CHANGE IT ON GET_LOGIC IF CHANGES EXPRESSION
 
         CHECK_SYNTAX (TCloseRoundBracket);
 
@@ -1531,7 +1534,7 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
                 Node = construct_op_node (def_type); \
                 NEXT_TKN; /* skipped func name */ \
                 NEXT_TKN; /* skipped ( */ \
-                Node->right = get_Expression (FUNC_ARGUMENTS); /* //TODO HERE!!! */ \
+                Node->right = get_Expression (FUNC_ARGUMENTS, ZeroRetPermisiion); /* //TODO HERE!!! */ \
                 CHECK_SYNTAX (TCloseRoundBracket); \
                 return Node; \
             }
@@ -1564,6 +1567,11 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS)
         NEXT_TKN;
 
         return Node;
+    }
+
+    if (ZeroRetPermisiion == true)
+    {
+        return NULL;
     }
 
     wprintf (KRED L"==ERROR!!=expected variable, function or value=\n" KNRM);

@@ -911,7 +911,7 @@ void push_parameters (BACK_FUNC_HEAD_PARAMETERS)
         push_parameters (BACK_RIGHT_SON_FUNC_PARAMETERS);
     }
 
-    if (CurNode != NULL)
+    if (CurNode != NULL && CurNode->left != NULL)
     {
         generate_expression (BACK_LEFT_SON_FUNC_PARAMETERS);
     }
