@@ -131,6 +131,7 @@ enum ERegisters_64
 
 typedef struct SElfBack
 {
+    EFuncConditions     func_cond       = any_f;
     EVarTableConditions table_cond      = none;
     int                 RAM_top_index   = 0;
     int                 label_cnt       = 0;

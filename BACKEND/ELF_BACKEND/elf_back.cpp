@@ -384,6 +384,16 @@ void SElfBack::elf_generate_statement (SNode* CurNode)
 
 void SElfBack::elf_generate_function (SNode* CurNode)
 {
+
+    if (wcscmp (CurNode->left->data.var, MAIN_LBL) == 0)
+    {
+        func_cond = main_f;
+    }
+    else
+    {
+        func_cond = any_f;
+    }
+
     x86___paste_call_label(CurNode->left->data.var);
     // fprintf (file, LABEL "%ls:\n", CurNode->left->data.var);
 
@@ -607,9 +617,18 @@ void SElfBack::elf_generate_return (SNode* CurNode)
 {
     elf_generate_expression (CurNode->left);
 
-    // x86_pop_r(eFUNC_REG);
+//     if (func_cond == main_f)
+//     {
+//         x86_pop_r(eFUNC_REG);
+//
+//         x86_ret();
+//     }
+//     else
+//     {
+        x86_pop_r(eFUNC_REG);
 
-    x86_ret();
+        x86_ret();
+    // }
 
     return;
 }
