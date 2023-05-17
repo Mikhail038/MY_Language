@@ -50,15 +50,50 @@ COperation _STATEMENT
                     {
                         COperation _STATEMENT
                         {
-                            COperation RETURN
+                            COperation IF
                             {
-                                CValue TValue 77
+                                COperation MORE
                                 {
+                                    CValue TValue 4
+                                    {
+                                    }
+                                    {
+                                    }
                                 }
                                 {
+                                    CValue TValue 6
+                                    {
+                                    }
+                                    {
+                                    }
                                 }
                             }
                             {
+                                COperation _CROSSROADS
+                                {
+                                    COperation _STATEMENT
+                                    {
+                                    }
+                                    {
+                                        COperation _STATEMENT
+                                        {
+                                            COperation RETURN
+                                            {
+                                                CValue TValue 77
+                                                {
+                                                }
+                                                {
+                                                }
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                        }
+                                    }
+                                }
+                                {
+                                }
                             }
                         }
                         {

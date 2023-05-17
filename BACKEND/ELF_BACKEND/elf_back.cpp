@@ -509,10 +509,16 @@ void SElfBack::elf_generate_if (SNode* CurNode)
 
     x86_push_i(FALSE);
 
-    PUT (je);
-    fprintf (file, " " LABEL "%d\n", label_cnt);
-    int Label_1 = label_cnt;
-    label_cnt++;
+    wchar_t* Label_1_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    make_label_to_jump (Label_1_name, cur_addr);
+
+    x86_cmp_stack();
+    x86_jump_label(Label_1_name, je_);
+
+    // PUT (je);
+    // fprintf (file, " " LABEL "%d\n", label_cnt);
+    // int Label_1 = label_cnt;
+    // label_cnt++;
 
     CurNode = CurNode->right;
 
@@ -520,15 +526,22 @@ void SElfBack::elf_generate_if (SNode* CurNode)
     elf_generate_statement (CurNode->left);
     ELF_CLEAN_TABLE;
 
-    PUT (jump);
-    fprintf (file, " " LABEL "%d\n", label_cnt);
-    int Label_2 = label_cnt;
-    label_cnt++;
+    wchar_t* Label_2_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    make_label_to_jump (Label_2_name, cur_addr);
 
-    fprintf (file,  LABEL "%d:\n", Label_1);
+    x86_jump_label(Label_2_name, jmp_);
+    // PUT (jump);
+    // fprintf (file, " " LABEL "%d\n", label_cnt);
+    // int Label_2 = label_cnt;
+    // label_cnt++;
+
+    x86___paste_jump_label(Label_1_name);
+    // fprintf (file,  LABEL "%d:\n", Label_1);
 
     CurNode = CurNode->right;
 
+    x86_nop();
+    x86_nop();
     if (CurNode != NULL)
     {
         if (CurNode->category == COperation && CurNode->type == TIf)
@@ -542,8 +555,14 @@ void SElfBack::elf_generate_if (SNode* CurNode)
             ELF_CLEAN_TABLE;
         }
     }
-    fprintf (file,  LABEL "%d:\n", Label_2);
+    x86_nop();
+    x86_nop();
 
+    x86___paste_jump_label(Label_2_name);
+    // fprintf (file,  LABEL "%d:\n", Label_2);
+
+    free (Label_1_name);
+    free (Label_2_name);
 
     return;
 }
@@ -729,8 +748,8 @@ void SElfBack::elf_incr_top_reg ()
     return;
 }
 
-#define STD_JUMP_FIRST_SHIFT    4   //DO NOT change
-#define STD_JUMP_SECOND_SHIFT   2   //DO NOT change
+#define STD_JUMP_FIRST_SHIFT    6   //DO NOT change
+#define STD_JUMP_SECOND_SHIFT   4   //DO NOT change
 
 void SElfBack::elf_standard_if_jump (int JumpMode)
 {

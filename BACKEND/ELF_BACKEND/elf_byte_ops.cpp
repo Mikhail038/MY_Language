@@ -353,7 +353,7 @@ void SElfBack::x86_call (int Shift)
 
     SET(0xe8);
 
-    set_hex_int(Shift);
+    set_hex_int(Shift - CALL_SIZE);
 }
 
 void SElfBack::x86_call_label (const wchar_t* Name)
@@ -362,7 +362,7 @@ void SElfBack::x86_call_label (const wchar_t* Name)
     {
         if (Labels[Name].finish != NULL_FINISH)
         {
-            x86_call (Labels[Name].finish - cur_addr - CALL_SIZE);
+            x86_call (Labels[Name].finish - cur_addr);
             // x86_call (Labels[Name].finish);
             // x86_call (0);
 
@@ -391,7 +391,15 @@ void SElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
     {
         if (Labels[Name].finish != NULL_FINISH)
         {
-            x86_jump_norm (Labels[Name].finish - cur_addr, JumpMode);
+
+            int JumpAddr = Labels[Name].finish - cur_addr;
+
+            if (JumpMode == jmp_ && JumpAddr < 0)
+            {
+                JumpAddr += 1;
+            }
+
+            x86_jump_norm (JumpAddr, JumpMode); //TODO maybe not
 
             return;
         }
@@ -539,9 +547,8 @@ void SElfBack::x86_jump_norm (int Shift, int JumpMode)
     //     current_jump_size -= 1; // Stupid jumps have different size of opcode
     // }
 
-    set_hex_int(Shift);
+    set_hex_int(Shift - NORM_JUMP_SIZE);
 }
-
 
 void SElfBack::x86_jump_near (int Shift, int JumpMode)
 {
@@ -599,7 +606,7 @@ void SElfBack::x86_jump_near (int Shift, int JumpMode)
 
     offset += Shift;
 
-    SET(offset);
+    SET(offset - NEAR_JUMP_SIZE);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -631,7 +638,7 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
             cur_addr = Labels[Name].start[i];   // go there
 
             //std::cout << Labels[Name].finish << std::endl << Labels[Name].start[i] << std::endl;
-            x86_call (Labels[Name].finish - Labels[Name].start[i] - CALL_SIZE); //paste code
+            x86_call (Labels[Name].finish - Labels[Name].start[i]); //paste code
 
             // x86_call (Labels[Name].finish); //paste code
 
