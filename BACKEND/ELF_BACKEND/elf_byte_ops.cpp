@@ -358,24 +358,31 @@ void SElfBack::x86_call (int Shift)
 
 void SElfBack::x86_call_label (const wchar_t* Name)
 {
+    fprintf (stdout, LABEL "<%ls>:\n", Name);
+
     if (Labels.find(Name) != Labels.end())
     {
         if (Labels[Name].finish != NULL_FINISH)
         {
+            // fprintf (stdout, LABEL "|%ls|:\n", Name);
+
             x86_call (Labels[Name].finish - cur_addr);
             // x86_call (Labels[Name].finish);
             // x86_call (0);
 
-            return;
         }
         else
         {
             Labels[Name].start[Labels[Name].amount] = cur_addr;
             Labels[Name].amount++;
         }
+
+        return;
     }
     else
     {
+        fprintf (stdout, LABEL "<>:\n", Name);
+
         Labels.insert({Name, {cur_addr, 0}});
     }
 
@@ -629,13 +636,18 @@ void SElfBack::x86___make_out_func ()
 
 void SElfBack::x86___paste_call_label (const wchar_t* Name)
 {
+    fprintf (stdout, LABEL "|%ls|:\n", Name);
+
     if (Labels.find(Name) != Labels.end())
     {
+
         Labels[Name].finish = cur_addr;
 
         for (size_t i = 0; i < Labels[Name].amount; ++i)
         {
             cur_addr = Labels[Name].start[i];   // go there
+
+            // fprintf (stdout, LABEL "|%ls|:\n", Name);
 
             //std::cout << Labels[Name].finish << std::endl << Labels[Name].start[i] << std::endl;
             x86_call (Labels[Name].finish - Labels[Name].start[i]); //paste code
@@ -647,6 +659,8 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
     }
     else
     {
+        fprintf (stdout, LABEL "||:\n", Name);
+
         Labels.insert({Name, {cur_addr}});   //TODO fix this
     }
 }

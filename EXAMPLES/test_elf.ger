@@ -3,7 +3,7 @@ var fac ()
     return 5;
 }
 
-var main ( )
+var main ()
 {
     while (3 > 1)
     {
