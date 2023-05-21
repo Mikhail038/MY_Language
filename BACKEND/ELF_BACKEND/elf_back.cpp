@@ -334,7 +334,6 @@ void SElfBack::elf_generate_code (SNode* Root)
 
     x86_mov_r_i(eTOP_REG, cur_addr - start_cnt); // TODO maybe not
 
-
     x86_call_label(MAIN_LBL);
 
     x86___End();
@@ -343,29 +342,7 @@ void SElfBack::elf_generate_code (SNode* Root)
 
     x86___make_out_func ();
 
-    // x86___paste_call_label(MAIN_LBL);
-
-
     elf_generate_statement(Root);
-
-    // x86___paste_call_label(MAIN_LBL);
-
-    // x86_push_i(3);
-    // x86_push_i(1);
-    // elf_standard_if_jump(jl_);
-
-//     wchar_t* Label_1_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-//     x86_jump_label(Label_1_name, jmp_);
-//
-//     x86_nop();
-//     x86_nop();
-//
-//     x86___paste_jump_label(Label_1_name);
-//     free(Label_1_name);
-//
-//     x86_nop();
-
-   // elf_generate_statement (Root);
 
     return;
 }
@@ -388,7 +365,7 @@ void SElfBack::elf_generate_statement (SNode* CurNode)
 void SElfBack::elf_generate_function (SNode* CurNode)
 {
 
-    if (wcscmp (CurNode->left->data.var, MAIN_LBL) == 0)
+    if (wcscoll (CurNode->left->data.var, MAIN_LBL) == 0)
     {
         func_cond = main_f;
         x86___paste_call_label(MAIN_LBL);
@@ -396,13 +373,11 @@ void SElfBack::elf_generate_function (SNode* CurNode)
     else
     {
         func_cond = any_f;
-        const wchar_t* Name = CurNode->left->data.var;
-        x86___paste_call_label(Name);
+        x86___paste_call_label(CurNode->left->data.var);
     }
 
-    // const wchar_t* Name = CurNode->left->data.var;
     // x86___paste_call_label(Name);
-    // fprintf (stdout, LABEL "|%ls|:\n", CurNode->left->data.var);
+    // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
 
     Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
 

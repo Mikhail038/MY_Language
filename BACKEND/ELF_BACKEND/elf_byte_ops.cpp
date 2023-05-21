@@ -358,7 +358,7 @@ void SElfBack::x86_call (int Shift)
 
 void SElfBack::x86_call_label (const wchar_t* Name)
 {
-    fprintf (stdout, LABEL "<%ls>:\n", Name);
+    // fprintf (stdout, LABEL "<%ls>:\n", Name);
 
     if (Labels.find(Name) != Labels.end())
     {
@@ -381,7 +381,7 @@ void SElfBack::x86_call_label (const wchar_t* Name)
     }
     else
     {
-        fprintf (stdout, LABEL "<>:\n", Name);
+        // fprintf (stdout, LABEL "<>:\n", Name);
 
         Labels.insert({Name, {cur_addr, 0}});
     }
@@ -636,7 +636,7 @@ void SElfBack::x86___make_out_func ()
 
 void SElfBack::x86___paste_call_label (const wchar_t* Name)
 {
-    fprintf (stdout, LABEL "|%ls|:\n", Name);
+    // fprintf (stdout, LABEL "|%ls|:\n", Name);
 
     if (Labels.find(Name) != Labels.end())
     {
@@ -659,7 +659,7 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
     }
     else
     {
-        fprintf (stdout, LABEL "||:\n", Name);
+        // fprintf (stdout, LABEL "||:\n", Name);
 
         Labels.insert({Name, {cur_addr}});   //TODO fix this
     }

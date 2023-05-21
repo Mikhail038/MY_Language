@@ -1,7 +1,8 @@
 *.txt
 *.o
 *.json
-back
+back_elf
+back_mc
 front
 asm
 disasm
