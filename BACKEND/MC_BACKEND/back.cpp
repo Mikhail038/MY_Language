@@ -1070,11 +1070,11 @@ void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
     SVarTable* Table = NULL;
     peek_from_stack (Back->VarStack, &Table);
 
-    Table->Arr[Table->size].name  = CurNode->data.var; //copy address from node
-    Table->Arr[Table->size].index = Back->RAM_top_index;
+    Table->Arr[Table->cur_size].name  = CurNode->data.var; //copy address from node
+    Table->Arr[Table->cur_size].index = Back->RAM_top_index;
 
     Back->RAM_top_index++;
-    Table->size++;
+    Table->cur_size++;
 
     return;
 }
@@ -1085,7 +1085,7 @@ void create_new_var_table (SBack* Back)
 
     SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
-    NewTable->size = 0;
+    NewTable->cur_size = 0;
 
     push_in_stack (Back->VarStack, NewTable);
 
@@ -1159,7 +1159,7 @@ bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex)
 {
     MLA (Table != NULL);
 
-    for (int counter = 0; counter < Table->size; ++counter)
+    for (int counter = 0; counter < Table->cur_size; ++counter)
     {
         if (wcscmp (varName, Table->Arr[counter].name) == 0)
         {

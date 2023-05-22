@@ -133,7 +133,7 @@ typedef struct SElfBack
 {
     EFuncConditions     func_cond       = any_f;
     EVarTableConditions table_cond      = none;
-    int                 RAM_top_index   = 0;
+    int                 delta_rbp       = 0;
     int                 label_cnt       = 0;
     FILE*               file            = NULL;
     SBackFuncTable*     Funcs           = NULL;
@@ -143,6 +143,7 @@ typedef struct SElfBack
     size_t              cur_addr        = 0;
     size_t              start_cnt       = 0;
 
+    int                 current_rbp_shift   = 0;
 
     std::unordered_map<const wchar_t*, TLabel> Labels;
 
@@ -266,8 +267,11 @@ public:
     void elf_generate_expression (SNode* CurNode);
     void elf_generate_postorder (SNode* CurNode);
 
-    void elf_generate_pop_var (SNode* CurNode);
-    void elf_generate_push_var (SNode* CurNode);
+    void elf_rax_var_value      (SNode* CurNode);
+    void elf_rax_var_address    (SNode* CurNode);
+
+    void elf_generate_pop_var   (SNode* CurNode);
+    void elf_generate_push_var  (SNode* CurNode);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -280,12 +284,17 @@ public:
 
     void elf_write_command (ECommandNums eCommand, FILE* File);
 
-    void elf_add_to_var_table (SNode* CurNode);
-    void elf_create_new_var_table ();
+    void elf_add_to_var_table (SNode* CurNode, bool ParamMarker);
+    void elf_create_new_var_table (SNode* CurNode, bool ParamMarker);
     void elf_create_param_var_table (SNode* CurNode);
     void elf_delete_var_table ();
 
+    size_t elf_find_new_vars    (SNode* CurNode);
+    size_t elf_find_new_var     (SNode* CurNode);
+
     int elf_find_var (SNode* CurNode);
+
+    bool elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
 };
 
 //==================================================================================================================================================================

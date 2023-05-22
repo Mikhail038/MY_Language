@@ -29,6 +29,7 @@
 
 #include "asm.h"
 #include "proc.h"
+#include "stackT.h"
 #include <bits/types/FILE.h>
 #include <cstdio>
 
@@ -327,6 +328,7 @@ void SElfBack::generate_elf_array (SNode* Root)
 }
 
 //=============================================================================================================================================================================
+#define VAR_SIZE 8
 
 void SElfBack::elf_generate_code (SNode* Root)
 {
@@ -375,7 +377,6 @@ void SElfBack::elf_generate_function (SNode* CurNode)
         func_cond = any_f;
         x86___paste_call_label(CurNode->left->data.var);
     }
-
     // x86___paste_call_label(Name);
     // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
 
@@ -384,7 +385,16 @@ void SElfBack::elf_generate_function (SNode* CurNode)
     table_cond = none;
     elf_create_param_var_table (CurNode->left->right);
 
-    elf_pop_parameters ();
+    SVarTable* Table = NULL;
+    peek_from_stack (VarStack, &Table);
+    size_t AmountVars = Table->amount;
+
+    // elf_pop_parameters ();
+
+    x86_push_r(rbp);
+    x86_mov_r_r(rbp, rsp);
+
+    x86_sub_i(rbp, AmountVars * VAR_SIZE);
 
     Funcs->top_index++;
 
@@ -435,11 +445,11 @@ void SElfBack::elf_generate_announce (SNode* CurNode)
 {
     elf_generate_expression (CurNode->right);
 
-    elf_add_to_var_table (CurNode->left);
+    elf_add_to_var_table (CurNode->left, false);
 
     elf_generate_pop_var (CurNode->left);
 
-    elf_incr_top_reg ();
+    // elf_incr_top_reg ();
 
     return;
 }
@@ -459,9 +469,9 @@ void SElfBack::elf_generate_input (SNode* CurNode)
 
     do
     {
-        writeln_command (inp, file);
+        elf_rax_var_address (Node->left);
 
-        elf_generate_pop_var (Node->left);
+        x86_call_label(INP_LBL);
 
         Node = Node->right;
     } while (Node != NULL);
@@ -475,9 +485,11 @@ void SElfBack::elf_generate_output (SNode* CurNode)
 
     do
     {
+        elf_rax_var_value (Node->left);
+
         elf_generate_push_var (Node->left);
 
-        writeln_command (out, file);
+        x86_call_label(INP_LBL);
 
         Node = Node->right;
     } while (Node != NULL);
@@ -658,15 +670,57 @@ void SElfBack::elf_generate_postorder (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_pop_var (SNode* CurNode)
+//=============================================================================================================================================================================
+
+void SElfBack::elf_rax_var_value (SNode* CurNode)
 {
     int Index = elf_find_var (CurNode);
 
-    x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
-    x86_add_i(eCOUNT_REG, Index);
+    if (Index < 0)
+    {
+        x86_mov_r_Ir_iI(rax, rbp, current_rbp_shift + Index * VAR_SIZE);
+
+        return;
+    }
+
+    x86_mov_r_Ir_iI(rax, rbp, - Index);
+
+    return;
+}
+
+void SElfBack::elf_rax_var_address (SNode* CurNode)
+{
+    int Index = elf_find_var (CurNode);
+
+    x86_mov_r_r(rax, rbp);
+
+    if (Index < 0)
+    {
+        x86_add_i(rax, current_rbp_shift + Index * VAR_SIZE);
+
+        return;
+    }
+
+    x86_sub_i(rax, Index);
+
+    return;
+}
+
+void SElfBack::elf_generate_pop_var (SNode* CurNode)
+{
+    elf_rax_var_address(CurNode);
 
     x86_pop_r(A_REG);
-    x86_mov_IrI_r(eCOUNT_REG, A_REG);
+
+    x86_mov_IrI_r(rax, A_REG);
+
+//     int Index = elf_find_var (CurNode);
+//
+//     x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
+//     x86_add_i(eCOUNT_REG, Index);
+//
+//     x86_pop_r(A_REG);
+//     x86_mov_IrI_r(eCOUNT_REG, A_REG);
 
     // PUT (pop);
     // fprintf (file, " [" COUNT_REG "]\n\n"); // this was
@@ -676,12 +730,16 @@ void SElfBack::elf_generate_pop_var (SNode* CurNode)
 
 void SElfBack::elf_generate_push_var (SNode* CurNode)
 {
-    int Index = elf_find_var (CurNode);
+    elf_rax_var_value(CurNode);
 
-    x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
-    x86_add_i(eCOUNT_REG, Index);
+    x86_push_r(rax);
 
-    x86_push_IrI(eCOUNT_REG);
+//     int Index = elf_find_var (CurNode);
+//
+//     x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
+//     x86_add_i(eCOUNT_REG, Index);
+//
+//     x86_push_IrI(eCOUNT_REG);
 
     return;
 }
@@ -703,25 +761,33 @@ void SElfBack::elf_push_parameters (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_pop_parameters ()
-{
-    x86_push_r(eSHIFT_REG);
-
-    x86_pop_r(eCOUNT_REG);
-
-    for (int i = 0; i < Funcs->Table[Funcs->top_index].parameters ; i++)
-    {
-        x86_inc(eCOUNT_REG);
-
-        x86_pop_r(A_REG);
-        x86_mov_IrI_r(eCOUNT_REG, A_REG);
-
-        // PUT (pop);
-        // fprintf (file, " [" COUNT_REG "]\n\n");  // this was
-    }
-
-    return;
-}
+// void SElfBack::elf_pop_parameters ()
+// {
+//     // x86_push_r(eSHIFT_REG);
+//
+//     // x86_pop_r(eCOUNT_REG);
+//
+//     // x86_mov_r_r(rax, rbp);
+//
+//     size_t AmountParams = Funcs->Table[Funcs->top_index].parameters;
+//
+//     for (int i = 0; i < AmountParams; i++)
+//     {
+//         x86_pop_r(rax);
+//
+//         x86_mov_r_Ir_iI(rsp, rax, - (AmountParams - ((i + 1) * VAR_SIZE)));
+//
+//         x86_inc(eCOUNT_REG);
+//
+//         x86_pop_r(A_REG);
+//         x86_mov_IrI_r(eCOUNT_REG, A_REG);
+//
+//         // PUT (pop);
+//         // fprintf (file, " [" COUNT_REG "]\n\n");  // this was
+//     }
+//
+//     return;
+// }
 
 void SElfBack::elf_incr_top_reg ()
 {
@@ -792,11 +858,11 @@ void SElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
 
 //=============================================================================================================================================================================
 
-void SElfBack::elf_add_to_var_table (SNode* CurNode)
+void SElfBack:: elf_add_to_var_table (SNode* CurNode, bool ParamMarker)
 {
     if (table_cond == none)
     {
-        elf_create_new_var_table ();
+        elf_create_new_var_table (CurNode, ParamMarker);
     }
 
     MLA (CurNode->category == CLine && CurNode->type == TVariable);
@@ -804,22 +870,40 @@ void SElfBack::elf_add_to_var_table (SNode* CurNode)
     SVarTable* Table = NULL;
     peek_from_stack (VarStack, &Table);
 
-    Table->Arr[Table->size].name  = CurNode->data.var; //copy address from node
-    Table->Arr[Table->size].index = RAM_top_index;
+    Table->Arr[Table->cur_size].name  = CurNode->data.var; //copy address from node
 
-    RAM_top_index++;
-    Table->size++;
+    if (ParamMarker == false)
+    {
+        Table->Arr[Table->cur_size].index = (Table->amount - Table->cur_size - 1) * VAR_SIZE;
+    }
+    else
+    {
+        Table->Arr[Table->cur_size].index = - (Table->cur_size + 1); // another way to mark params of function
+    }
+
+    // RAM_top_index++;
+    Table->cur_size++;
 
     return;
 }
 
-void SElfBack::elf_create_new_var_table ()
+void SElfBack::elf_create_new_var_table (SNode* CurNode, bool ParamMarker)
 {
     ME;
 
+    delta_rbp = 0;
+
     SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
-    NewTable->size = 0;
+    NewTable->cur_size = 0;
+
+    NewTable->param_marker = ParamMarker;
+
+    if (ParamMarker == false)
+    {
+        NewTable->amount = elf_find_new_vars (CurNode);
+        printf("amount %d\n", NewTable->amount);
+    }
 
     push_in_stack (VarStack, NewTable);
 
@@ -828,17 +912,40 @@ void SElfBack::elf_create_new_var_table ()
     return;
 }
 
+size_t SElfBack::elf_find_new_vars (SNode* CurNode)
+{
+    return elf_find_new_var(CurNode);
+}
+
+size_t SElfBack::elf_find_new_var (SNode* CurNode)
+{
+    size_t OneMoreVar = 0;
+
+    if (CurNode->left->type == T_Announce)
+    {
+        OneMoreVar = 1;
+    }
+
+    if (CurNode->right == NULL)
+    {
+        return OneMoreVar;
+    }
+
+    return OneMoreVar + elf_find_new_var(CurNode->right);
+}
+
+
 void SElfBack::elf_create_param_var_table (SNode* CurNode)
 {
     ME;
 
-    RAM_top_index = 1;
+    // RAM_top_index = 1;
 
     do
     {
         if (CurNode->left != NULL)
         {
-            elf_add_to_var_table (CurNode->left->left);
+            elf_add_to_var_table (CurNode->left->left, true);
             Funcs->Table[Funcs->top_index].parameters++;
         }
 
@@ -866,6 +973,7 @@ void SElfBack::elf_delete_var_table ()
 int SElfBack::elf_find_var (SNode* CurNode)
 {
     int RetIndex = JUNK;
+    bool ParamMarker = false;
 
     MLA (VarStack->size != 0);
     MLA (CurNode->category == CLine && CurNode->type == TVariable);
@@ -878,7 +986,7 @@ int SElfBack::elf_find_var (SNode* CurNode)
         Table = VarStack->data[VarStack->size - depth];
         //printf ("=%p=%d/%d=\n", Table, depth, VarStack->size);
         depth++;
-    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth <= VarStack->size));
+    } while ((elf_find_in_table (CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (depth <= VarStack->size));
 
     if (RetIndex < 0)
     {
@@ -886,7 +994,33 @@ int SElfBack::elf_find_var (SNode* CurNode)
         MLA (0);
     }
 
+    if (ParamMarker == true)
+    {
+        RetIndex = -RetIndex;
+    }
+
     return RetIndex;
+}
+
+//=============================================================================================================================================================================
+
+bool SElfBack::elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker)
+{
+    MLA (Table != NULL);
+
+    for (int counter = 0; counter < Table->cur_size; ++counter)
+    {
+        *ParamMarker = Table->param_marker;
+
+        if (wcscmp (varName, Table->Arr[counter].name) == 0)
+        {
+            *RetIndex = Table->Arr[counter].index;
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 //=============================================================================================================================================================================

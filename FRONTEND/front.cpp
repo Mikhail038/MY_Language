@@ -545,7 +545,7 @@ void f_create_new_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag)
 
     SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
-    NewTable->size = 0;
+    NewTable->cur_size = 0;
 
     push_in_stack (Vars, NewTable);
 
@@ -604,11 +604,11 @@ bool f_find_in_table (CharT* Name, SVarTable* Table, bool* PrintFlag)
 {
     MLA (Table != NULL);
 
-    for (int counter = 0; counter < Table->size; ++counter)
+    for (int counter = 0; counter < Table->cur_size; ++counter)
     {
         if (*PrintFlag)
         {
-            wprintf (L"%d--%d--%ls--\n", Table->size, counter, Table->Arr[counter].name);
+            wprintf (L"%d--%d--%ls--\n", Table->cur_size, counter, Table->Arr[counter].name);
         }
 
         if (wcscmp (Name, Table->Arr[counter].name) == 0)
@@ -637,14 +637,14 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
     SVarTable* Table = NULL;
     peek_from_stack (Vars, &Table);
 
-    Table->Arr[Table->size].name = Name; //copy address from node
+    Table->Arr[Table->cur_size].name = Name; //copy address from node
 
     if (*PrintFlag)
     {
-        wprintf (L"added '%ls'\n", Table->Arr[Table->size].name);
+        wprintf (L"added '%ls'\n", Table->Arr[Table->cur_size].name);
     }
 
-    Table->size++;
+    Table->cur_size++;
 
     return;
 }

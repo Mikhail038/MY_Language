@@ -37,7 +37,6 @@ typedef struct TLabel
     TLabel(size_t FirstStart, size_t Finish)
     {
         START_;
-;
 
         finish = Finish;
         start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
@@ -49,7 +48,6 @@ typedef struct TLabel
     TLabel (const TLabel& other)
     {
         START_;
-;
 
         finish = other.finish;
         amount = other.amount;
@@ -61,7 +59,6 @@ typedef struct TLabel
     TLabel& operator= (const TLabel& other)
     {
         START_;
-;
 
         if (this == &other)
         {
@@ -80,7 +77,6 @@ typedef struct TLabel
     TLabel& operator= (TLabel&& other)
     {
         START_;
-;
 
         if (this == &other)
         {
@@ -99,7 +95,6 @@ typedef struct TLabel
     TLabel (TLabel&& other)
     {
         START_;
-;
 
         finish = other.finish;
         amount = other.amount;
@@ -111,7 +106,6 @@ typedef struct TLabel
     ~TLabel()
     {
         START_;
-;
 
         free (start);
     }

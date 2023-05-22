@@ -3,6 +3,7 @@
 #define FRONT_H
 
 //=============================================================================================================================================================================
+#include <cstddef>
 #define TKN_IS_OP       TKN.category = COperation
 
 #include "stackT.h"
@@ -180,7 +181,12 @@ SVarAccord;
 
 typedef struct
 {
-    int         size = 0;
+    bool        param_marker;
+    size_t      amount = 0;
+    // size_t      amount_param = 0;
+
+    int         cur_size = 0;
+
     SVarAccord* Arr  = NULL;
 }
 SVarTable;
