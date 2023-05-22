@@ -549,8 +549,8 @@ void SElfBack::elf_generate_if (SNode* CurNode)
 
     CurNode = CurNode->right;
 
-    x86_nop();
-    x86_nop();
+    // x86_nop();
+    // x86_nop();
     if (CurNode != NULL)
     {
         if (CurNode->category == COperation && CurNode->type == TIf)
@@ -564,8 +564,8 @@ void SElfBack::elf_generate_if (SNode* CurNode)
             ELF_CLEAN_TABLE;
         }
     }
-    x86_nop();
-    x86_nop();
+    // x86_nop();
+    // x86_nop();
 
     x86___paste_jump_label(Label_2_name);
     // fprintf (file,  LABEL "%d:\n", Label_2);
@@ -621,11 +621,11 @@ void SElfBack::elf_generate_while (SNode* CurNode)
 
 void SElfBack::elf_generate_call (SNode* CurNode)
 {
-    x86_push_r(eTOP_REG);
+    // x86_push_r(eTOP_REG);
 
     elf_push_parameters (CurNode->right);
 
-    x86_push_r(eTOP_REG);
+    // x86_push_r(eTOP_REG);
 
     x86_pop_r(eSHIFT_REG);
 
@@ -634,7 +634,7 @@ void SElfBack::elf_generate_call (SNode* CurNode)
     // PUT (call);
     // fprintf (file, " " LABEL "%ls\n", CurNode->left->data.var);
 
-    x86_pop_r(eTOP_REG);
+    // x86_pop_r(eTOP_REG);
 
     x86_push_r(eFUNC_REG);
 
