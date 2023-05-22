@@ -332,9 +332,9 @@ void SElfBack::generate_elf_array (SNode* Root)
 
 void SElfBack::elf_generate_code (SNode* Root)
 {
-    x86_mov_r_i(eSHIFT_REG, 0);
+    // x86_mov_r_i(eSHIFT_REG, 0);
 
-    x86_mov_r_i(eTOP_REG, cur_addr - start_cnt); // TODO maybe not
+    // x86_mov_r_i(eTOP_REG, cur_addr - start_cnt); // TODO maybe not
 
     x86_call_label(MAIN_LBL);
 
