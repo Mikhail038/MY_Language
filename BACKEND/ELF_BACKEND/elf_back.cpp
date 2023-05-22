@@ -385,9 +385,15 @@ void SElfBack::elf_generate_function (SNode* CurNode)
     table_cond = none;
     elf_create_param_var_table (CurNode->left->right);
 
+    size_t AmountVars = 0;
+
     SVarTable* Table = NULL;
-    peek_from_stack (VarStack, &Table);
-    size_t AmountVars = Table->amount;
+
+    if (VarStack->size != 0)
+    {
+        peek_from_stack (VarStack, &Table);
+        AmountVars = Table->amount;
+    }
 
     // elf_pop_parameters ();
 
@@ -398,8 +404,17 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
     Funcs->top_index++;
 
+    x86_nop ();
+
     elf_generate_statement (CurNode->right);
     ELF_CLEAN_TABLE;
+
+    x86_nop ();
+
+
+    x86_add_i(rbp, AmountVars * VAR_SIZE);
+
+    x86_pop_r(rbp);
 
     return;
 }
@@ -905,6 +920,11 @@ void SElfBack::elf_create_new_var_table (SNode* CurNode, bool ParamMarker)
         printf("amount %d\n", NewTable->amount);
     }
 
+    if (ParamMarker == true)
+    {
+        printf("func params\n");
+    }
+
     push_in_stack (VarStack, NewTable);
 
     table_cond = exist;
@@ -921,7 +941,7 @@ size_t SElfBack::elf_find_new_var (SNode* CurNode)
 {
     size_t OneMoreVar = 0;
 
-    if (CurNode->left->type == T_Announce)
+    if (CurNode->left != NULL && CurNode->left->type == T_Announce)
     {
         OneMoreVar = 1;
     }
@@ -988,7 +1008,7 @@ int SElfBack::elf_find_var (SNode* CurNode)
         depth++;
     } while ((elf_find_in_table (CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (depth <= VarStack->size));
 
-    if (RetIndex < 0)
+    if (RetIndex == -JUNK)
     {
         printf ("==ERROR==\n""No '%ls' found!\n", CurNode->data.var);
         MLA (0);

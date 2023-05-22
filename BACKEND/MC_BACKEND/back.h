@@ -95,7 +95,7 @@ SBack;
 
 #define LABEL "lbl_"
 
-#define JUNK -1
+#define JUNK -13
 
 #define TRUE   1
 #define FALSE  0

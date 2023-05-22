@@ -307,22 +307,50 @@ void SElfBack::x86_add_i (int Register, int Number)
 {
     x86___Dst_config(Register);
 
-    SET(0x83);
+    if (Number <= 127)
+    {
+        SET(0x83);
+    }
+    else
+    {
+        SET(0x81);
+    }
 
     x86___Reg_config(Register, 0xc0);
 
-    set_hex_int(Number);
+    if (Number <= 127)
+    {
+        SET((char) Number);
+    }
+    else
+    {
+        set_hex_int(Number);
+    }
 }
 
 void SElfBack::x86_sub_i (int Register, int Number)
 {
     x86___Dst_config(Register);
 
-    SET(0x83);
+    if (Number <= 127)
+    {
+        SET(0x83);
+    }
+    else
+    {
+        SET(0x81);
+    }
 
     x86___Reg_config(Register, 0xe8);
 
-    set_hex_int(Number);
+    if (Number <= 127)
+    {
+        SET((char) Number);
+    }
+    else
+    {
+        set_hex_int(Number);
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

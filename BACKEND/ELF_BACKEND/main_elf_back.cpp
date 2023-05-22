@@ -2,6 +2,7 @@
 //29.04.2023
 //==================================================================================================================================================================
 
+#include <cstddef>
 #include <cstdlib>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +44,7 @@ int main (int argc, char** argv)
         make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
         FILE* ExFile = fopen ("EXAMPLES_ELF/code.elf", "w");
+        MLA (ExFile != NULL);
 
         make_elf_file (Root, ExFile);
 
