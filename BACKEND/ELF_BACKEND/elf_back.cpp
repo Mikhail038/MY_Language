@@ -370,14 +370,15 @@ void SElfBack::elf_generate_function (SNode* CurNode)
     if (wcscoll (CurNode->left->data.var, MAIN_LBL) == 0)
     {
         func_cond = main_f;
-        x86___paste_call_label(MAIN_LBL);
+        // x86___paste_call_label(MAIN_LBL);
     }
     else
     {
         func_cond = any_f;
-        x86___paste_call_label(CurNode->left->data.var);
+        // x86___paste_call_label(CurNode->left->data.var);
     }
-    // x86___paste_call_label(Name);
+
+    x86___paste_call_label(CurNode->left->data.var);
     // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
 
     Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
@@ -404,12 +405,12 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
     Funcs->top_index++;
 
-    x86_nop ();
+    // x86_nop ();
 
     elf_generate_statement (CurNode->right);
     ELF_CLEAN_TABLE;
 
-    x86_nop ();
+    // x86_nop ();
 
 
     x86_add_i(rbp, AmountVars * VAR_SIZE);
@@ -586,9 +587,9 @@ void SElfBack::elf_generate_while (SNode* CurNode)
     // fprintf (file,  LABEL "%d:\n", Label_1);
     // label_cnt++;
 
-    x86_nop();
+    // x86_nop();
     elf_generate_postorder (CurNode->left);
-    x86_nop();
+    // x86_nop();
 
     x86_push_i(FALSE);
 
@@ -603,11 +604,11 @@ void SElfBack::elf_generate_while (SNode* CurNode)
     // fprintf (file, " " LABEL "%d\n", Label_2);
     // label_cnt++;
 
-    x86_nop();
+    // x86_nop();
     table_cond = none;
     elf_generate_statement (CurNode->right);
     ELF_CLEAN_TABLE;
-    x86_nop();
+    // x86_nop();
 
     x86_jump_label(Label_1_name, jmp_);
 
@@ -627,7 +628,7 @@ void SElfBack::elf_generate_call (SNode* CurNode)
 
     // x86_push_r(eTOP_REG);
 
-    x86_pop_r(eSHIFT_REG);
+    // x86_pop_r(eSHIFT_REG);
 
     x86_call_label(CurNode->left->data.var);
 
@@ -636,7 +637,7 @@ void SElfBack::elf_generate_call (SNode* CurNode)
 
     // x86_pop_r(eTOP_REG);
 
-    x86_push_r(eFUNC_REG);
+    // x86_push_r(eFUNC_REG);
 
     return;
 }

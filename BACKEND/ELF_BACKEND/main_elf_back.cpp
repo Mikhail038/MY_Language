@@ -22,6 +22,8 @@
 
 //=============================================================================================================================================================================
 
+#include <errno.h>
+
 #include "elf_back.h"
 
 #include "back.h"
@@ -35,7 +37,7 @@
 
 int main (int argc, char** argv)
 {
-    setlocale(LC_CTYPE, "");
+    // setlocale(LC_CTYPE, "");
 
     SNode* Root = read_tree ("FILES/ParsedSrc.tr");
 
@@ -43,7 +45,17 @@ int main (int argc, char** argv)
     {
         make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
+        system ("chmod +rwx EXAMPLES_ELF/code.elf");
+
+        errno = 0;
+        // /home/mikhail/PROGA/1st_term/Language/
         FILE* ExFile = fopen ("EXAMPLES_ELF/code.elf", "w");
+
+        if (ExFile == NULL)
+        {
+            printf ("fopen errno [%d]", errno);
+        }
+
         MLA (ExFile != NULL);
 
         make_elf_file (Root, ExFile);
@@ -54,7 +66,7 @@ int main (int argc, char** argv)
 
         system ("chmod +rwx EXAMPLES_ELF/code.elf");
 
-        system("EXAMPLES_ELF/code.elf");
+        // system("EXAMPLES_ELF/code.elf");
     }
 
     return 0;
