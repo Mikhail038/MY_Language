@@ -296,7 +296,8 @@ public:
 
     bool elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
 
-    bool my_find (const wchar_t* Name);
+    // bool my_find (const wchar_t* Name);
+    const wchar_t* my_find (const wchar_t* Name);
 };
 
 

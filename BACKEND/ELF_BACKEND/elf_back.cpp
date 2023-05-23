@@ -646,18 +646,31 @@ void SElfBack::elf_generate_return (SNode* CurNode)
 {
     elf_generate_expression (CurNode->left);
 
-//     if (func_cond == main_f)
-//     {
-//         x86_pop_r(eFUNC_REG);
-//
-//         x86_ret();
-//     }
-//     else
-//     {
+    if (func_cond == main_f)
+    {
         x86_pop_r(eFUNC_REG);
 
         x86_ret();
-    // }
+    }
+    else
+    {
+        x86_pop_r(eFUNC_REG);
+
+        size_t AmountVars = 0;
+
+        SVarTable* Table = NULL;
+
+        if (VarStack->size != 0)
+        {
+            peek_from_stack (VarStack, &Table);
+            AmountVars = Table->amount;
+        }
+        x86_add_i(rbp, AmountVars * VAR_SIZE);
+
+        x86_pop_r(rbp);
+
+        x86_ret();
+    }
 
     return;
 }

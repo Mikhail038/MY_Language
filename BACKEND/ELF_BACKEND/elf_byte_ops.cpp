@@ -388,21 +388,24 @@ void SElfBack::x86_call_label (const wchar_t* Name)
 {
     fprintf (stdout, "call <%ls>:\n", Name);
 
-    if (Labels.find(Name) != Labels.end())
+    // if (Labels.find(Name) != Labels.end())
+    if (my_find(Name) != NULL)
     {
-        if (Labels[Name].finish != NULL_FINISH)
-        {
-            // fprintf (stdout, LABEL "|%ls|:\n", Name);
+        TLabel Label = Labels[my_find(Name)];
 
-            x86_call (Labels[Name].finish - cur_addr);
+        if (Label.finish != NULL_FINISH)
+        {
+            // fprintf (stdout, LA  BEL "|%ls|:\n", Name);
+
+            x86_call (Label.finish - cur_addr);
             // x86_call (Labels[Name].finish);
             // x86_call (0);
 
         }
         else
         {
-            Labels[Name].start[Labels[Name].amount] = cur_addr;
-            Labels[Name].amount++;
+            Label.start[Label.amount] = cur_addr;
+            Label.amount++;
         }
 
         return;
@@ -422,7 +425,8 @@ void SElfBack::x86_call_label (const wchar_t* Name)
 
 void SElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
 {
-    if (my_find (Name) == true)
+    // if (my_find (Name) == true)
+    if (Labels.find(Name) != Labels.end())
     {
         if (Labels[Name].finish != NULL_FINISH)
         {
@@ -666,22 +670,26 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
 {
     fprintf (stdout, "paste |%ls|:\n", Name);
 
-    if (my_find (Name) == true)
+    // if (my_find (Name) == true)
+    // if (Labels.find(Name) != Labels.end())
+    if (my_find (Name) != NULL)
     {
-        Labels[Name].finish = cur_addr;
+        TLabel Label = Labels[my_find(Name)];
 
-        for (size_t i = 0; i < Labels[Name].amount; ++i)
+        Label.finish = cur_addr;
+
+        for (size_t i = 0; i < Label.amount; ++i)
         {
-            cur_addr = Labels[Name].start[i];   // go there
+            cur_addr = Label.start[i];   // go there
 
             // fprintf (stdout, LABEL "|%ls|:\n", Name);
 
             //std::cout << Labels[Name].finish << std::endl << Labels[Name].start[i] << std::endl;
-            x86_call (Labels[Name].finish - Labels[Name].start[i]); //paste code
+            x86_call (Label.finish - Label.start[i]); //paste code
 
             // x86_call (Labels[Name].finish); //paste code
 
-            cur_addr = Labels[Name].finish;  // go back
+            cur_addr = Label.finish;  // go back
         }
     }
     else
@@ -783,17 +791,17 @@ void SElfBack::x86___End ()
     x86_syscall ();
 }
 
-bool SElfBack::my_find (const wchar_t* Name)
+const wchar_t* SElfBack::my_find (const wchar_t* Name)
 {
     for (auto iterator = Labels.begin(); iterator != Labels.end(); ++iterator)
     {
         if (wcscoll(Name, iterator->first) == 0)
         {
-            return true;
+            return iterator->first;
         }
     }
 
-    return false;
+    return NULL;
 }
 
 //=============================================================================================================================================================================
