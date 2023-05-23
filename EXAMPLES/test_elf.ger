@@ -1,13 +1,19 @@
-var fac ()
+var fac (var x, var y, var z)
 {
-    return 5;
+    var a = 1;
+
+    return (a + x - y) * z;
 }
 
 var main ()
 {
+    var x_z = 40;
+
+    var z = 2;
+
     while (3 > 1)
     {
-        fac ();
+        fac (x_z - z, 1, z);
     }
 
     return 0;

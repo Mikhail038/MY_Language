@@ -183,7 +183,7 @@ typedef struct
 {
     bool        param_marker;
     size_t      amount = 0;
-    // size_t      amount_param = 0;
+    size_t      amount_param = 0;
 
     int         cur_size = 0;
 

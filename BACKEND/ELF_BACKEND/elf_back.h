@@ -143,8 +143,6 @@ typedef struct SElfBack
     size_t              cur_addr        = 0;
     size_t              start_cnt       = 0;
 
-    int                 current_rbp_shift   = 0;
-
     std::unordered_map<const wchar_t*, TLabel> Labels;
 
 public:
@@ -276,6 +274,8 @@ public:
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     void elf_push_parameters (SNode* CurNode);
+    void elf_delete_parameters (SNode* CurNode);
+
     void elf_pop_parameters ();
 
     void elf_incr_top_reg ();
@@ -294,6 +294,7 @@ public:
 
     int elf_find_var (SNode* CurNode);
 
+    SNode* elf_find_parent_statement (SNode* CurNode);
     bool elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
 
     // bool my_find (const wchar_t* Name);

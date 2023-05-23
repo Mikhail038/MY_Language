@@ -13,8 +13,48 @@ COperation _STATEMENT
         {
             COperation _PARAM
             {
+                COperation _FUNC_ANNOUNCE
+                {
+                    CLine TVariable x
+                    {
+                    }
+                    {
+                    }
+                }
+                {
+                }
             }
             {
+                COperation _PARAM
+                {
+                    COperation _FUNC_ANNOUNCE
+                    {
+                        CLine TVariable y
+                        {
+                        }
+                        {
+                        }
+                    }
+                    {
+                    }
+                }
+                {
+                    COperation _PARAM
+                    {
+                        COperation _FUNC_ANNOUNCE
+                        {
+                            CLine TVariable z
+                            {
+                            }
+                            {
+                            }
+                        }
+                        {
+                        }
+                    }
+                    {
+                    }
+                }
             }
         }
     }
@@ -25,18 +65,68 @@ COperation _STATEMENT
         {
             COperation _STATEMENT
             {
-                COperation RETURN
+                COperation _ANNOUNCE
                 {
-                    CValue TValue 5
+                    CLine TVariable a
                     {
                     }
                     {
                     }
                 }
                 {
+                    CValue TValue 1
+                    {
+                    }
+                    {
+                    }
                 }
             }
             {
+                COperation _STATEMENT
+                {
+                    COperation RETURN
+                    {
+                        COperation MUL
+                        {
+                            COperation ADD
+                            {
+                                CLine TVariable a
+                                {
+                                }
+                                {
+                                }
+                            }
+                            {
+                                COperation SUB
+                                {
+                                    CLine TVariable x
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                                {
+                                    CLine TVariable y
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                            }
+                        }
+                        {
+                            CLine TVariable z
+                            {
+                            }
+                            {
+                            }
+                        }
+                    }
+                    {
+                    }
+                }
+                {
+                }
             }
         }
     }
@@ -69,18 +159,35 @@ COperation _STATEMENT
             {
                 COperation _STATEMENT
                 {
-                    COperation WHILE
+                    COperation _ANNOUNCE
                     {
-                        COperation MORE
+                        CLine TVariable x_z
                         {
-                            CValue TValue 3
+                        }
+                        {
+                        }
+                    }
+                    {
+                        CValue TValue 40
+                        {
+                        }
+                        {
+                        }
+                    }
+                }
+                {
+                    COperation _STATEMENT
+                    {
+                        COperation _ANNOUNCE
+                        {
+                            CLine TVariable z
                             {
                             }
                             {
                             }
                         }
                         {
-                            CValue TValue 1
+                            CValue TValue 2
                             {
                             }
                             {
@@ -90,46 +197,104 @@ COperation _STATEMENT
                     {
                         COperation _STATEMENT
                         {
+                            COperation WHILE
+                            {
+                                COperation MORE
+                                {
+                                    CValue TValue 3
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                                {
+                                    CValue TValue 1
+                                    {
+                                    }
+                                    {
+                                    }
+                                }
+                            }
+                            {
+                                COperation _STATEMENT
+                                {
+                                }
+                                {
+                                    COperation _STATEMENT
+                                    {
+                                        COperation _CALL
+                                        {
+                                            CLine TVariable fac
+                                            {
+                                            }
+                                            {
+                                            }
+                                        }
+                                        {
+                                            COperation _PARAM
+                                            {
+                                                COperation SUB
+                                                {
+                                                    CLine TVariable x_z
+                                                    {
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                                {
+                                                    CLine TVariable z
+                                                    {
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                            }
+                                            {
+                                                COperation _PARAM
+                                                {
+                                                    CValue TValue 1
+                                                    {
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                                {
+                                                    COperation _PARAM
+                                                    {
+                                                        CLine TVariable z
+                                                        {
+                                                        }
+                                                        {
+                                                        }
+                                                    }
+                                                    {
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    {
+                                    }
+                                }
+                            }
                         }
                         {
                             COperation _STATEMENT
                             {
-                                COperation _CALL
+                                COperation RETURN
                                 {
-                                    CLine TVariable fac
+                                    CValue TValue 0
                                     {
                                     }
                                     {
                                     }
                                 }
                                 {
-                                    COperation _PARAM
-                                    {
-                                    }
-                                    {
-                                    }
                                 }
                             }
                             {
                             }
                         }
-                    }
-                }
-                {
-                    COperation _STATEMENT
-                    {
-                        COperation RETURN
-                        {
-                            CValue TValue 0
-                            {
-                            }
-                            {
-                            }
-                        }
-                        {
-                        }
-                    }
-                    {
                     }
                 }
             }

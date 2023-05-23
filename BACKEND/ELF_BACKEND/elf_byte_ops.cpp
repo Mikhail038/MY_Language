@@ -180,6 +180,8 @@ void SElfBack::x86_mov_IrI_r (int dstReg, int srcReg)
     SET(opcode);
 }
 
+#define BORDER_SHORT 128
+
 void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
 {
     x86___DstSrc_config(dstReg, srcReg);
@@ -195,7 +197,14 @@ void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
 
         SET(0x24);
 
-        set_hex_int(Shift);
+        if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
+        {
+            SET((char) Shift);
+        }
+        else
+        {
+            set_hex_int(Shift);
+        }
 
         return;
     }
@@ -206,8 +215,14 @@ void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
 
         SET(opcode);
 
-        set_hex_int(Shift);
-
+        if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
+        {
+            SET((char) Shift);
+        }
+        else
+        {
+            set_hex_int(Shift);
+        }
         return;
     }
 
@@ -219,7 +234,14 @@ void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
 
         SET(opcode);
 
-        set_hex_int(Shift);
+        if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
+        {
+            SET((char) Shift);
+        }
+        else
+        {
+            set_hex_int(Shift);
+        }
     }
     else
     {
@@ -247,7 +269,7 @@ void SElfBack::x86_add_stack ()
 
     x86___Regs_config(a_reg, b_reg);
 
-    x86_push_i(a_reg);
+    x86_push_r(a_reg);
 }
 
 void SElfBack::x86_sub_stack ()
@@ -264,7 +286,7 @@ void SElfBack::x86_sub_stack ()
 
     x86___Regs_config(a_reg, b_reg);
 
-    x86_push_i(a_reg);
+    x86_push_r(a_reg);
 }
 
 void SElfBack::x86_imul_stack ()
@@ -280,7 +302,7 @@ void SElfBack::x86_imul_stack ()
 
     x86___Reg_config(a_reg, 0xe8);
 
-    x86_push_i(rax);
+    x86_push_r(rax);
 }
 
 void SElfBack::x86_idiv_stack ()
@@ -386,7 +408,9 @@ void SElfBack::x86_call (int Shift)
 
 void SElfBack::x86_call_label (const wchar_t* Name)
 {
+    #ifdef LABEL_OVERSEER
     fprintf (stdout, "call <%ls>:\n", Name);
+    #endif
 
     // if (Labels.find(Name) != Labels.end())
     if (my_find(Name) != NULL)
@@ -412,7 +436,9 @@ void SElfBack::x86_call_label (const wchar_t* Name)
     }
     else
     {
+        #ifdef LABEL_OVERSEER
         fprintf (stdout, "<not found>:\n", Name);
+        #endif
 
         Labels.insert({Name, {cur_addr, 0}});
     }
@@ -668,7 +694,9 @@ void SElfBack::x86___make_out_func ()
 
 void SElfBack::x86___paste_call_label (const wchar_t* Name)
 {
+    #ifdef LABEL_OVERSEER
     fprintf (stdout, "paste |%ls|:\n", Name);
+    #endif
 
     // if (my_find (Name) == true)
     // if (Labels.find(Name) != Labels.end())
@@ -694,7 +722,9 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
     }
     else
     {
+        #ifdef LABEL_OVERSEER
         fprintf (stdout, "|not called|:\n", Name);
+        #endif
 
         Labels.insert({Name, {cur_addr}});   //TODO fix this
     }

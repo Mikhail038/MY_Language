@@ -16,7 +16,7 @@ digraph {
                     ]
                     
                     node_0x604000000010 -> node_0x6040000000d0;
-                    node_0x604000000010 -> node_0x604000000750;
+                    node_0x604000000010 -> node_0x604000001550;
 
                     node_0x6040000000d0
                     [
@@ -30,7 +30,7 @@ digraph {
                     ]
                     
                     node_0x6040000000d0 -> node_0x604000000150;
-                    node_0x6040000000d0 -> node_0x6040000003d0;
+                    node_0x6040000000d0 -> node_0x6040000009d0;
 
                     node_0x604000000150
                     [
@@ -69,39 +69,54 @@ digraph {
                         >
                     ]
                     
+                    node_0x6040000002d0 -> node_0x604000000350;
+                    node_0x6040000002d0 -> node_0x604000000510;
+
+                    node_0x604000000350
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC_ANNOUNCE </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000000350 -> node_0x6040000003d0;
 
                     node_0x6040000003d0
                     [
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> x </td>
                             </tr>
                         </table>
                         >
                     ]
                     
-                    node_0x6040000003d0 -> node_0x6040000004d0;
 
-                    node_0x6040000004d0
+                    node_0x604000000510
                     [
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
                             </tr>
                         </table>
                         >
                     ]
                     
-                    node_0x6040000004d0 -> node_0x604000000590;
+                    node_0x604000000510 -> node_0x604000000590;
+                    node_0x604000000510 -> node_0x604000000750;
 
                     node_0x604000000590
                     [
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> RETURN </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC_ANNOUNCE </td>
                             </tr>
                         </table>
                         >
@@ -114,7 +129,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#f21847"> 5 </td>
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> y </td>
                             </tr>
                         </table>
                         >
@@ -126,67 +141,40 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-                    node_0x604000000750 -> node_0x604000000810;
-
-                    node_0x604000000810
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-                    node_0x604000000810 -> node_0x604000000890;
-                    node_0x604000000810 -> node_0x604000000b10;
-
-                    node_0x604000000890
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#1cfc03"> main </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-                    node_0x604000000890 -> node_0x604000000910;
-                    node_0x604000000890 -> node_0x604000000a10;
-
-                    node_0x604000000910
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> stdType </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-
-                    node_0x604000000a10
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
                             <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
                             </tr>
                         </table>
                         >
                     ]
                     
+                    node_0x604000000750 -> node_0x6040000007d0;
 
-                    node_0x604000000b10
+                    node_0x6040000007d0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC_ANNOUNCE </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x6040000007d0 -> node_0x604000000850;
+
+                    node_0x604000000850
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> z </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x6040000009d0
                     [
                         label=
                         <
@@ -197,9 +185,9 @@ digraph {
                         >
                     ]
                     
-                    node_0x604000000b10 -> node_0x604000000c10;
+                    node_0x6040000009d0 -> node_0x604000000ad0;
 
-                    node_0x604000000c10
+                    node_0x604000000ad0
                     [
                         label=
                         <
@@ -210,50 +198,36 @@ digraph {
                         >
                     ]
                     
-                    node_0x604000000c10 -> node_0x604000000cd0;
-                    node_0x604000000c10 -> node_0x6040000013d0;
+                    node_0x604000000ad0 -> node_0x604000000b90;
+                    node_0x604000000ad0 -> node_0x604000000e10;
 
-                    node_0x604000000cd0
+                    node_0x604000000b90
                     [
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> WHILE </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _ANNOUNCE </td>
                             </tr>
                         </table>
                         >
                     ]
                     
-                    node_0x604000000cd0 -> node_0x604000000d50;
-                    node_0x604000000cd0 -> node_0x604000000f50;
+                    node_0x604000000b90 -> node_0x604000000c50;
+                    node_0x604000000b90 -> node_0x604000000d50;
+
+                    node_0x604000000c50
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> a </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
 
                     node_0x604000000d50
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> MORE </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-                    node_0x604000000d50 -> node_0x604000000dd0;
-                    node_0x604000000d50 -> node_0x604000000e90;
-
-                    node_0x604000000dd0
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#f21847"> 3 </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-
-                    node_0x604000000e90
                     [
                         label=
                         <
@@ -265,7 +239,7 @@ digraph {
                     ]
                     
 
-                    node_0x604000000f50
+                    node_0x604000000e10
                     [
                         label=
                         <
@@ -276,53 +250,93 @@ digraph {
                         >
                     ]
                     
-                    node_0x604000000f50 -> node_0x604000001050;
+                    node_0x604000000e10 -> node_0x604000000ed0;
+
+                    node_0x604000000ed0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> RETURN </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000000ed0 -> node_0x604000000f50;
+
+                    node_0x604000000f50
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> MUL </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000000f50 -> node_0x604000000fd0;
+                    node_0x604000000f50 -> node_0x6040000013d0;
+
+                    node_0x604000000fd0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> ADD </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000000fd0 -> node_0x604000001050;
+                    node_0x604000000fd0 -> node_0x604000001150;
 
                     node_0x604000001050
                     [
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-                    node_0x604000001050 -> node_0x604000001110;
-
-                    node_0x604000001110
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _CALL </td>
-                            </tr>
-                        </table>
-                        >
-                    ]
-                    
-                    node_0x604000001110 -> node_0x604000001190;
-                    node_0x604000001110 -> node_0x604000001290;
-
-                    node_0x604000001190
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#1cfc03"> fac </td>
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> a </td>
                             </tr>
                         </table>
                         >
                     ]
                     
 
-                    node_0x604000001290
+                    node_0x604000001150
                     [
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> SUB </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001150 -> node_0x6040000011d0;
+                    node_0x604000001150 -> node_0x6040000012d0;
+
+                    node_0x6040000011d0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> x </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x6040000012d0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> y </td>
                             </tr>
                         </table>
                         >
@@ -334,15 +348,430 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> z </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000001550
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
                             <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
                             </tr>
                         </table>
                         >
                     ]
                     
-                    node_0x6040000013d0 -> node_0x604000001490;
+                    node_0x604000001550 -> node_0x604000001610;
 
-                    node_0x604000001490
+                    node_0x604000001610
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001610 -> node_0x604000001690;
+                    node_0x604000001610 -> node_0x604000001910;
+
+                    node_0x604000001690
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> main </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001690 -> node_0x604000001710;
+                    node_0x604000001690 -> node_0x604000001810;
+
+                    node_0x604000001710
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> stdType </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000001810
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000001910
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001910 -> node_0x604000001a10;
+
+                    node_0x604000001a10
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001a10 -> node_0x604000001ad0;
+                    node_0x604000001a10 -> node_0x604000001d50;
+
+                    node_0x604000001ad0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _ANNOUNCE </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001ad0 -> node_0x604000001b90;
+                    node_0x604000001ad0 -> node_0x604000001c90;
+
+                    node_0x604000001b90
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> x_z </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000001c90
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#f21847"> 40 </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000001d50
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001d50 -> node_0x604000001e10;
+                    node_0x604000001d50 -> node_0x604000002090;
+
+                    node_0x604000001e10
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _ANNOUNCE </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000001e10 -> node_0x604000001ed0;
+                    node_0x604000001e10 -> node_0x604000001fd0;
+
+                    node_0x604000001ed0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> z </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000001fd0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#f21847"> 2 </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000002090
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002090 -> node_0x604000002150;
+                    node_0x604000002090 -> node_0x604000002d50;
+
+                    node_0x604000002150
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> WHILE </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002150 -> node_0x6040000021d0;
+                    node_0x604000002150 -> node_0x6040000023d0;
+
+                    node_0x6040000021d0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> MORE </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x6040000021d0 -> node_0x604000002250;
+                    node_0x6040000021d0 -> node_0x604000002310;
+
+                    node_0x604000002250
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#f21847"> 3 </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000002310
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#f21847"> 1 </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x6040000023d0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x6040000023d0 -> node_0x6040000024d0;
+
+                    node_0x6040000024d0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x6040000024d0 -> node_0x604000002590;
+
+                    node_0x604000002590
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _CALL </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002590 -> node_0x604000002610;
+                    node_0x604000002590 -> node_0x604000002710;
+
+                    node_0x604000002610
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> fac </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000002710
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002710 -> node_0x604000002790;
+                    node_0x604000002710 -> node_0x604000002a10;
+
+                    node_0x604000002790
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> SUB </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002790 -> node_0x604000002810;
+                    node_0x604000002790 -> node_0x604000002910;
+
+                    node_0x604000002810
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> x_z </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000002910
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> z </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000002a10
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002a10 -> node_0x604000002a90;
+                    node_0x604000002a10 -> node_0x604000002b50;
+
+                    node_0x604000002a90
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#f21847"> 1 </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000002b50
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002b50 -> node_0x604000002bd0;
+
+                    node_0x604000002bd0
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#1cfc03"> z </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+
+                    node_0x604000002d50
+                    [
+                        label=
+                        <
+                        <table border="0" cellborder="1" cellspacing="0">
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            </tr>
+                        </table>
+                        >
+                    ]
+                    
+                    node_0x604000002d50 -> node_0x604000002e10;
+
+                    node_0x604000002e10
                     [
                         label=
                         <
@@ -353,9 +782,9 @@ digraph {
                         >
                     ]
                     
-                    node_0x604000001490 -> node_0x604000001510;
+                    node_0x604000002e10 -> node_0x604000002e90;
 
-                    node_0x604000001510
+                    node_0x604000002e90
                     [
                         label=
                         <
