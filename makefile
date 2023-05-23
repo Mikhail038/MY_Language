@@ -1,6 +1,8 @@
 #=============================================================================================================================================================================
 
-VR_FLAGS = -DVAR_OVERSEER -D_DEBUG -g -ggdb3 -std=c++17 -O3
+DEB_FLAGS = -DVAR_OVERSEER
+
+VR_FLAGS =  -D_DEBUG -g -ggdb3 -std=c++17 -O3
 
 ASSAN = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 

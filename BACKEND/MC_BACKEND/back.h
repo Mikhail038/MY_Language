@@ -101,7 +101,7 @@ SBack;
 #define FALSE  0
 
 #define ME printf ("==%s %s:%d\n", LOCATION);
-// #define ME
+#define ME
 
 #define PUTLN(d_command) writeln_command ( d_command , Back->file)
 #define PUT(d_command) write_command   ( d_command , Back->file)

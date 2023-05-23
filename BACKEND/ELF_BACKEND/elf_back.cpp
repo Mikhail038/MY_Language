@@ -379,17 +379,14 @@ void SElfBack::elf_generate_function (SNode* CurNode)
     if (wcscoll (CurNode->left->data.var, MAIN_LBL) == 0)
     {
         func_cond = main_f;
-        // x86___paste_call_label(MAIN_LBL);
     }
     else
     {
         func_cond = any_f;
-        // x86___paste_call_label(CurNode->left->data.var);
     }
 
     x86___paste_call_label(CurNode->left->data.var);
     // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
-    // printf ("1 varstack size = %d\n", VarStack->size);
 
     Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
 
@@ -398,12 +395,9 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
     size_t AmountVars = 0;
 
-    // printf ("2 varstack size = %d\n", VarStack->size);
-    // printf ("a\n");
     SVarTable* Table = NULL;
     if (VarStack->size != 0)
     {
-        // printf ("b\n");
 
         pop_from_stack (VarStack, &Table);
 
@@ -412,13 +406,9 @@ void SElfBack::elf_generate_function (SNode* CurNode)
         Table->amount = AmountVars;
 
         push_in_stack(VarStack, Table);
-        // MLA(VarStack->size != 0);
 
-        printf ("Vars Amount: [%d]\n", AmountVars);
+        // printf ("Vars Amount: [%d]\n", AmountVars);
     }
-    // printf ("3 varstack size = %d\n", VarStack->size);
-
-    // elf_pop_parameters ();
 
     x86_push_r(rbp);
     x86_mov_r_r(rbp, rsp);
@@ -429,10 +419,8 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
     Funcs->top_index++;
 
-    // x86_nop ();
 
     int old_delta_rbp = delta_rbp;
-    // delta_rbp =  (AmountVars + 1) * VAR_SIZE;
     delta_rbp = (AmountVars) * VAR_SIZE;
 
 
@@ -441,7 +429,6 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
     delta_rbp = old_delta_rbp;
 
-    // x86_nop ();
 
 
     x86_add_i(rbp, AmountVars * VAR_SIZE);
@@ -750,16 +737,16 @@ void SElfBack::elf_rax_var_value (SNode* CurNode)
 {
     int Index = elf_find_var (CurNode);
 
-    printf("value param = ");
+    // printf("value param = ");
     if (Index < 0)
     {
-        printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
+        // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
         x86_mov_r_Ir_iI(rax, rbp, delta_rbp - Index * VAR_SIZE);
 
         return;
     }
 
-    printf("Index: %d\n", Index);
+    // printf("Index: %d\n", Index);
     x86_mov_r_Ir_iI(rax, rbp, Index);
 
     return;
@@ -768,19 +755,19 @@ void SElfBack::elf_rax_var_value (SNode* CurNode)
 void SElfBack::elf_rax_var_address (SNode* CurNode)
 {
     int Index = elf_find_var (CurNode);
-    printf("addr  param = ");
+    // printf("addr  param = ");
 
     x86_mov_r_r(rax, rbp);
 
     if (Index < 0)
     {
-        printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
+        // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
         x86_add_i(rax, delta_rbp - Index * VAR_SIZE);
 
         return;
     }
 
-    printf("Index: %d\n", Index);
+    // printf("Index: %d\n", Index);
     x86_add_i(rax, Index);
 
     return;
@@ -1039,7 +1026,7 @@ void SElfBack::elf_create_new_var_table (SNode* CurNode, bool ParamMarker)
 
     if (ParamMarker == true)
     {
-        printf("func params\n");
+        // printf("func params\n");
     }
 
     push_in_stack (VarStack, NewTable);

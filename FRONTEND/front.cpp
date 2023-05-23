@@ -53,10 +53,10 @@ void my_f_main (int argc, char** argv)
         fopen (argv[2], "r");
     }
 
-    bool PrintFlag = true;
-    if ((argc > 1) && (strcmp (argv[1],"-s") == 0))
+    bool PrintFlag = false;
+    if ((argc > 1) && (strcmp (argv[1],"-v") == 0))
     {
-        PrintFlag = false;
+        PrintFlag = true;
     }
 
     MLA (SourceText != NULL);
