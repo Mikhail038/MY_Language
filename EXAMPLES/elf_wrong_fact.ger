@@ -1,0 +1,20 @@
+var fac (var a)
+{
+    if (a == 1)
+    {
+        return 1;
+    }
+
+    var b = a - 1;
+
+    return (b + 1) * fac(b);
+}
+
+var main ()
+{
+    var x = 5;
+
+    x = fac (x);
+
+    return 0;
+}

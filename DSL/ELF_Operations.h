@@ -328,7 +328,7 @@ DEF_OP (T_Call,
 },
 L"_CALL",
 {
-    elf_generate_call (CurNode);
+    elf_generate_call (CurNode, RetValueMarker);
 })
 
 DEF_OP (T_Parameters,

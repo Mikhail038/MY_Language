@@ -253,17 +253,17 @@ public:
     void elf_generate_statement (SNode* CurNode);
     void elf_generate_function (SNode* CurNode);
     void elf_generate_node (SNode* CurNode);
-    void elf_generate_op_node (SNode* CurNode);
+    void elf_generate_op_node (SNode* CurNode, bool RetValueMarker);
     void elf_generate_input (SNode* CurNode);
     void elf_generate_output (SNode* CurNode);
     void elf_generate_if (SNode* CurNode);
     void elf_generate_while (SNode* CurNode);
-    void elf_generate_call (SNode* CurNode);
+    void elf_generate_call (SNode* CurNode, bool RetValueMarker);
     void elf_generate_return (SNode* CurNode);
     void elf_generate_announce (SNode* CurNode);
     void elf_generate_equation (SNode* CurNode);
     void elf_generate_expression (SNode* CurNode);
-    void elf_generate_postorder (SNode* CurNode);
+    void elf_generate_postorder (SNode* CurNode, bool RetValueMarker);
 
     void elf_rax_var_value      (SNode* CurNode);
     void elf_rax_var_address    (SNode* CurNode);

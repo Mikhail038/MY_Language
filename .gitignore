@@ -8,3 +8,4 @@ asm
 disasm
 proc
 .cache/*
+*.png

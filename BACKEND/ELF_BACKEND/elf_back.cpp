@@ -353,7 +353,7 @@ void SElfBack::elf_generate_statement (SNode* CurNode)
 {
     if (CurNode->left != NULL)
     {
-        elf_generate_op_node (CurNode->left);
+        elf_generate_op_node (CurNode->left, false);
     }
 
     if (CurNode->right != NULL)
@@ -380,7 +380,7 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
     x86___paste_call_label(CurNode->left->data.var);
     // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
-    printf ("1 varstack size = %d\n", VarStack->size);
+    // printf ("1 varstack size = %d\n", VarStack->size);
 
     Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
 
@@ -389,7 +389,7 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
     size_t AmountVars = 0;
 
-    printf ("2 varstack size = %d\n", VarStack->size);
+    // printf ("2 varstack size = %d\n", VarStack->size);
     // printf ("a\n");
     SVarTable* Table = NULL;
     if (VarStack->size != 0)
@@ -405,9 +405,9 @@ void SElfBack::elf_generate_function (SNode* CurNode)
         push_in_stack(VarStack, Table);
         // MLA(VarStack->size != 0);
 
-        printf ("Amount: [%d]\n", AmountVars);
+        printf ("Vars Amount: [%d]\n", AmountVars);
     }
-    printf ("3 varstack size = %d\n", VarStack->size);
+    // printf ("3 varstack size = %d\n", VarStack->size);
 
     // elf_pop_parameters ();
 
@@ -447,7 +447,7 @@ void SElfBack::elf_generate_node (SNode* CurNode)
 {
     if (CurNode->category == COperation)
     {
-        elf_generate_op_node (CurNode);
+        elf_generate_op_node (CurNode, true);
     }
 
     if (CurNode->category == CValue)
@@ -463,7 +463,7 @@ void SElfBack::elf_generate_node (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_op_node (SNode* CurNode)
+void SElfBack::elf_generate_op_node (SNode* CurNode, bool RetValueMarker)
 {
     switch (CurNode->type)
     {
@@ -538,7 +538,7 @@ void SElfBack::elf_generate_output (SNode* CurNode)
 
 void SElfBack::elf_generate_if (SNode* CurNode)
 {
-    elf_generate_postorder (CurNode->left);
+    elf_generate_expression (CurNode->left);
 
     x86_push_i(FALSE);
 
@@ -611,7 +611,7 @@ void SElfBack::elf_generate_while (SNode* CurNode)
     // label_cnt++;
 
     // x86_nop();
-    elf_generate_postorder (CurNode->left);
+    elf_generate_expression (CurNode->left);
     // x86_nop();
 
     x86_push_i(FALSE);
@@ -643,7 +643,7 @@ void SElfBack::elf_generate_while (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_call (SNode* CurNode)
+void SElfBack::elf_generate_call (SNode* CurNode, bool RetValueMarker)
 {
     // x86_push_r(eTOP_REG);
 
@@ -662,7 +662,15 @@ void SElfBack::elf_generate_call (SNode* CurNode)
 
     // x86_pop_r(eTOP_REG);
 
-    // x86_push_r(eFUNC_REG);
+    if (RetValueMarker == true)
+    {
+        // printf (KRED "WAAGH!\n" KNRM);
+        x86_push_r(eFUNC_REG);
+    }
+    else
+    {
+        // printf (KGRN "no\n" KNRM);
+    }
 
     return;
 }
@@ -671,14 +679,14 @@ void SElfBack::elf_generate_return (SNode* CurNode)
 {
     elf_generate_expression (CurNode->left);
 
-    if (func_cond == main_f)
-    {
-        x86_pop_r(eFUNC_REG);
-
-        x86_ret();
-    }
-    else
-    {
+//     if (func_cond == main_f)
+//     {
+//         x86_pop_r(eFUNC_REG);
+//
+//         x86_ret();
+//     }
+//     else
+//     {
         x86_pop_r(eFUNC_REG);
 
         size_t AmountVars = 0;
@@ -692,31 +700,34 @@ void SElfBack::elf_generate_return (SNode* CurNode)
         }
         x86_add_i(rbp, AmountVars * VAR_SIZE);
 
+        x86_mov_r_r(rsp, rbp);
+
         x86_pop_r(rbp);
 
         x86_ret();
-    }
+    // }
 
     return;
 }
 
 void SElfBack::elf_generate_expression (SNode* CurNode)
 {
-    elf_generate_postorder (CurNode);
+    elf_generate_postorder (CurNode, true);
 
     return;
 }
 
-void SElfBack::elf_generate_postorder (SNode* CurNode)
+void SElfBack::elf_generate_postorder (SNode* CurNode, bool RetValueMarker)
 {
     if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->left != NULL)
     {
-        elf_generate_postorder (CurNode->left);
+        elf_generate_postorder (CurNode->left, RetValueMarker);
     }
 
     if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->right != NULL)
     {
-        elf_generate_postorder (CurNode->right);
+        elf_generate_postorder (CurNode->right, RetValueMarker);
+        // x86_push_r(eFUNC_REG);
     }
 
     elf_generate_node (CurNode);
@@ -740,7 +751,7 @@ void SElfBack::elf_rax_var_value (SNode* CurNode)
     }
 
     printf("Index: %d\n", Index);
-    x86_mov_r_Ir_iI(rax, rbp, - Index);
+    x86_mov_r_Ir_iI(rax, rbp, Index);
 
     return;
 }
@@ -761,7 +772,7 @@ void SElfBack::elf_rax_var_address (SNode* CurNode)
     }
 
     printf("Index: %d\n", Index);
-    x86_sub_i(rax, Index);
+    x86_add_i(rax, Index);
 
     return;
 }
@@ -961,13 +972,13 @@ void SElfBack:: elf_add_to_var_table (SNode* CurNode, bool ParamMarker)
 //         }
 
         #ifdef VAR_OVERSEER
-        printf ("Amount: %d CurSize: %d Param: %d Final: %d => ", Table->amount, Table->cur_size, Table->amount_param, Table->amount - (Table->cur_size - Table->amount_param) - 1);
+        printf (KYLW "Amount: %d CurSize: %d Param: %d Final: %d => " KNRM, Table->amount, Table->cur_size, Table->amount_param, Table->amount - (Table->cur_size - Table->amount_param) - 1);
         #endif
 
         Table->Arr[Table->cur_size].index = (Table->amount - (Table->cur_size - Table->amount_param) - 1) * VAR_SIZE;
 
         #ifdef VAR_OVERSEER
-        printf ("index <%d>\n", Table->Arr[Table->cur_size].index);
+        printf (KYLW "index <%d>\n" KNRM, Table->Arr[Table->cur_size].index);
         #endif
 
         // Table->param_marker = false;
@@ -977,7 +988,7 @@ void SElfBack:: elf_add_to_var_table (SNode* CurNode, bool ParamMarker)
         Table->Arr[Table->cur_size].index = - (Table->cur_size + 2); // another way to mark params of function
 
         #ifdef VAR_OVERSEER
-        printf ("index |%d|\n", Table->Arr[Table->cur_size].index);
+        printf (KYLW "index |%d|\n" KNRM, Table->Arr[Table->cur_size].index);
         #endif
 
         Table->amount_param++;
@@ -1072,6 +1083,7 @@ void SElfBack::elf_create_param_var_table (SNode* CurNode)
 
     if (TableCreationMark == false)
     {
+        // printf (KRED "forced\n" KNRM);
         elf_create_new_var_table(CurNode, true);
     }
 
