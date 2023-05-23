@@ -37,7 +37,7 @@
 
 int main (int argc, char** argv)
 {
-    // setlocale(LC_CTYPE, "");
+    setlocale(LC_CTYPE, "");
 
     SNode* Root = read_tree ("FILES/ParsedSrc.tr");
 

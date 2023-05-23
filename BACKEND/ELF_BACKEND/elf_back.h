@@ -295,7 +295,10 @@ public:
     int elf_find_var (SNode* CurNode);
 
     bool elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
+
+    bool my_find (const wchar_t* Name);
 };
+
 
 //==================================================================================================================================================================
 

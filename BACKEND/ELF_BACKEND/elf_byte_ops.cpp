@@ -422,7 +422,7 @@ void SElfBack::x86_call_label (const wchar_t* Name)
 
 void SElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
 {
-    if (Labels.find(Name) != Labels.end())
+    if (my_find (Name) == true)
     {
         if (Labels[Name].finish != NULL_FINISH)
         {
@@ -666,9 +666,8 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
 {
     fprintf (stdout, "paste |%ls|:\n", Name);
 
-    if (Labels.find(Name) != Labels.end())
+    if (my_find (Name) == true)
     {
-
         Labels[Name].finish = cur_addr;
 
         for (size_t i = 0; i < Labels[Name].amount; ++i)
@@ -782,6 +781,19 @@ void SElfBack::x86___End ()
     x86_mov_r_i(rdi, 0);
 
     x86_syscall ();
+}
+
+bool SElfBack::my_find (const wchar_t* Name)
+{
+    for (auto iterator = Labels.begin(); iterator != Labels.end(); ++iterator)
+    {
+        if (wcscoll(Name, iterator->first) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 //=============================================================================================================================================================================
