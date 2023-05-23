@@ -1,0 +1,35 @@
+var discriminant (var a, var b, var c)
+{
+    return b * b - 4 * a * c;
+}
+
+var main ()
+{
+    var a = 1;
+    var b = 5;
+    var c = 0 - 6;
+
+    var x_1 = 0;
+    var x_2 = 0;
+
+    discriminant (a, b, c);
+
+    if (a != 0)
+    {
+        if (discriminant (a, b, c) < 0)
+        {
+            x_1 = 1337;
+        }
+        else
+        {
+            x_1 = (0 - b) - (discriminant (a, b, c) / 7) / (2 * a);
+            x_2 = (0 - b) + (discriminant (a, b, c) / 7) / (2 * a);
+        }
+    }
+    else
+    {
+        x_1 = 0 - c/b;
+    }
+
+    return 0;
+}
