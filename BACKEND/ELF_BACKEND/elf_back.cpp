@@ -330,6 +330,8 @@ void SElfBack::generate_elf_array (SNode* Root)
 //=============================================================================================================================================================================
 #define VAR_SIZE 8
 
+#define BUFFER_SIZE 20
+
 void SElfBack::elf_generate_code (SNode* Root)
 {
     // x86_mov_r_i(eSHIFT_REG, 0);
@@ -339,6 +341,13 @@ void SElfBack::elf_generate_code (SNode* Root)
     x86_call_label(MAIN_LBL);
 
     x86___End();
+
+    buffer = cur_addr;
+
+    for (size_t cnt = 0; cnt < BUFFER_SIZE; ++cnt)
+    {
+        SET(0x00);
+    }
 
     x86___make_inp_func ();
 
@@ -526,9 +535,9 @@ void SElfBack::elf_generate_output (SNode* CurNode)
     {
         elf_rax_var_value (Node->left);
 
-        elf_generate_push_var (Node->left);
+        // elf_generate_push_var (Node->left);
 
-        x86_call_label(INP_LBL);
+        x86_call_label(OUT_LBL);
 
         Node = Node->right;
     } while (Node != NULL);

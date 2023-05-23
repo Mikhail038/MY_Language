@@ -12,9 +12,13 @@ var fac (var a)
 
 var main ()
 {
-    var x = 5;
+    var x = 0;
+
+    in (x);
 
     x = fac (x);
+
+    out (x);
 
     return 0;
 }

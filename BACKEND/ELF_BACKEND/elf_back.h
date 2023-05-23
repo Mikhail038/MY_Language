@@ -143,6 +143,8 @@ typedef struct SElfBack
     size_t              cur_addr        = 0;
     size_t              start_cnt       = 0;
 
+    size_t              buffer          = 0;
+
     std::unordered_map<const wchar_t*, TLabel> Labels;
 
 public:
@@ -204,11 +206,16 @@ public:
     void x86_mov_r_IrI  (const int dstReg, const int srcReg);
     void x86_mov_r_Ir_iI(const int dstReg, const int srcReg, int Shift);
     void x86_mov_IrI_r  (const int dstReg, const int srcReg);
+    void x86_mov_r_IiI  (int dstReg, int MemAddr);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+    void x86_add_r_r (int dstReg, int SrcReg);
+
     void x86_add_stack ();
     void x86_add_i (const int Register, const int Number);
+
+    void x86_sub_r_r (int dstReg, int SrcReg);
 
     void x86_sub_stack ();
     void x86_sub_i (const int Register, const int Number);
@@ -243,6 +250,8 @@ public:
 
     void x86___make_inp_func ();
     void x86___make_out_func ();
+
+    void x86_write_new_line ();
 
     //==================================================================================================================================================================
 

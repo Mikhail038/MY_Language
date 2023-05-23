@@ -180,6 +180,21 @@ void SElfBack::x86_mov_IrI_r (int dstReg, int srcReg)
     SET(opcode);
 }
 
+void SElfBack::x86_mov_r_IiI (int dstReg, int MemAddr)
+{
+    x86___Dst_config(dstReg);
+
+    SET(0x8b);
+
+    char opcode = 0x05;
+    opcode += (char) dstReg;
+
+    SET(opcode);
+
+    set_hex_int(MemAddr);
+}
+
+
 #define BORDER_SHORT 128
 
 void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
@@ -255,6 +270,15 @@ void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void SElfBack::x86_add_r_r (int dstReg, int SrcReg)
+{
+    x86___DstSrc_config(dstReg, SrcReg);
+
+    SET(0x01);
+
+    x86___Regs_config(dstReg, SrcReg);
+}
+
 void SElfBack::x86_add_stack ()
 {
     int a_reg = A_REG;
@@ -263,13 +287,18 @@ void SElfBack::x86_add_stack ()
     x86_pop_r(b_reg);
     x86_pop_r(a_reg);
 
-    x86___DstSrc_config(a_reg, b_reg);
-
-    SET(0x01);
-
-    x86___Regs_config(a_reg, b_reg);
+    x86_add_r_r (a_reg, b_reg);
 
     x86_push_r(a_reg);
+}
+
+void SElfBack::x86_sub_r_r (int dstReg, int SrcReg)
+{
+    x86___DstSrc_config(dstReg, SrcReg);
+
+    SET(0x29);
+
+    x86___Regs_config(dstReg, SrcReg);
 }
 
 void SElfBack::x86_sub_stack ()
@@ -280,11 +309,7 @@ void SElfBack::x86_sub_stack ()
     x86_pop_r(b_reg);
     x86_pop_r(a_reg);
 
-    x86___DstSrc_config(a_reg, b_reg);
-
-    SET(0x29);
-
-    x86___Regs_config(a_reg, b_reg);
+    x86_sub_r_r(a_reg, b_reg);
 
     x86_push_r(a_reg);
 }
@@ -679,14 +704,220 @@ void SElfBack::x86_jump_near (int Shift, int JumpMode)
 void SElfBack::x86___make_inp_func ()
 {
     x86___paste_call_label(INP_LBL);
-    //TODO inp
+
+    x86_mov_r_r(r14, rax);
+
+    // x86_mov_r_i(rax, 3);
+    // x86_mov_r_i(rbx, 0);
+    // x86_mov_r_i(rdx, 16);
+
+    // mov rdi, 0x0      ; file descriptor = stdin = 0
+    x86_mov_r_i(rdi, 0);
+
+    // mov rdx, 0xa      ; number of bytes to read
+    x86_mov_r_i(rdx, 0x0a);
+
+    // lea rsi, [rsp+8]  ; buffer = address to store the bytes read
+    SET(0x48);
+    SET(0x8d);
+    SET(0x74);
+    SET(0x24);
+    SET(0x08);
+
+    // mov rax, 0x0      ; SYSCALL number for reading from STDIN
+    x86_mov_r_i(rax, 0);
+
+    // syscall
+    x86_syscall();  //read
+
+    // xor rax, rax      ; clear off rax
+    SET(0x48);
+    SET(0x31);
+    SET(0xc0);
+
+    // lea rsi, [rsp+8]  ; Get the address on the stack where the first ASCII byte of the integer is stored.
+    SET(0x48);
+    SET(0x8d);
+    SET(0x74);
+    SET(0x24);
+    SET(0x08);
+
+    // mov rax, 0x0      ; initialize the counter which stores the number of bytes in the string representation of the integer
+    x86_mov_r_i(rax, 0);
+
+    x86_mov_r_i(rbx, 0);
+
+
+    x86___paste_jump_label(L"_in_convert");
+
+    // mov dl, [rsi]
+    SET(0x8a);
+    SET(0x16);
+
+    //cmp dl, 0x0a
+    SET(0x80);
+    SET(0xfa);
+    SET(0x0a);
+
+    x86_jump_label(L"_in_done", je_);
+
+    x86_sub_i(rdx, '0');
+
+    // and rdx, 0xff
+    // SET(0x48);
+    // SET(0x81);
+    // SET(0xed);
+    // SET(0xff);
+    // SET(0x00);
+    // SET(0x00);
+
+    x86_push_r(rdx);
+
+    x86_mov_r_r(rbx, rax);
+
+    // imul eax, 10
+    x86_mov_r_i(rax, 10);
+    x86_push_r(rax);
+
+    x86_mov_r_r(rax, rbx);
+    x86_push_r(rax);
+
+    x86_imul_stack();
+    x86_pop_r(rax);
+
+    x86_pop_r(rdx);
+    // x86_sub_i(rdx, '0'); !!!
+
+    x86_add_r_r(rax, rdx);
+
+    x86_inc(rsi);
+    x86_jump_label(L"_in_convert", jmp_);
+    // add eax, edx
+    // inc esi
+    // jmp convert
+
+    //TOO inp
+
+    x86___paste_jump_label(L"_in_done");
+
+    x86_mov_IrI_r(r14, rax);
+
+    // x86_write_new_line();
+
     x86_ret();
+}
+
+void SElfBack::x86_write_new_line ()
+{
+    // mov rdi, 0x1      ; file descriptor = stdout
+    x86_mov_r_i(rdi, 1);
+
+    // mov rdx, 0x1      ; number of bytes to write
+    x86_mov_r_i(rdx, 0x01);
+
+    // mov rax, 0xa      ; move the new line character to rax
+    x86_mov_r_i(rax, 0x0a);
+
+    //  mov [rsp+8], rax  ; put this on the stack
+    SET(0x48);
+    SET(0x89);
+    SET(0x44);
+    SET(0x24);
+    SET(0x08);
+
+    // lea rsi, [rsp+8]  ; buffer = address to write to consol
+    SET(0x48);
+    SET(0x8d);
+    SET(0x74);
+    SET(0x24);
+    SET(0x08);
+
+    //  ; SYSCALL number for writing to STDOUT
+    x86_mov_r_i(rax, 0x01);
+
+    // syscall
+    x86_syscall();  //write
 }
 
 void SElfBack::x86___make_out_func ()
 {
     x86___paste_call_label(OUT_LBL);
-    //TODO out
+
+    //  xor  rdx, rdx     ; Clear rdx which stores obtains a single digit of the number to convert to ASCII bytes
+    x86_mov_r_i(rdx, 0);
+
+    //  mov  r8, 0x0      ; Initialize the counter containing the number of digits
+    x86_mov_r_i(r8, 0);
+
+    // //  pop  rax          ; Pop the read number from the stack
+    // x86_pop_r(rax);
+
+    //  mov  rbx, 0xa     ; We store the divisor which is 10 for decimals (base-10) in rbx. rbx will be the divisor.
+    x86_mov_r_i(rbx, 0x0a);
+
+    x86___paste_jump_label(L"_out_next");
+
+    //  div  rbx          ; Divide the number in rdx:rax by rbx to get the remainder in rdx
+    SET(0x48);
+    SET(0xf7);
+    SET(0xf3);
+
+    //  add  rdx, 0x30    ; Add 0x30 to get the ASCII byte equivalent of the remainder which is the digit in the number to be written to display.
+    x86_add_i(rdx, '0');
+
+    //  push rdx          ; Push this byte to the stack. We do this because, we get the individial digit bytes in reverse order. So to reverse the order we use the stack
+    x86_push_r(rdx);
+
+    //  xor  rdx, rdx     ; Clear rdx preparing it for next division
+    x86_mov_r_i(rdx, 0);
+
+    //  inc  r8           ; Increment the digits counter
+    x86_inc (r8);
+
+    //  cmp  rax, 0x0     ; Continue until the number becomes 0 when there are no more digits to write to the console.
+    x86_cmp_r_r(rax, rdx);
+
+    //  jne  wnext        ; Loop until there aren't any more digits.
+    x86_jump_label(L"_out_next", jne_);
+
+    // popnext:
+    x86___paste_jump_label(L"_out_popnext");
+
+    // cmp  r8, 0x0      ; Check if the counter which contains the number of digits to write is 0
+    x86_mov_r_i (rcx, 0);
+    x86_cmp_r_r (r8, rcx);
+
+    // jle  endw         ; If so there are no more digits to write
+    x86_jump_label(L"_out_done", jle_);
+
+    // mov  rdx, 0x1     ; number of bytes to write
+    x86_mov_r_i (rdx, 1);
+
+    // mov  rsi, rsp     ; buffer = address to write to console
+    x86_mov_r_r (rsi, rsp);
+
+    // mov  rdi, 0x1     ; file descriptor = stdout
+    x86_mov_r_i (rdi, 1);
+
+    // mov  rax, 0x1     ; SYSCALL number for writing to STDOUT
+    x86_mov_r_i (rax, 1);
+
+    // syscall           ; make the syscall
+    x86_syscall();
+
+    // dec  r8           ; Decrement the counter
+    x86_dec(r8);
+
+    // pop  rbx          ; Pop the current digit that was already written to the display preparing the stack pointer for next digit.
+    x86_pop_r(rbx);
+
+    // jmp  popnext      ; Loop until the counter which contains the number of digits goes down to 0.
+    x86_jump_label(L"_out_popnext", jmp_);
+
+    x86___paste_jump_label(L"_out_done");
+
+    x86_write_new_line();
+
     x86_ret();
 }
 
