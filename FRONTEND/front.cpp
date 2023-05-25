@@ -28,7 +28,7 @@
 
 #define BASE_SCOPES_NUM 20
 
-#define MAX_MEMORY  10000
+#define MAX_MEMORY  100000
 #define MAX_LEXEM_SIZE 30
 
 #define SEP_SYMBOLS "\n;,() "
@@ -119,7 +119,7 @@ void my_f_main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        make_gv_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump", false);
+        make_graf_viz_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
         write_tree (Root, "FILES/ParsedSrc.tr");
 
@@ -138,7 +138,7 @@ CodeSource* construct_source (CodeSource* Source, FILE* SourceText)
     //Source->Code = (CharT*) calloc (MAX_MEMORY, sizeof (*(Source->Code)));
     //Source->size = MAX_MEMORY;
 
-    fwscanf (SourceText, L"%ml[^~]", &Source->Arr); // TODO Ask Danya how to remove this shit!!
+    fwscanf (SourceText, L"%ml[^~]", &Source->Arr); // Asked Danya how to remove this shit!! nikak
     //wprintf (L"|\n%ls|\n", Source->Arr);
 
     Source->ip   = 0;
@@ -1534,7 +1534,7 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
                 Node = construct_op_node (def_type); \
                 NEXT_TKN; /* skipped func name */ \
                 NEXT_TKN; /* skipped ( */ \
-                Node->right = get_Expression (FUNC_ARGUMENTS, ZeroRetPermisiion); /* //TODO HERE!!! */ \
+                Node->right = get_Expression (FUNC_ARGUMENTS, ZeroRetPermisiion); /* //I forgot -> HERE!!! */ \
                 CHECK_SYNTAX (TypeCloseRoundBracket); \
                 return Node; \
             }
@@ -1585,7 +1585,7 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 //GraphViz//
 //===================================================================================================================================================================
 
-void make_gv_tree (SNode* Root, const char* FileName, bool Display)
+void make_graf_viz_tree (SNode* Root, const char* FileName, bool Display)
 {
     FILE* gvInputFile = fopen (FileName, "w");
     MY_LOUD_ASSERT (gvInputFile != NULL);
@@ -1660,7 +1660,7 @@ void make_gv_node (FILE* File, SNode* Node)
     }
 
 
-    // if (Node->parent != NULL) //TODO !!!was working
+    // if (Node->parent != NULL) //TOO !!!was working
     // {
     //     //wprintf (L"!%d!\n", Node->branch);
     //     if ((Node->parent != NULL) && (Node->parent->left == Node))

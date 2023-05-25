@@ -43,13 +43,11 @@ int main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false); // TODO rename
+        const char* FileName = (argc > 1)  ? argv[1] : "a.elf";
 
-        system ("chmod +rwx EXAMPLES_ELF/code.elf");  // TODO
+        make_graf_viz_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
-        errno = 0;
-        // /home/mikhail/PROGA/1st_term/Language/
-        FILE* ExFile = fopen ("EXAMPLES_ELF/code.elf", "w"); // TODO hardcoded
+        FILE* ExFile = fopen (FileName, "w");
 
         MY_LOUD_ASSERT (ExFile != NULL);
 
@@ -59,9 +57,21 @@ int main (int argc, char** argv)
 
         delete_tree (&Root);
 
-        system ("chmod +rwx EXAMPLES_ELF/code.elf"); // TODO hardcoded
+        size_t length = strlen (FileName) + 100;
 
-        system("EXAMPLES_ELF/code.elf"); // TODO hardcoded
+        char* Command = (char*) calloc (sizeof (*FileName), length);
+
+        sprintf (Command, "chmod +rwx %s", FileName);
+        system (Command);
+
+        // sprintf (Command, "./%s", FileName);
+        // system (FileName);
+
+        free (Command);
+    }
+    else
+    {
+        printf("No AST found!\n");
     }
 
     return 0;

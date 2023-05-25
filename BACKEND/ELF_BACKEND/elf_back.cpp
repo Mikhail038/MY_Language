@@ -92,11 +92,11 @@ void make_elf_file (SNode* Root, FILE* ExFile)
 //Make ELF//
 //=============================================================================================================================================================================
 
-void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
+void ElfBack::elf_head_start ()
 {
     SET (0x7f); //MAGIC SIGNATURE
 
-    SET ('E'); // TODO Maybe move to create ELF header func
+    SET ('E');
     SET ('L');
     SET ('F');
 
@@ -120,16 +120,10 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
 
     SET (0x01); //Version (only correct = 1)
     FILL_4;     //nothing
+}
 
-
-    size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
-
-    SKIP_8(EntryVA, addr_EntryVA); // TODO naming!
-
-    SKIP_8(ProgramHeadersStart, addr_ProgramHeadersStart);
-
-    SKIP_8(SectionHeadersStart, addr_SectionHeadersStart);
-
+void ElfBack::elf_head_start_params ()
+{
     SET (0x00); //Flags (no flags = 0)
     FILL_4;     //nothing
 
@@ -150,11 +144,10 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
 
     unsigned short int  ShstrTabIndex  = 2; // maybe not
     SET_2(ShstrTabIndex);
+}
 
-    //=======================================================================
-
-    PASTE_8(ProgramHeadersStart, addr_ProgramHeadersStart);
-
+void ElfBack::elf_head_program_header_params (const size_t FileVirtualAddress)
+{
     SET (0x01); //Segment type (load = 0)
     FILL_4;     //nothing
 
@@ -171,10 +164,78 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
     memcpy ((size_t*) &(Array[cur_addr]),
             &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
     cur_addr += 8;
+}
 
-    SKIP_8(SegmentSize, addr_SegmentSize);
+void ElfBack::elf_head_shstrtable ( size_t& SegmentSize, size_t& addrSegmentSize,
+                                    size_t& SegmentFileSize, size_t& addrSegmentFileSize,
+                                    size_t& TableAddress, size_t& addrTableAddress,
+                                    size_t& TableLoadAddress, size_t& addrTableLoadAddress,
+                                    unsigned int& TextNameOffset, size_t& addrTextNameOffset,
+                                    unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress)
+{
+    PASTE_8(SegmentSize, addrSegmentSize);
 
-    SKIP_8(SegmentFileSize, addr_SegmentFileSize);
+    PASTE_8(SegmentFileSize, addrSegmentFileSize);
+
+    PASTE_8(TableAddress, addrTableAddress);
+
+    TableLoadAddress = TableAddress + FileVirtualAddress;
+    memcpy ((size_t*) &(Array[addrTableLoadAddress]),
+    &TableLoadAddress, sizeof (size_t));
+
+
+    SET (0x00); //begin section header string table
+
+    TextNameOffset = cur_addr - SegmentSize;
+    memcpy ((unsigned int*) &(Array[addrTextNameOffset]),
+    &TextNameOffset, sizeof (unsigned int));
+
+    SET ('.');
+    SET ('t');
+    SET ('e');
+    SET ('x');
+    SET ('t');
+    SET (0x00); //end
+
+    TableNameOffset = cur_addr - SegmentSize;
+    memcpy ((unsigned int*) &(Array[addrTableNameOffset]),
+    &TableNameOffset, sizeof (unsigned int));
+
+    SET ('.');
+    SET ('s');
+    SET ('h');
+    SET ('s');
+    SET ('t');
+    SET ('r');
+    SET ('t');
+    SET ('a');
+    SET ('b');
+    SET (0x00); //end
+}
+
+void ElfBack::generate_elf_array (SNode* Root)
+{
+    elf_head_start ();
+
+    size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
+
+    SKIP_8(EntryVA, addrEntryVA);
+
+    SKIP_8(ProgramHeadersStart, addrProgramHeadersStart);
+
+    SKIP_8(SectionHeadersStart, addrSectionHeadersStart);
+
+    elf_head_start_params ();
+
+    //=======================================================================
+
+    PASTE_8(ProgramHeadersStart, addrProgramHeadersStart);
+
+    elf_head_program_header_params (FileVirtualAddress);
+
+    SKIP_8(SegmentSize, addrSegmentSize);
+
+    SKIP_8(SegmentFileSize, addrSegmentFileSize);
 
     SET (0x00);
     SET (0x00);
@@ -187,7 +248,7 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
 
     //=======================================================================
 
-    PASTE_8(SectionHeadersStart, addr_SectionHeadersStart);
+    PASTE_8(SectionHeadersStart, addrSectionHeadersStart);
 
     //=======================================================================
     //null
@@ -200,7 +261,7 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
     //=======================================================================
     //text
 
-    SKIP_4(TextNameOffset, addr_TextNameOffset);
+    SKIP_4(TextNameOffset, addrTextNameOffset);
 
     SET (0x01); //Section type (bits = 1)
     FILL_4;     //nothing
@@ -208,12 +269,12 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
     SET (0x06); //Section flags (r w x )
     FILL_8;     //nothing
 
-    size_t addr_another_EntryVA = cur_addr;
+    size_t addrAnotherEntryVA = cur_addr;
     cur_addr += 8; //skip
 
-    SKIP_8(TextOffset, addr_TextOffset);
+    SKIP_8(TextOffset, addrTextOffset);
 
-    SKIP_8(TextSize, addr_TextSize);
+    SKIP_8(TextSize, addrTextSize);
 
     SET (0x00); //Section index
     FILL_4;
@@ -230,7 +291,7 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
     //=======================================================================
     //strtable
 
-    SKIP_4(TableNameOffset, addr_TableNameOffset);
+    SKIP_4(TableNameOffset, addrTableNameOffset);
 
     SET (0x03); //Section type (strtable = 1)
     FILL_4;     //nothing
@@ -238,11 +299,11 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
     SET (0x00);
     FILL_8;
 
-    SKIP_8(TableLoadAddress, addr_TableLoadAddress);
+    SKIP_8(TableLoadAddress, addrTableLoadAddress);
 
-    SKIP_8(TableAddress, addr_TableAddress);
+    SKIP_8(TableAddress, addrTableAddress);
 
-    SKIP_8(TableSize, addr_TableSize);
+    SKIP_8(TableSize, addrTableSize);
 
     SET (0x00); //Section index
     FILL_4;
@@ -260,16 +321,16 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
     //entry
 
     EntryVA = cur_addr + FileVirtualAddress;
-    memcpy ((size_t*) &(Array[addr_EntryVA]),
+    memcpy ((size_t*) &(Array[addrEntryVA]),
     &EntryVA, sizeof (size_t));
 
-    memcpy ((size_t*) &(Array[addr_another_EntryVA]),
-    &EntryVA, sizeof (size_t)); //TODO maybe remove
+    memcpy ((size_t*) &(Array[addrAnotherEntryVA]),
+    &EntryVA, sizeof (size_t));
 
     //=======================================================================
     //.code
 
-    PASTE_8(TextOffset, addr_TextOffset);
+    PASTE_8(TextOffset, addrTextOffset);
 
     //----------------------------------------------------------------------
 
@@ -278,53 +339,23 @@ void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
     //----------------------------------------------------------------------
 
     TextSize = cur_addr - TextOffset;
-    memcpy ((size_t*) &(Array[addr_TextSize]),
+    memcpy ((size_t*) &(Array[addrTextSize]),
     &TextSize, sizeof (size_t));
 
     //=======================================================================
     //shstrtable
 
-    PASTE_8(SegmentSize, addr_SegmentSize);
+    elf_head_shstrtable (SegmentSize, addrSegmentSize,
+                        SegmentFileSize, addrSegmentFileSize,
+                        TableAddress, addrTableAddress,
+                        TableLoadAddress, addrTableLoadAddress,
+                        TextNameOffset, addrTextNameOffset,
+                        TableNameOffset, addrTableNameOffset, FileVirtualAddress);
 
-    PASTE_8(SegmentFileSize, addr_SegmentFileSize);
-
-    PASTE_8(TableAddress, addr_TableAddress);
-
-    TableLoadAddress = TableAddress + FileVirtualAddress;
-    memcpy ((size_t*) &(Array[addr_TableLoadAddress]),
-    &TableLoadAddress, sizeof (size_t));
-
-
-    SET (0x00); //begin section header string table
-
-    TextNameOffset = cur_addr - SegmentSize;
-    memcpy ((unsigned int*) &(Array[addr_TextNameOffset]),
-    &TextNameOffset, sizeof (unsigned int));
-
-    SET ('.');
-    SET ('t');
-    SET ('e');
-    SET ('x');
-    SET ('t');
-    SET (0x00); //end
-
-    TableNameOffset = cur_addr - SegmentSize;
-    memcpy ((unsigned int*) &(Array[addr_TableNameOffset]),
-    &TableNameOffset, sizeof (unsigned int));
-
-    SET ('.');
-    SET ('s');
-    SET ('h');
-    SET ('s');
-    SET ('t');
-    SET ('r');
-    SET ('t');
-    SET ('a');
-    SET ('b');
-    SET (0x00); //end
+    //=======================================================================
 
     TableSize = cur_addr - SegmentSize;
-    memcpy ((size_t*) &(Array[addr_TableSize]),
+    memcpy ((size_t*) &(Array[addrTableSize]),
     &TableSize, sizeof (size_t));
 
     return;
@@ -539,7 +570,7 @@ void ElfBack::elf_generate_if (SNode* CurNode)
     prepare_name_label_to_jump (Label_true_name, cur_addr);
 
     x86_cmp_stack();
-    x86_jump_label(Label_true_name, je_); // TODO rename je_
+    x86_jump_label(Label_true_name, x86_je);
 
 
     CurNode = CurNode->right;
@@ -551,7 +582,7 @@ void ElfBack::elf_generate_if (SNode* CurNode)
     wchar_t* Label_false_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
     prepare_name_label_to_jump (Label_false_name, cur_addr);
 
-    x86_jump_label(Label_false_name, jmp_);
+    x86_jump_label(Label_false_name, x86_jmp);
 
     x86_macro_paste_jump_label(Label_true_name);
 
@@ -599,7 +630,7 @@ void ElfBack::elf_generate_while (SNode* CurNode)
     prepare_name_label_to_jump (Label_end_name, cur_addr);
 
     x86_cmp_stack();
-    x86_jump_label(Label_end_name, je_);
+    x86_jump_label(Label_end_name, x86_je);
 
     // PUT (je);
     // int Label_2 = label_cnt;
@@ -612,7 +643,7 @@ void ElfBack::elf_generate_while (SNode* CurNode)
     ELF_CLEAN_TABLE ();
     // x86_nop();
 
-    x86_jump_label(Label_body_name, jmp_);
+    x86_jump_label(Label_body_name, x86_jmp);
 
     x86_macro_paste_jump_label(Label_end_name);
 
@@ -822,7 +853,7 @@ void ElfBack::elf_standard_if_jump (int JumpMode)
     const int STD_JUMP_FIRST_SHIFT  = 6;
     const int STD_JUMP_SECOND_SHIFT = 4;
 
-    if (JumpMode != jmp_)
+    if (JumpMode != x86_jmp)
     {
         x86_cmp_stack ();
     }
@@ -837,7 +868,7 @@ void ElfBack::elf_standard_if_jump (int JumpMode)
     // PUT (push);
     // fprintf (file, " %d\n", MY_FALSE);
 
-    x86_jump_any(STD_JUMP_SECOND_SHIFT, jmp_);
+    x86_jump_any(STD_JUMP_SECOND_SHIFT, x86_jmp);
 
     // PUT (jump);
     // fprintf (file, " " LABEL "%d\n", label_cnt);

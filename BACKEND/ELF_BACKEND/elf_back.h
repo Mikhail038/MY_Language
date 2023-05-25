@@ -18,28 +18,33 @@
 
 //=============================================================================================================================================================================
 
-enum EJumpModes
+enum JumpModes
 {
-    jmp_    = 0,
-    ja_     = 1,
-    jae_    = 2,
-    jb_     = 3,
-    jbe_    = 5,
-    je_     = 6,
-    jne_    = 7,
-    jl_     = 8,
-    jle_    = 9,
-    jg_     = 10,
-    jge_    = 11
+    x86_jmp    = 0,
+    x86_ja     = 1,
+    x86_jae    = 2,
+    x86_jb     = 3,
+    x86_jbe    = 5,
+    x86_je     = 6,
+    x86_jne    = 7,
+    x86_jl     = 8,
+    x86_jle    = 9,
+    x86_jg     = 10,
+    x86_jge    = 11
 };
-
-#define QUADWORD_SIZE 32
-
-#define MAX_JUMP_LABEL_SIZE 50
 
 //==================================================================================================================================================================
 
-#define MAX_ELF_SIZE 100000
+const int QUADWORD_SIZE = 32;
+// #define QUADWORD_SIZE 32
+
+const int MAX_JUMP_LABEL_SIZE = 50;
+// #define MAX_JUMP_LABEL_SIZE 50
+
+const int MAX_ELF_SIZE = 100000;
+// #define MAX_ELF_SIZE 100000
+
+//==================================================================================================================================================================
 
 #define SET(x) Array[cur_addr] = (x); cur_addr++;
 
@@ -249,14 +254,29 @@ public:
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     void x86_macro_make_input_func ();
+    void x86_macro_make_input_func_body ();
+
     void x86_macro_make_output_func ();
+    void x86_macro_make_output_func_body ();
 
     void x86_write_new_line ();
 
     //==================================================================================================================================================================
 
+    void elf_head_start ();
+    void elf_head_start_params ();
+    void elf_head_program_header_params (const size_t FileVirtualAddress);
+    void elf_head_shstrtable (  size_t& SegmentSize, size_t& addrSegmentSize,
+                                size_t& SegmentFileSize, size_t& addrSegmentFileSize,
+                                size_t& TableAddress, size_t& addrTableAddress,
+                                size_t& TableLoadAddress, size_t& addrTableLoadAddress,
+                                unsigned int& TextNameOffset, size_t& addrTextNameOffset,
+                                unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
+
     void generate_elf_array (SNode* Root);
+
     void elf_generate_code (SNode* Root);
+
     void generate_main ();
 
     void elf_generate_statement (SNode* CurNode);

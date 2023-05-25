@@ -38,7 +38,7 @@ void my_b_main (int argc, char** argv)
     {
         FILE* ExFile = fopen ("EXAMPLES_ASM/code.asm", "w");
 
-        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
+        make_graf_viz_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
         make_asm_file (Root, ExFile);
 
@@ -328,7 +328,7 @@ void delete_tree (SNode** Node)
 //GraphViz//
 //===================================================================================================================================================================
 
-void make_gv_tree (SNode* Root, const char* FileName, bool Display)
+void make_graf_viz_tree (SNode* Root, const char* FileName, bool Display)
 {
     FILE* gvInputFile = fopen (FileName, "w");
     MY_LOUD_ASSERT (gvInputFile != NULL);
@@ -403,7 +403,7 @@ void make_gv_node (FILE* File, SNode* Node)
     }
 
 
-    // if (Node->parent != NULL) //TODO !!!was working
+    // if (Node->parent != NULL) //TOO !!!was working
     // {
     //     //wprintf (L"!%d!\n", Node->branch);
     //     if ((Node->parent != NULL) && (Node->parent->left == Node))

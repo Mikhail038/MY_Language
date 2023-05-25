@@ -88,7 +88,7 @@ LEXEM_IS (L"<"),
 },
 L"LESS",
 {
-    elf_standard_if_jump (jl_);
+    elf_standard_if_jump (x86_jl);
 })
 
 DEF_OP (TypeLogicMore,
@@ -98,7 +98,7 @@ LEXEM_IS (L">"),
 },
 L"MORE",
 {
-    elf_standard_if_jump (jg_);
+    elf_standard_if_jump (x86_jg);
 })
 
 DEF_OP (TypeLogicLessEqual,
@@ -108,7 +108,7 @@ LEXEM_IS (L"<="),
 },
 L"LESS OR EQUAL",
 {
-    elf_standard_if_jump (jle_);
+    elf_standard_if_jump (x86_jle);
 })
 
 DEF_OP (TypeLogicMoreEqual,
@@ -118,7 +118,7 @@ LEXEM_IS (L">="),
 },
 L"MORE OR EQUAL",
 {
-    elf_standard_if_jump (jge_);
+    elf_standard_if_jump (x86_jge);
 })
 
 DEF_OP (TypeLogicEqual,
@@ -128,7 +128,7 @@ LEXEM_IS (L"=="),
 },
 L"EQUAL",
 {
-    elf_standard_if_jump (je_);
+    elf_standard_if_jump (x86_je);
 })
 
 DEF_OP (TypeLogicNotEqual,
@@ -138,7 +138,7 @@ LEXEM_IS (L"!="),
 },
 L"NOT EQUAL",
 {
-    elf_standard_if_jump (jne_);
+    elf_standard_if_jump (x86_jne);
 })
 
 //TODO Not is not working
@@ -162,7 +162,7 @@ L"AND",
 
     x86_push_imm(MY_FALSE);
 
-    elf_standard_if_jump (jne_);
+    elf_standard_if_jump (x86_jne);
 })
 
 //TODO ABS ERROR THINK LATER
@@ -177,7 +177,7 @@ L"OR",
 
     x86_push_imm(MY_FALSE);
 
-    elf_standard_if_jump (jne_);
+    elf_standard_if_jump (x86_jne);
 })
 
 DEF_OP (TypeOpenRoundBracket,

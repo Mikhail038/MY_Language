@@ -336,7 +336,7 @@ SNode* get_Bracket      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void make_gv_tree (SNode* Root, const char* FileName, bool Display);
+void make_graf_viz_tree (SNode* Root, const char* FileName, bool Display);
 
 void make_gv_node (FILE* File, SNode* Node);
 

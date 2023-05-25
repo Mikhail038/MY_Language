@@ -483,7 +483,7 @@ void ElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
 
             int JumpAddr = Labels[Name].finish - cur_addr;
 
-            if (JumpMode == jmp_ && JumpAddr < 0)
+            if (JumpMode == x86_jmp && JumpAddr < 0)
             {
                 JumpAddr += 1;
             }
@@ -503,7 +503,7 @@ void ElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
         Labels.insert({Name, {cur_addr, 0}});
     }
 
-    if (JumpMode == jmp_)
+    if (JumpMode == x86_jmp)
     {
         x86_nop();
     }
@@ -572,56 +572,56 @@ void ElfBack::x86_jump_norm (int Shift, int JumpMode)
 {
     switch (JumpMode)
     {
-        case jmp_:
+        case x86_jmp:
             SET(0xe9);
             break;
 
-        case ja_:
+        case x86_ja:
             SET(0x0f);
             SET(0x87);
             break;
 
-        case jae_:
+        case x86_jae:
             SET(0x0f);
             SET(0x83);
             break;
 
-        case jb_:
+        case x86_jb:
             SET(0x0f);
             SET(0x82);
             break;
 
-        case jbe_:
+        case x86_jbe:
             SET(0x0f);
             SET(0x86);
             break;
 
-        case je_:
+        case x86_je:
             SET(0x0f);
             SET(0x84);
             break;
 
-        case jne_:
+        case x86_jne:
             SET(0x0f);
             SET(0x85);
             break;
 
-        case jl_:
+        case x86_jl:
             SET(0x0f);
             SET(0x8c);
             break;
 
-        case jle_:
+        case x86_jle:
             SET(0x0f);
             SET(0x8e);
             break;
 
-        case jg_:
+        case x86_jg:
             SET(0x0f);
             SET(0x8f);
             break;
 
-        case jge_:
+        case x86_jge:
             SET(0x0f);
             SET(0x8d);
             break;
@@ -631,7 +631,7 @@ void ElfBack::x86_jump_norm (int Shift, int JumpMode)
     }
 
     // int current_jump_size = NORM_JUMP_SIZE;
-    // if (JumpMode == jmp_)
+    // if (JumpMode == x86_jmp)
     // {
     //     current_jump_size -= 1; // Stupid jumps have different size of opcode
     // }
@@ -643,47 +643,47 @@ void ElfBack::x86_jump_near (int Shift, int JumpMode)
 {
     switch (JumpMode)
     {
-        case jmp_:
+        case x86_jmp:
             SET(0xeb);
             break;
 
-        case ja_:
+        case x86_ja:
             SET(0x77);
             break;
 
-        case jae_:
+        case x86_jae:
             SET(0x73);
             break;
 
-        case jb_:
+        case x86_jb:
             SET(0x72);
             break;
 
-        case jbe_:
+        case x86_jbe:
             SET(0x76);
             break;
 
-        case je_:
+        case x86_je:
             SET(0x74);
             break;
 
-        case jne_:
+        case x86_jne:
             SET(0x75);
             break;
 
-        case jl_:
+        case x86_jl:
             SET(0x7c);
             break;
 
-        case jle_:
+        case x86_jle:
             SET(0x7e);
             break;
 
-        case jg_:
+        case x86_jg:
             SET(0x7f);
             break;
 
-        case jge_:
+        case x86_jge:
             SET(0x7d);
             break;
 
@@ -700,15 +700,11 @@ void ElfBack::x86_jump_near (int Shift, int JumpMode)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElfBack::x86_macro_make_input_func () // TODO too large
+void ElfBack::x86_macro_make_input_func ()
 {
     x86_macro_paste_call_label(INP_LBL);
 
     x86_mov_reg_reg(r14, rax);
-
-    // x86_mov_r_i(rax, 3);
-    // x86_mov_r_i(rbx, 0);
-    // x86_mov_r_i(rdx, 16);
 
     // mov rdi, 0x0      ; file descriptor = stdin = 0
     x86_mov_reg_imm(rdi, 0);
@@ -746,7 +742,17 @@ void ElfBack::x86_macro_make_input_func () // TODO too large
 
     x86_mov_reg_imm(rbx, 0);
 
+    x86_macro_make_input_func_body ();
 
+    x86_mov_to_addr_in_reg_from_reg(r14, rax);
+
+    // x86_write_new_line();
+
+    x86_ret();
+}
+
+void ElfBack::x86_macro_make_input_func_body ()
+{
     x86_macro_paste_jump_label(L"_in_convert");
 
     // mov dl, [rsi]
@@ -758,7 +764,7 @@ void ElfBack::x86_macro_make_input_func () // TODO too large
     SET(0xfa);
     SET(0x0a);
 
-    x86_jump_label(L"_in_done", je_);
+    x86_jump_label(L"_in_done", x86_je);
 
     x86_sub_reg_imm(rdx, '0');
 
@@ -790,20 +796,12 @@ void ElfBack::x86_macro_make_input_func () // TODO too large
     x86_add_reg_reg(rax, rdx);
 
     x86_inc(rsi);
-    x86_jump_label(L"_in_convert", jmp_);
+    x86_jump_label(L"_in_convert", x86_jmp);
     // add eax, edx
     // inc esi
     // jmp convert
 
-    //TOO inp
-
     x86_macro_paste_jump_label(L"_in_done");
-
-    x86_mov_to_addr_in_reg_from_reg(r14, rax);
-
-    // x86_write_new_line();
-
-    x86_ret();
 }
 
 void ElfBack::x86_write_new_line ()
@@ -838,7 +836,7 @@ void ElfBack::x86_write_new_line ()
     x86_syscall();  //write
 }
 
-void ElfBack::x86_macro_make_output_func () // TODO too large
+void ElfBack::x86_macro_make_output_func ()
 {
     x86_macro_paste_call_label(OUT_LBL);
 
@@ -854,6 +852,15 @@ void ElfBack::x86_macro_make_output_func () // TODO too large
     //  mov  rbx, 0xa     ; We store the divisor which is 10 for decimals (base-10) in rbx. rbx will be the divisor.
     x86_mov_reg_imm(rbx, 0x0a);
 
+    x86_macro_make_output_func_body ();
+
+    x86_write_new_line();
+
+    x86_ret();
+}
+
+void ElfBack::x86_macro_make_output_func_body ()
+{
     x86_macro_paste_jump_label(L"_out_next");
 
     //  div  rbx          ; Divide the number in rdx:rax by rbx to get the remainder in rdx
@@ -877,7 +884,7 @@ void ElfBack::x86_macro_make_output_func () // TODO too large
     x86_cmp_reg_reg(rax, rdx);
 
     //  jne  wnext        ; Loop until there aren't any more digits.
-    x86_jump_label(L"_out_next", jne_);
+    x86_jump_label(L"_out_next", x86_jne);
 
     // popnext:
     x86_macro_paste_jump_label(L"_out_popnext");
@@ -887,7 +894,7 @@ void ElfBack::x86_macro_make_output_func () // TODO too large
     x86_cmp_reg_reg (r8, rcx);
 
     // jle  endw         ; If so there are no more digits to write
-    x86_jump_label(L"_out_done", jle_);
+    x86_jump_label(L"_out_done", x86_jle);
 
     // mov  rdx, 0x1     ; number of bytes to write
     x86_mov_reg_imm (rdx, 1);
@@ -911,13 +918,9 @@ void ElfBack::x86_macro_make_output_func () // TODO too large
     x86_pop_to_reg(rbx);
 
     // jmp  popnext      ; Loop until the counter which contains the number of digits goes down to 0.
-    x86_jump_label(L"_out_popnext", jmp_);
+    x86_jump_label(L"_out_popnext", x86_jmp);
 
     x86_macro_paste_jump_label(L"_out_done");
-
-    x86_write_new_line();
-
-    x86_ret();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
