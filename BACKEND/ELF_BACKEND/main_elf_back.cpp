@@ -43,20 +43,15 @@ int main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
+        make_gv_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false); // TODO rename
 
-        system ("chmod +rwx EXAMPLES_ELF/code.elf");
+        system ("chmod +rwx EXAMPLES_ELF/code.elf");  // TODO
 
         errno = 0;
         // /home/mikhail/PROGA/1st_term/Language/
-        FILE* ExFile = fopen ("EXAMPLES_ELF/code.elf", "w");
+        FILE* ExFile = fopen ("EXAMPLES_ELF/code.elf", "w"); // TODO hardcoded
 
-        if (ExFile == NULL)
-        {
-            printf ("fopen errno [%d]", errno);
-        }
-
-        MLA (ExFile != NULL);
+        MY_LOUD_ASSERT (ExFile != NULL);
 
         make_elf_file (Root, ExFile);
 
@@ -64,9 +59,9 @@ int main (int argc, char** argv)
 
         delete_tree (&Root);
 
-        system ("chmod +rwx EXAMPLES_ELF/code.elf");
+        system ("chmod +rwx EXAMPLES_ELF/code.elf"); // TODO hardcoded
 
-        system("EXAMPLES_ELF/code.elf");
+        system("EXAMPLES_ELF/code.elf"); // TODO hardcoded
     }
 
     return 0;

@@ -87,8 +87,8 @@ static int make_stack_smaller (SStack<StackDataType>* stack)
 template <typename StackDataType>
 static int stack_variator (SStack<StackDataType>* stack)
 {
-    MLA (stack != NULL);
-    MLA (stack->data != NULL);
+    MY_LOUD_ASSERT (stack != NULL);
+    MY_LOUD_ASSERT (stack->data != NULL);
 
     return 0;
 }
@@ -96,9 +96,9 @@ static int stack_variator (SStack<StackDataType>* stack)
 template <typename StackDataType>
 int stack_constructor (SStack<StackDataType>* stack, int Capacity)
 {
-    MLA (Capacity >= 0);
-    MLA (stack != NULL);
-    MLA (stack != NULL);
+    MY_LOUD_ASSERT (Capacity >= 0);
+    MY_LOUD_ASSERT (stack != NULL);
+    MY_LOUD_ASSERT (stack != NULL);
 
     stack->capacity = Capacity;
     stack->size = 0;

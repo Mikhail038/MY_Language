@@ -31,7 +31,7 @@ typedef wchar_t CharT; //will not work with char
 
 //===================================================================================================================================================================
 
-#define NODE_IS_OP_AND__ Node->category == COperation && Node->type ==
+#define NODE_IS_OP_AND__ Node->category == CategoryOperation && Node->type ==
 
 #define BACK_FUNC_HEAD_PARAMETERS SNode* CurNode, SBack* Back
 
@@ -83,6 +83,12 @@ SBack;
 
 //===================================================================================================================================================================
 
+const int WrongValue = -13;
+
+const int MY_TRUE   = 1;
+const int MY_FALSE  = 0;
+
+//===================================================================================================================================================================
 
 #define MAIN_WORD L"main"
 
@@ -95,13 +101,8 @@ SBack;
 
 #define LABEL "lbl_"
 
-#define JUNK -13
-
-#define TRUE   1
-#define FALSE  0
-
-#define ME printf ("==%s %s:%d\n", LOCATION);
-#define ME
+#define PRINT_DEBUG_INFO printf ("==%s %s:%d\n", LOCATION);
+#define PRINT_DEBUG_INFO
 
 #define PUTLN(d_command) writeln_command ( d_command , Back->file)
 #define PUT(d_command) write_command   ( d_command , Back->file)
@@ -129,7 +130,7 @@ void my_b_main (int argc, char** argv);
 
 SNode* read_tree (const char* FileName);
 
-SNode* read_node (SSrc* Tree);
+SNode* read_node (CodeSource* Tree);
 
 //===================================================================================================================================================================
 //Make ASM//

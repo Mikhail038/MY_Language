@@ -59,14 +59,14 @@ void my_b_main (int argc, char** argv)
 SNode* read_tree (const char* FileName)
 {
     FILE* InputFile = fopen (FileName, "r");
-    MLA (InputFile != NULL);
+    MY_LOUD_ASSERT (InputFile != NULL);
 
-    SSrc Tree = {};
+    CodeSource Tree = {};
 
     fscanf (InputFile, "%ml[^" FORBIDDEN_TERMINATING_SYMBOL "]", &(Tree.Arr));
     fclose (InputFile);
 
-    MLA (Tree.Arr != NULL);
+    MY_LOUD_ASSERT (Tree.Arr != NULL);
 
     Tree.ip = 0;
     Tree.size = wcslen (Tree.Arr);
@@ -80,48 +80,48 @@ SNode* read_tree (const char* FileName)
     return Root;
 }
 
-SNode* read_node (SSrc* Tree)
+SNode* read_node (CodeSource* Tree)
 {
     SNode* Node = (SNode*) calloc (1, sizeof (SNode));
 
-    CharT* CategoryLine = NULL;
+    CharT* Category = NULL;
     seek (Tree);
-    swscanf (&(Tree->Arr[Tree->ip]), L"%mls", &CategoryLine);
+    swscanf (&(Tree->Arr[Tree->ip]), L"%mls", &Category);
 
-    if (wcscmp (CategoryLine, L"COperation") == 0)
+    if (wcscmp (Category, L"CategoryOperation") == 0)
     {
-        Node->category = COperation;
+        Node->category = CategoryOperation;
         seek_out (Tree);
     }
-    else if (wcscmp (CategoryLine, L"CValue") == 0)
+    else if (wcscmp (Category, L"CategoryValue") == 0)
     {
-        Node->category = CValue;
+        Node->category = CategoryValue;
         seek_out (Tree);
     }
-    else if (wcscmp (CategoryLine, L"CLine") == 0)
+    else if (wcscmp (Category, L"CategoryLine") == 0)
     {
-        Node->category = CLine;
+        Node->category = CategoryLine;
         seek_out (Tree);
     }
     else
     {
         //wprintf (L"%ls\n", CategoryLine);
-        free (CategoryLine);
+        free (Category);
         free (Node);
 
         return NULL;
     }
 
     //wprintf (L"++%ls++\n", CategoryLine);
-    free (CategoryLine);
+    free (Category);
 
     CharT* Line = NULL;
 
     switch (Node->category)
     {
-        case COperation:
+        case CategoryOperation:
             swscanf (&(Tree->Arr[Tree->ip]), L"%ml[^\n]", &Line);
-            MLA (Line != NULL);
+            MY_LOUD_ASSERT (Line != NULL);
             //wprintf (L"--%ls--\n", Line);
 
             #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
@@ -137,7 +137,7 @@ SNode* read_node (SSrc* Tree)
             else
             {
                 wprintf (L"ERROR!==%ls== in ParcedFile\n", Line);
-                MLA (0);
+                MY_LOUD_ASSERT (0);
             }
 
             #undef DEF_OP
@@ -146,9 +146,9 @@ SNode* read_node (SSrc* Tree)
 
             break;
 
-        case CValue:
+        case CategoryValue:
             swscanf (&(Tree->Arr[Tree->ip]), L"%mls", &Line);
-            MLA (Line != NULL);
+            MY_LOUD_ASSERT (Line != NULL);
 
             Tree->ip += wcslen (Line);
 
@@ -161,9 +161,9 @@ SNode* read_node (SSrc* Tree)
 
             break;
 
-        case CLine:
+        case CategoryLine:
             swscanf (&(Tree->Arr[Tree->ip]), L"%mls", &Line);
-            MLA (Line != NULL);
+            MY_LOUD_ASSERT (Line != NULL);
 
             Tree->ip += wcslen (Line) + 1;
 
@@ -175,13 +175,13 @@ SNode* read_node (SSrc* Tree)
 
             Tree->ip += wcslen (Node->data.var) + 1;
 
-            Node->type = TVariable;
+            Node->type = TypeVariable;
 
             break;
 
         default:
             wprintf (L"DEFAULT ERROR!\n");
-            MLA (0);
+            MY_LOUD_ASSERT (0);
     }
 
     free (Line);
@@ -217,7 +217,7 @@ SNode* read_node (SSrc* Tree)
 //Seekers//
 //=============================================================================================================================================================================
 
-void seek (SSrc* Source)
+void seek (CodeSource* Source)
 {
     for (; Source->ip < Source->size; Source->ip++)
     {
@@ -231,7 +231,7 @@ void seek (SSrc* Source)
     return;
 }
 
-void seek_out (SSrc* Source)
+void seek_out (CodeSource* Source)
 {
     for (; Source->ip < Source->size; Source->ip++)
     {
@@ -250,28 +250,28 @@ void seek_out (SSrc* Source)
 //Tree//
 //=============================================================================================================================================================================
 
-SNode* construct_op_node (ETokenType Type)
+SNode* construct_op_node (TokenType Type)
 {
     SNode* Node = (SNode*) calloc (1, sizeof (*Node));
 
-    Node->category = COperation;
+    Node->category = CategoryOperation;
 
     Node->type = Type;
 
     return Node;
 }
 
-SNode* construct_var_node (SToken* Token)
+SNode* construct_var_node (Token* CurToken)
 {
     SNode* Node = (SNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CLine;
+    Node->category = CategoryLine;
 
-    Node->type = TVariable;
+    Node->type = TypeVariable;
 
-    MLA (Token->category == CLine && Token->type == TVariable);
+    MY_LOUD_ASSERT (CurToken->category == CategoryLine && CurToken->type == TypeVariable);
 
-    Node->data.var = wcsdup (Token->data.var);
+    Node->data.var = wcsdup (CurToken->data.var);
 
     return Node;
 }
@@ -280,7 +280,7 @@ SNode* construct_val_node (ValT Value)
 {
     SNode* Node = (SNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CValue;
+    Node->category = CategoryValue;
 
     Node->type = TValue;
 
@@ -310,7 +310,7 @@ void delete_tree (SNode** Node)
 
     //printf ("\n%p freed\n", *Node);
 
-    if ((*Node)->category == CLine)
+    if ((*Node)->category == CategoryLine)
     {
         free ((*Node)->data.var);
         (*Node)->data.var = NULL;
@@ -331,7 +331,7 @@ void delete_tree (SNode** Node)
 void make_gv_tree (SNode* Root, const char* FileName, bool Display)
 {
     FILE* gvInputFile = fopen (FileName, "w");
-    MLA (gvInputFile != NULL);
+    MY_LOUD_ASSERT (gvInputFile != NULL);
 
     fprintf (gvInputFile,
         R"(digraph {
@@ -353,7 +353,7 @@ void make_gv_tree (SNode* Root, const char* FileName, bool Display)
 
 void make_gv_node (FILE* File, SNode* Node)
 {
-    MLA (File != NULL);
+    MY_LOUD_ASSERT (File != NULL);
 
     if (Node == NULL)
     {
@@ -424,11 +424,11 @@ void make_gv_node (FILE* File, SNode* Node)
 
 void print_gv_node (FILE* File, SNode* Node)
 {
-    MLA (File != NULL);
+    MY_LOUD_ASSERT (File != NULL);
 
     switch (Node->category)
     {
-        case COperation:
+        case CategoryOperation:
             switch (Node->type)
             {
                 #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
@@ -445,11 +445,11 @@ void print_gv_node (FILE* File, SNode* Node)
             }
             break;
 
-        case CLine:
+        case CategoryLine:
             fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAR_COLOUR "\"> " VAR_SPEC " ", Node->data.var);
             break;
 
-        case CValue:
+        case CategoryValue:
             fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAL_COLOUR "\"> " VAL_SPEC " ", Node->data.val);
             break;
 
@@ -521,7 +521,7 @@ void back_destructor (SBack* Back)
 
 void make_asm_file (SNode* Root, FILE* File)
 {
-    MLA (File != NULL);
+    MY_LOUD_ASSERT (File != NULL);
 
     SBack* Back = back_constructor (File);
 
@@ -544,7 +544,7 @@ void generate_code (SNode* Root, SBack* Back)
     fprintf (Back->file, SEP_LINE "\n\n");
 
     PUT (push);
-    fprintf (Back->file, " 0\n"); //TODO ask Danya maybe %d 0
+    fprintf (Back->file, " 0\n");
     PUT (pop);
     fprintf (Back->file, " " SHIFT_REG "\n\n");
 
@@ -614,19 +614,19 @@ void generate_function (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_node (BACK_FUNC_HEAD_PARAMETERS)
 {
-    if (CurNode->category == COperation)
+    if (CurNode->category == CategoryOperation)
     {
         generate_op_node (BACK_FUNC_PARAMETERS);
     }
 
-    if (CurNode->category == CValue)
+    if (CurNode->category == CategoryValue)
     {
         write_command (push, Back->file);
 
         fprintf (Back->file, " %lg\n", CurNode->data.val);
     }
 
-    if (CurNode->category == CLine && CurNode->type == TVariable)
+    if (CurNode->category == CategoryLine && CurNode->type == TypeVariable)
     {
         generate_push_var (BACK_FUNC_PARAMETERS);
 //         write_command (push, Back->file);
@@ -718,7 +718,7 @@ void generate_if (BACK_FUNC_HEAD_PARAMETERS)
     generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
 
     PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
+    fprintf (Back->file, " %d\n", MY_FALSE);
 
     PUT (je);
     fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
@@ -742,7 +742,7 @@ void generate_if (BACK_FUNC_HEAD_PARAMETERS)
 
     if (CurNode != NULL)
     {
-        if (CurNode->category == COperation && CurNode->type == TIf)
+        if (CurNode->category == CategoryOperation && CurNode->type == TypeIf)
         {
             generate_if (BACK_FUNC_PARAMETERS);
         }
@@ -768,7 +768,7 @@ void generate_while (BACK_FUNC_HEAD_PARAMETERS)
     generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
 
     PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
+    fprintf (Back->file, " %d\n", MY_FALSE);
 
     PUT (je);
     int Label_2 = Back->label_cnt;
@@ -844,12 +844,12 @@ void generate_expression (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_postorder (BACK_FUNC_HEAD_PARAMETERS)
 {
-    if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->left != NULL)
+    if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->left != NULL)
     {
         generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
     }
 
-    if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->right != NULL)
+    if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->right != NULL)
     {
         generate_postorder (BACK_RIGHT_SON_FUNC_PARAMETERS);
     }
@@ -981,7 +981,7 @@ void standard_if_jump (SBack* Back)
     Back->label_cnt++;
 
     PUT (push);
-    fprintf (Back->file, " %d\n", FALSE);
+    fprintf (Back->file, " %d\n", MY_FALSE);
 
     PUT (jump);
     fprintf (Back->file, " " LABEL "%d\n", Back->label_cnt);
@@ -989,7 +989,7 @@ void standard_if_jump (SBack* Back)
     fprintf (Back->file, LABEL "%d:\n", Back->label_cnt - 1);
 
     PUT (push);
-    fprintf (Back->file, " %d\n", TRUE);
+    fprintf (Back->file, " %d\n", MY_TRUE);
 
     fprintf (Back->file, LABEL "%d:\n", Back->label_cnt);
 
@@ -1000,10 +1000,10 @@ void standard_if_jump (SBack* Back)
 
 // SNode* find_main (SNode* Node)
 // {
-//     if (NODE_IS_OP_AND__ T_Function)
+//     if (NODE_IS_OP_AND__ TypeLinkerFunction)
 //     {
 //         if (Node->left != NULL &&
-//         Node->left->category == CLine && (wcscmp (MAIN_WORD, Node->left->data.var) == 0))
+//         Node->left->category == CategoryLine && (wcscmp (MAIN_WORD, Node->left->data.var) == 0))
 //         {
 //             return Node->right->right;
 //         }
@@ -1039,7 +1039,7 @@ void write_command (ECommandNums eCommand, FILE* File)
 
     else
     {
-        MLA (0);
+        MY_LOUD_ASSERT (0);
     }
 
     #undef DEF_CMD
@@ -1065,7 +1065,7 @@ void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
         create_new_var_table (Back);
     }
 
-    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+    MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
     peek_from_stack (Back->VarStack, &Table);
@@ -1081,7 +1081,7 @@ void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
 
 void create_new_var_table (SBack* Back)
 {
-    ME;
+    PRINT_DEBUG_INFO;
 
     SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
@@ -1096,7 +1096,7 @@ void create_new_var_table (SBack* Back)
 
 void create_param_var_table (BACK_FUNC_HEAD_PARAMETERS)
 {
-    //ME;
+    //PRINT_DEBUG_INFO;
 
     Back->RAM_top_index = 1;
 
@@ -1116,7 +1116,7 @@ void create_param_var_table (BACK_FUNC_HEAD_PARAMETERS)
 
 void delete_var_table (SBack* Back)
 {
-    ME;
+    PRINT_DEBUG_INFO;
 
     SVarTable* Table = NULL;
 
@@ -1131,10 +1131,10 @@ void delete_var_table (SBack* Back)
 
 int find_var (BACK_FUNC_HEAD_PARAMETERS)
 {
-    int RetIndex = JUNK;
+    int RetIndex = WrongValue;
 
-    MLA (Back->VarStack->size != 0);
-    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+    MY_LOUD_ASSERT (Back->VarStack->size != 0);
+    MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
 
@@ -1146,10 +1146,10 @@ int find_var (BACK_FUNC_HEAD_PARAMETERS)
         depth++;
     } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth <= Back->VarStack->size));
 
-    if (RetIndex < 0)
+    if (RetIndex == WrongValue)
     {
         printf ("==ERROR==\n""No '%ls' found!\n", CurNode->data.var);
-        MLA (0);
+        MY_LOUD_ASSERT (0);
     }
 
     return RetIndex;
@@ -1157,7 +1157,7 @@ int find_var (BACK_FUNC_HEAD_PARAMETERS)
 
 bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex)
 {
-    MLA (Table != NULL);
+    MY_LOUD_ASSERT (Table != NULL);
 
     for (int counter = 0; counter < Table->cur_size; ++counter)
     {

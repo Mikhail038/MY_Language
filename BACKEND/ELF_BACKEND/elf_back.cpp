@@ -35,7 +35,7 @@
 
 //=============================================================================================================================================================================
 
-SElfBack::SElfBack(FILE* ExFile, SNode* Root)
+ElfBack::ElfBack(FILE* ExFile, SNode* Root)
 {
     Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
     Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
@@ -53,7 +53,7 @@ SElfBack::SElfBack(FILE* ExFile, SNode* Root)
     cur_addr = 0;
 }
 
-SElfBack::~SElfBack()
+ElfBack::~ElfBack()
 {
     free_tables (VarStack);
 
@@ -65,11 +65,14 @@ SElfBack::~SElfBack()
 
 //=============================================================================================================================================================================
 
+
+//=============================================================================================================================================================================
+
 void make_elf_file (SNode* Root, FILE* ExFile)
 {
-    MLA (ExFile != NULL);
+    MY_LOUD_ASSERT (ExFile != NULL);
 
-    SElfBack Back {ExFile, Root};
+    ElfBack Back {ExFile, Root};
 
     //generate_user_functions (Root, Back);
 
@@ -89,11 +92,11 @@ void make_elf_file (SNode* Root, FILE* ExFile)
 //Make ELF//
 //=============================================================================================================================================================================
 
-void SElfBack::generate_elf_array (SNode* Root)
+void ElfBack::generate_elf_array (SNode* Root) // TODO too large function
 {
     SET (0x7f); //MAGIC SIGNATURE
 
-    SET ('E');
+    SET ('E'); // TODO Maybe move to create ELF header func
     SET ('L');
     SET ('F');
 
@@ -121,7 +124,7 @@ void SElfBack::generate_elf_array (SNode* Root)
 
     size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
 
-    SKIP_8(EntryVA, addr_EntryVA);
+    SKIP_8(EntryVA, addr_EntryVA); // TODO naming!
 
     SKIP_8(ProgramHeadersStart, addr_ProgramHeadersStart);
 
@@ -142,10 +145,10 @@ void SElfBack::generate_elf_array (SNode* Root)
     unsigned short int  SectionHeadersSize = 64; //std
     SET_2(SectionHeadersSize);
 
-    unsigned short int  SectionHeadersCnt = 3; //TODO maybe not
+    unsigned short int  SectionHeadersCnt = 3; // maybe not
     SET_2(SectionHeadersCnt);
 
-    unsigned short int  ShstrTabIndex  = 2; //TODO maybe not
+    unsigned short int  ShstrTabIndex  = 2; // maybe not
     SET_2(ShstrTabIndex);
 
     //=======================================================================
@@ -162,11 +165,11 @@ void SElfBack::generate_elf_array (SNode* Root)
     FILL_8;     //nothing
 
     memcpy ((size_t*) &(Array[cur_addr]),
-    &FileVirtualAddress, sizeof (size_t));  //Virtual address
+            &FileVirtualAddress, sizeof (size_t));  //Virtual address
     cur_addr += 8;
 
     memcpy ((size_t*) &(Array[cur_addr]),
-    &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
+            &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
     cur_addr += 8;
 
     SKIP_8(SegmentSize, addr_SegmentSize);
@@ -332,15 +335,11 @@ void SElfBack::generate_elf_array (SNode* Root)
 
 #define BUFFER_SIZE 20
 
-void SElfBack::elf_generate_code (SNode* Root)
+void ElfBack::elf_generate_code (SNode* Root)
 {
-    // x86_mov_r_i(eSHIFT_REG, 0);
-
-    // x86_mov_r_i(eTOP_REG, cur_addr - start_cnt); // TODO maybe not
-
     x86_call_label(MAIN_LBL);
 
-    x86___End();
+    x86_macro_exit();
 
     buffer = cur_addr;
 
@@ -349,16 +348,16 @@ void SElfBack::elf_generate_code (SNode* Root)
         SET(0x00);
     }
 
-    x86___make_inp_func ();
+    x86_macro_make_input_func ();
 
-    x86___make_out_func ();
+    x86_macro_make_output_func ();
 
     elf_generate_statement(Root);
 
     return;
 }
 
-void SElfBack::elf_generate_statement (SNode* CurNode)
+void ElfBack::elf_generate_statement (SNode* CurNode)
 {
     if (CurNode->left != NULL)
     {
@@ -373,7 +372,7 @@ void SElfBack::elf_generate_statement (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_function (SNode* CurNode)
+void ElfBack::elf_generate_function (SNode* CurNode)
 {
 
     if (wcscoll (CurNode->left->data.var, MAIN_LBL) == 0)
@@ -385,7 +384,7 @@ void SElfBack::elf_generate_function (SNode* CurNode)
         func_cond = any_f;
     }
 
-    x86___paste_call_label(CurNode->left->data.var);
+    x86_macro_paste_call_label(CurNode->left->data.var);
     // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
 
     Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
@@ -401,7 +400,7 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
         pop_from_stack (VarStack, &Table);
 
-        AmountVars = elf_find_new_vars(CurNode->right);
+        AmountVars = elf_find_all_new_vars(CurNode->right);
 
         Table->amount = AmountVars;
 
@@ -410,12 +409,12 @@ void SElfBack::elf_generate_function (SNode* CurNode)
         // printf ("Vars Amount: [%d]\n", AmountVars);
     }
 
-    x86_push_r(rbp);
-    x86_mov_r_r(rbp, rsp);
+    x86_push_reg(rbp);
+    x86_mov_reg_reg(rbp, rsp);
 
-    x86_sub_i(rbp, AmountVars * VAR_SIZE);
+    x86_sub_reg_imm(rbp, AmountVars * VAR_SIZE);
 
-    x86_mov_r_r(rsp, rbp);
+    x86_mov_reg_reg(rsp, rbp);
 
     Funcs->top_index++;
 
@@ -425,33 +424,33 @@ void SElfBack::elf_generate_function (SNode* CurNode)
 
 
     elf_generate_statement (CurNode->right);
-    ELF_CLEAN_TABLE;
+    ELF_CLEAN_TABLE ();
 
     delta_rbp = old_delta_rbp;
 
 
 
-    x86_add_i(rbp, AmountVars * VAR_SIZE);
+    x86_add_reg_imm(rbp, AmountVars * VAR_SIZE);
 
-    x86_pop_r(rbp);
-    x86_mov_r_r(rsp, rbp);
+    x86_pop_to_reg(rbp);
+    x86_mov_reg_reg(rsp, rbp);
 
     return;
 }
 
-void SElfBack::elf_generate_node (SNode* CurNode)
+void ElfBack::elf_generate_node (SNode* CurNode)
 {
-    if (CurNode->category == COperation)
+    if (CurNode->category == CategoryOperation)
     {
         elf_generate_op_node (CurNode, true);
     }
 
-    if (CurNode->category == CValue)
+    if (CurNode->category == CategoryValue)
     {
-        x86_push_i(CurNode->data.val);
+        x86_push_imm(CurNode->data.val);
     }
 
-    if (CurNode->category == CLine && CurNode->type == TVariable)
+    if (CurNode->category == CategoryLine && CurNode->type == TypeVariable)
     {
         elf_generate_push_var (CurNode);
     }
@@ -459,7 +458,7 @@ void SElfBack::elf_generate_node (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_op_node (SNode* CurNode, bool RetValueMarker)
+void ElfBack::elf_generate_op_node (SNode* CurNode, bool RetValueMarker)
 {
     switch (CurNode->type)
     {
@@ -476,7 +475,7 @@ void SElfBack::elf_generate_op_node (SNode* CurNode, bool RetValueMarker)
     return;
 }
 
-void SElfBack::elf_generate_announce (SNode* CurNode)
+void ElfBack::elf_generate_announce (SNode* CurNode)
 {
     elf_generate_expression (CurNode->right);
 
@@ -489,7 +488,7 @@ void SElfBack::elf_generate_announce (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_equation (SNode* CurNode)
+void ElfBack::elf_generate_equation (SNode* CurNode)
 {
     elf_generate_expression (CurNode->right);
 
@@ -498,13 +497,13 @@ void SElfBack::elf_generate_equation (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_input (SNode* CurNode)
+void ElfBack::elf_generate_input (SNode* CurNode)
 {
     SNode* Node = CurNode->left;
 
     do
     {
-        elf_rax_var_address (Node->left);
+        elf_set_rax_var_address (Node->left);
 
         x86_call_label(INP_LBL);
 
@@ -514,15 +513,13 @@ void SElfBack::elf_generate_input (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_output (SNode* CurNode)
+void ElfBack::elf_generate_output (SNode* CurNode)
 {
     SNode* Node = CurNode->left;
 
     do
     {
-        elf_rax_var_value (Node->left);
-
-        // elf_generate_push_var (Node->left);
+        elf_set_rax_var_value (Node->left);
 
         x86_call_label(OUT_LBL);
 
@@ -532,48 +529,37 @@ void SElfBack::elf_generate_output (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_if (SNode* CurNode)
+void ElfBack::elf_generate_if (SNode* CurNode)
 {
     elf_generate_expression (CurNode->left);
 
-    x86_push_i(FALSE);
+    x86_push_imm(MY_FALSE);
 
-    wchar_t* Label_1_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    make_label_to_jump (Label_1_name, cur_addr);
+    wchar_t* Label_true_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    prepare_name_label_to_jump (Label_true_name, cur_addr);
 
     x86_cmp_stack();
-    x86_jump_label(Label_1_name, je_);
+    x86_jump_label(Label_true_name, je_); // TODO rename je_
 
-    // PUT (je);
-    // fprintf (file, " " LABEL "%d\n", label_cnt);
-    // int Label_1 = label_cnt;
-    // label_cnt++;
 
     CurNode = CurNode->right;
 
     table_cond = none;
     elf_generate_statement (CurNode->left);
-    ELF_CLEAN_TABLE;
+    ELF_CLEAN_TABLE ();
 
-    wchar_t* Label_2_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    make_label_to_jump (Label_2_name, cur_addr);
+    wchar_t* Label_false_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    prepare_name_label_to_jump (Label_false_name, cur_addr);
 
-    x86_jump_label(Label_2_name, jmp_);
-    // PUT (jump);
-    // fprintf (file, " " LABEL "%d\n", label_cnt);
-    // int Label_2 = label_cnt;
-    // label_cnt++;
+    x86_jump_label(Label_false_name, jmp_);
 
-    x86___paste_jump_label(Label_1_name);
-    // fprintf (file,  LABEL "%d:\n", Label_1);
+    x86_macro_paste_jump_label(Label_true_name);
 
     CurNode = CurNode->right;
 
-    // x86_nop();
-    // x86_nop();
     if (CurNode != NULL)
     {
-        if (CurNode->category == COperation && CurNode->type == TIf)
+        if (CurNode->category == CategoryOperation && CurNode->type == TypeIf)
         {
             elf_generate_if (CurNode);
         }
@@ -581,27 +567,24 @@ void SElfBack::elf_generate_if (SNode* CurNode)
         {
             table_cond = none;
             elf_generate_statement (CurNode);
-            ELF_CLEAN_TABLE;
+            ELF_CLEAN_TABLE ();
         }
     }
-    // x86_nop();
-    // x86_nop();
 
-    x86___paste_jump_label(Label_2_name);
-    // fprintf (file,  LABEL "%d:\n", Label_2);
+    x86_macro_paste_jump_label(Label_false_name);
 
-    free (Label_1_name);
-    free (Label_2_name);
+    free (Label_true_name);
+    free (Label_false_name);
 
     return;
 }
 
-void SElfBack::elf_generate_while (SNode* CurNode)
+void ElfBack::elf_generate_while (SNode* CurNode)
 {
-    wchar_t* Label_1_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    make_label_to_jump (Label_1_name, cur_addr);
+    wchar_t* Label_body_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    prepare_name_label_to_jump (Label_body_name, cur_addr);
 
-    x86___paste_jump_label(Label_1_name);
+    x86_macro_paste_jump_label(Label_body_name);
     // int Label_1 = label_cnt;
     // fprintf (file,  LABEL "%d:\n", Label_1);
     // label_cnt++;
@@ -610,13 +593,13 @@ void SElfBack::elf_generate_while (SNode* CurNode)
     elf_generate_expression (CurNode->left);
     // x86_nop();
 
-    x86_push_i(FALSE);
+    x86_push_imm(MY_FALSE);
 
-    wchar_t* Label_2_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    make_label_to_jump (Label_2_name, cur_addr);
+    wchar_t* Label_end_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
+    prepare_name_label_to_jump (Label_end_name, cur_addr);
 
     x86_cmp_stack();
-    x86_jump_label(Label_2_name, je_);
+    x86_jump_label(Label_end_name, je_);
 
     // PUT (je);
     // int Label_2 = label_cnt;
@@ -626,20 +609,20 @@ void SElfBack::elf_generate_while (SNode* CurNode)
     // x86_nop();
     table_cond = none;
     elf_generate_statement (CurNode->right);
-    ELF_CLEAN_TABLE;
+    ELF_CLEAN_TABLE ();
     // x86_nop();
 
-    x86_jump_label(Label_1_name, jmp_);
+    x86_jump_label(Label_body_name, jmp_);
 
-    x86___paste_jump_label(Label_2_name);
+    x86_macro_paste_jump_label(Label_end_name);
 
-    free (Label_1_name);
-    free (Label_2_name);
+    free (Label_body_name);
+    free (Label_end_name);
 
     return;
 }
 
-void SElfBack::elf_generate_call (SNode* CurNode, bool RetValueMarker)
+void ElfBack::elf_generate_call (SNode* CurNode, bool RetValueMarker)
 {
     // x86_push_r(eTOP_REG);
 
@@ -647,11 +630,11 @@ void SElfBack::elf_generate_call (SNode* CurNode, bool RetValueMarker)
 
     // x86_push_r(eTOP_REG);
 
-    // x86_pop_r(eSHIFT_REG);
+    // x86_pop_r(ELF_SHIFT_REG);
 
     x86_call_label(CurNode->left->data.var);
 
-    elf_delete_parameters (CurNode->right);
+    elf_delete_function_parameters (CurNode->right);
 
     // PUT (call);
     // fprintf (file, " " LABEL "%ls\n", CurNode->left->data.var);
@@ -661,7 +644,7 @@ void SElfBack::elf_generate_call (SNode* CurNode, bool RetValueMarker)
     if (RetValueMarker == true)
     {
         // printf (KRED "WAAGH!\n" KNRM);
-        x86_push_r(eFUNC_REG);
+        x86_push_reg(ELF_FUNC_RET_REG);
     }
     else
     {
@@ -671,59 +654,50 @@ void SElfBack::elf_generate_call (SNode* CurNode, bool RetValueMarker)
     return;
 }
 
-void SElfBack::elf_generate_return (SNode* CurNode)
+void ElfBack::elf_generate_return (SNode* CurNode)
 {
     elf_generate_expression (CurNode->left);
 
-//     if (func_cond == main_f)
-//     {
-//         x86_pop_r(eFUNC_REG);
-//
-//         x86_ret();
-//     }
-//     else
-//     {
-        x86_pop_r(eFUNC_REG);
+    x86_pop_to_reg(ELF_FUNC_RET_REG);
 
-        size_t AmountVars = 0;
+    size_t AmountVars = 0;
 
-        SVarTable* Table = NULL;
+    SVarTable* Table = NULL;
 
-        if (VarStack->size != 0)
-        {
-            peek_from_stack (VarStack, &Table);
-            AmountVars = Table->amount;
-        }
-        x86_add_i(rbp, AmountVars * VAR_SIZE);
+    if (VarStack->size != 0)
+    {
+        peek_from_stack (VarStack, &Table);
+        AmountVars = Table->amount;
+    }
+    x86_add_reg_imm(rbp, AmountVars * VAR_SIZE);
 
-        x86_mov_r_r(rsp, rbp);
+    x86_mov_reg_reg(rsp, rbp);
 
-        x86_pop_r(rbp);
+    x86_pop_to_reg(rbp);
 
-        x86_ret();
-    // }
+    x86_ret();
 
     return;
 }
 
-void SElfBack::elf_generate_expression (SNode* CurNode)
+void ElfBack::elf_generate_expression (SNode* CurNode)
 {
     elf_generate_postorder (CurNode, true);
 
     return;
 }
 
-void SElfBack::elf_generate_postorder (SNode* CurNode, bool RetValueMarker)
+void ElfBack::elf_generate_postorder (SNode* CurNode, bool RetValueMarker)
 {
-    if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->left != NULL)
+    if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->left != NULL)
     {
         elf_generate_postorder (CurNode->left, RetValueMarker);
     }
 
-    if (!(CurNode->category == COperation && CurNode->type == T_Call) && CurNode->right != NULL)
+    if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->right != NULL)
     {
         elf_generate_postorder (CurNode->right, RetValueMarker);
-        // x86_push_r(eFUNC_REG);
+        // x86_push_r(ELF_FUNC_RET_REG);
     }
 
     elf_generate_node (CurNode);
@@ -733,7 +707,7 @@ void SElfBack::elf_generate_postorder (SNode* CurNode, bool RetValueMarker)
 
 //=============================================================================================================================================================================
 
-void SElfBack::elf_rax_var_value (SNode* CurNode)
+void ElfBack::elf_set_rax_var_value (SNode* CurNode)
 {
     int Index = elf_find_var (CurNode);
 
@@ -741,49 +715,49 @@ void SElfBack::elf_rax_var_value (SNode* CurNode)
     if (Index < 0)
     {
         // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
-        x86_mov_r_Ir_iI(rax, rbp, delta_rbp - Index * VAR_SIZE);
+        x86_mov_to_reg_from_addr_in_reg_with_imm(rax, rbp, delta_rbp - Index * VAR_SIZE);
 
         return;
     }
 
     // printf("Index: %d\n", Index);
-    x86_mov_r_Ir_iI(rax, rbp, Index);
+    x86_mov_to_reg_from_addr_in_reg_with_imm(rax, rbp, Index);
 
     return;
 }
 
-void SElfBack::elf_rax_var_address (SNode* CurNode)
+void ElfBack::elf_set_rax_var_address (SNode* CurNode)
 {
     int Index = elf_find_var (CurNode);
     // printf("addr  param = ");
 
-    x86_mov_r_r(rax, rbp);
+    x86_mov_reg_reg(rax, rbp);
 
     if (Index < 0)
     {
         // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
-        x86_add_i(rax, delta_rbp - Index * VAR_SIZE);
+        x86_add_reg_imm(rax, delta_rbp - Index * VAR_SIZE);
 
         return;
     }
 
     // printf("Index: %d\n", Index);
-    x86_add_i(rax, Index);
+    x86_add_reg_imm(rax, Index);
 
     return;
 }
 
-void SElfBack::elf_generate_pop_var (SNode* CurNode)
+void ElfBack::elf_generate_pop_var (SNode* CurNode)
 {
-    elf_rax_var_address(CurNode);
+    elf_set_rax_var_address(CurNode);
 
-    x86_pop_r(A_REG);
+    x86_pop_to_reg(A_REG);
 
-    x86_mov_IrI_r(rax, A_REG);
+    x86_mov_to_addr_in_reg_from_reg(rax, A_REG);
 
 //     int Index = elf_find_var (CurNode);
 //
-//     x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
+//     x86_mov_r_r(eCOUNT_REG, ELF_SHIFT_REG);
 //     x86_add_i(eCOUNT_REG, Index);
 //
 //     x86_pop_r(A_REG);
@@ -795,15 +769,15 @@ void SElfBack::elf_generate_pop_var (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_generate_push_var (SNode* CurNode)
+void ElfBack::elf_generate_push_var (SNode* CurNode)
 {
-    elf_rax_var_value(CurNode);
+    elf_set_rax_var_value(CurNode);
 
-    x86_push_r(rax);
+    x86_push_reg(rax);
 
 //     int Index = elf_find_var (CurNode);
 //
-//     x86_mov_r_r(eCOUNT_REG, eSHIFT_REG);
+//     x86_mov_r_r(eCOUNT_REG, ELF_SHIFT_REG);
 //     x86_add_i(eCOUNT_REG, Index);
 //
 //     x86_push_IrI(eCOUNT_REG);
@@ -813,7 +787,7 @@ void SElfBack::elf_generate_push_var (SNode* CurNode)
 
 //=============================================================================================================================================================================
 
-void SElfBack::elf_push_parameters (SNode* CurNode)
+void ElfBack::elf_push_parameters (SNode* CurNode)
 {
     if (CurNode->right != NULL)
     {
@@ -828,62 +802,26 @@ void SElfBack::elf_push_parameters (SNode* CurNode)
     return;
 }
 
-void SElfBack::elf_delete_parameters (SNode* CurNode)
+void ElfBack::elf_delete_function_parameters (SNode* CurNode)
 {
     if (CurNode->right != NULL)
     {
-        elf_delete_parameters (CurNode->right);
+        elf_delete_function_parameters (CurNode->right);
     }
 
     if (CurNode != NULL && CurNode->left != NULL)
     {
-        x86_add_i(rsp, VAR_SIZE);
+        x86_add_reg_imm(rsp, VAR_SIZE);
     }
 
     return;
 }
 
-
-// void SElfBack::elf_pop_parameters ()
-// {
-//     // x86_push_r(eSHIFT_REG);
-//
-//     // x86_pop_r(eCOUNT_REG);
-//
-//     // x86_mov_r_r(rax, rbp);
-//
-//     size_t AmountParams = Funcs->Table[Funcs->top_index].parameters;
-//
-//     for (int i = 0; i < AmountParams; i++)
-//     {
-//         x86_pop_r(rax);
-//
-//         x86_mov_r_Ir_iI(rsp, rax, - (AmountParams - ((i + 1) * VAR_SIZE)));
-//
-//         x86_inc(eCOUNT_REG);
-//
-//         x86_pop_r(A_REG);
-//         x86_mov_IrI_r(eCOUNT_REG, A_REG);
-//
-//         // PUT (pop);
-//         // fprintf (file, " [" COUNT_REG "]\n\n");  // this was
-//     }
-//
-//     return;
-// }
-
-// void SElfBack::elf_incr_top_reg ()
-// {
-//     x86_inc(eTOP_REG);
-//
-//     return;
-// }
-
-#define STD_JUMP_FIRST_SHIFT    6   //DO NOT change
-#define STD_JUMP_SECOND_SHIFT   4   //DO NOT change
-
-void SElfBack::elf_standard_if_jump (int JumpMode)
+void ElfBack::elf_standard_if_jump (int JumpMode)
 {
+    const int STD_JUMP_FIRST_SHIFT  = 6;
+    const int STD_JUMP_SECOND_SHIFT = 4;
+
     if (JumpMode != jmp_)
     {
         x86_cmp_stack ();
@@ -894,10 +832,10 @@ void SElfBack::elf_standard_if_jump (int JumpMode)
     // fprintf (file, " " LABEL "%d\n", label_cnt);
     // label_cnt++;
 
-    x86_push_i(FALSE);
+    x86_push_imm(MY_FALSE);
 
     // PUT (push);
-    // fprintf (file, " %d\n", FALSE);
+    // fprintf (file, " %d\n", MY_FALSE);
 
     x86_jump_any(STD_JUMP_SECOND_SHIFT, jmp_);
 
@@ -906,10 +844,10 @@ void SElfBack::elf_standard_if_jump (int JumpMode)
 
     // fprintf (file, LABEL "%d:\n", label_cnt - 1);
 
-    x86_push_i(TRUE);
+    x86_push_imm(MY_TRUE);
 
     // PUT (push);
-    // fprintf (file, " %d\n", TRUE);
+    // fprintf (file, " %d\n", MY_TRUE);
 
 //     fprintf (file, LABEL "%d:\n", label_cnt);
 //
@@ -918,7 +856,7 @@ void SElfBack::elf_standard_if_jump (int JumpMode)
     return;
 }
 
-void SElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
+void ElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
 {
     #define DEF_CMD(def_line, def_enum, ...) \
     else if (eCommand == def_enum) \
@@ -927,13 +865,13 @@ void SElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
         return; \
     }
 
-    if (0) {}
+    if (false) {}
 
     #include "commands.h"
 
     else
     {
-        MLA (0);
+        MY_LOUD_ASSERT (false);
     }
 
     #undef DEF_CMD
@@ -941,14 +879,14 @@ void SElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
 
 //=============================================================================================================================================================================
 
-void SElfBack:: elf_add_to_var_table (SNode* CurNode, bool ParamMarker)
+void ElfBack:: elf_add_to_var_table (SNode* CurNode, bool ParamMarker)
 {
-    if (table_cond == none)
+    if (table_cond == EVarTableConditions::none)
     {
-        elf_create_new_var_table (CurNode, ParamMarker);
+        elf_create_new_var_table (ParamMarker);
     }
 
-    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+    MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
     peek_from_stack (VarStack, &Table);
@@ -957,16 +895,6 @@ void SElfBack:: elf_add_to_var_table (SNode* CurNode, bool ParamMarker)
 
     if (ParamMarker == false)
     {
-//         if (Table->param_marker == true)
-//         {
-//             printf ("%p\n", CurNode);
-//
-//             Table->amount = elf_find_new_vars(CurNode->parent->parent);
-//             printf ("amount %d", Table->amount);
-//
-//             Table->param_marker = false;
-//         }
-
         #ifdef VAR_OVERSEER
         printf (KYLW "Amount: %d CurSize: %d Param: %d Final: %d => " KNRM, Table->amount, Table->cur_size, Table->amount_param, Table->amount - (Table->cur_size - Table->amount_param) - 1);
         #endif
@@ -990,15 +918,14 @@ void SElfBack:: elf_add_to_var_table (SNode* CurNode, bool ParamMarker)
         Table->amount_param++;
     }
 
-    // RAM_top_index++;
     Table->cur_size++;
 
     return;
 }
 
-void SElfBack::elf_create_new_var_table (SNode* CurNode, bool ParamMarker)
+void ElfBack::elf_create_new_var_table (bool ParamMarker)
 {
-    ME;
+    PRINT_DEBUG_INFO;
 
     delta_rbp = 0;
 
@@ -1012,10 +939,10 @@ void SElfBack::elf_create_new_var_table (SNode* CurNode, bool ParamMarker)
 //     {
 //         // SNode* Node = elf_find_parent_statement (CurNode);
 //
-//         // MLA (Node != NULL);
+//         // MY_LOUD_ASSERT (Node != NULL);
 //
 //         // NewTable->amount = elf_find_new_vars (Node);
-//         MLA (CurNode->type != T_Param);
+//         MY_LOUD_ASSERT (CurNode->type != TypeLinkerParameter);
 //         printf("amount %d\n", NewTable->amount);
 //     }
 //     else
@@ -1036,16 +963,16 @@ void SElfBack::elf_create_new_var_table (SNode* CurNode, bool ParamMarker)
     return;
 }
 
-size_t SElfBack::elf_find_new_vars (SNode* CurNode)
+size_t ElfBack::elf_find_all_new_vars (SNode* CurNode)
 {
     return elf_find_new_var(CurNode);
 }
 
-size_t SElfBack::elf_find_new_var (SNode* CurNode)
+size_t ElfBack::elf_find_new_var (SNode* CurNode)
 {
     size_t OneMoreVar = 0;
 
-    if (CurNode->left != NULL && CurNode->left->type == T_Announce)
+    if (CurNode->left != NULL && CurNode->left->type == TypeLinkerAnnounce)
     {
         OneMoreVar = 1;
     }
@@ -1059,9 +986,9 @@ size_t SElfBack::elf_find_new_var (SNode* CurNode)
 }
 
 
-void SElfBack::elf_create_param_var_table (SNode* CurNode)
+void ElfBack::elf_create_param_var_table (SNode* CurNode)
 {
-    ME;
+    PRINT_DEBUG_INFO;
 
     bool TableCreationMark = false;
 
@@ -1080,15 +1007,15 @@ void SElfBack::elf_create_param_var_table (SNode* CurNode)
     if (TableCreationMark == false)
     {
         // printf (KRED "forced\n" KNRM);
-        elf_create_new_var_table(CurNode, true);
+        elf_create_new_var_table(true);
     }
 
     return;
 }
 
-void SElfBack::elf_delete_var_table ()
+void ElfBack::elf_delete_var_table ()
 {
-    ME;
+    PRINT_DEBUG_INFO;
 
     SVarTable* Table = NULL;
 
@@ -1101,13 +1028,13 @@ void SElfBack::elf_delete_var_table ()
     return;
 }
 
-SNode* SElfBack::elf_find_parent_statement (SNode* CurNode)
+SNode* ElfBack::elf_find_parent_statement (SNode* CurNode)
 {
     SNode* Node = NULL;
     while (CurNode->parent != NULL)
     {
         CurNode = CurNode->parent;
-        if (CurNode->right != NULL && CurNode->category == COperation && CurNode->type == T_Statement)
+        if (CurNode->right != NULL && CurNode->category == CategoryOperation && CurNode->type == TypeLinkerStatement)
         {
             Node = CurNode;
         }
@@ -1116,13 +1043,13 @@ SNode* SElfBack::elf_find_parent_statement (SNode* CurNode)
     return Node;
 }
 
-int SElfBack::elf_find_var (SNode* CurNode)
+int ElfBack::elf_find_var (SNode* CurNode)
 {
-    int RetIndex = JUNK;
+    int RetIndex = WrongValue;
     bool ParamMarker = false;
 
-    MLA (VarStack->size != 0);
-    MLA (CurNode->category == CLine && CurNode->type == TVariable);
+    MY_LOUD_ASSERT (VarStack->size != 0);
+    MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
 
@@ -1134,10 +1061,10 @@ int SElfBack::elf_find_var (SNode* CurNode)
         depth++;
     } while ((elf_find_in_table (CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (depth <= VarStack->size));
 
-    if (RetIndex == -JUNK)
+    if (RetIndex == WrongValue)
     {
         printf ("==ERROR==\n""No '%ls' found!\n", CurNode->data.var);
-        MLA (0);
+        MY_LOUD_ASSERT (0);
     }
 
     return RetIndex;
@@ -1145,9 +1072,9 @@ int SElfBack::elf_find_var (SNode* CurNode)
 
 //=============================================================================================================================================================================
 
-bool SElfBack::elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker)
+bool ElfBack::elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker)
 {
-    MLA (Table != NULL);
+    MY_LOUD_ASSERT (Table != NULL);
 
     for (int counter = 0; counter < Table->cur_size; ++counter)
     {
@@ -1166,7 +1093,7 @@ bool SElfBack::elf_find_in_table (CharT* varName, SVarTable* Table, int* RetInde
 
 //=============================================================================================================================================================================
 
-void make_label_to_jump (wchar_t* Label_name, size_t Address)
+void prepare_name_label_to_jump (wchar_t* Label_name, size_t Address)
 {
     // std::cout << Address << std::endl;
 

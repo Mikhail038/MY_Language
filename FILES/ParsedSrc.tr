@@ -1,21 +1,21 @@
-COperation _STATEMENT
+CategoryOperation _STATEMENT
 {
-    COperation _FUNC
+    CategoryOperation _FUNC
     {
-        CLine TVariable fac
+        CategoryLine TypeVariable fac
         {
-            COperation stdType
+            CategoryOperation stdType
             {
             }
             {
             }
         }
         {
-            COperation _PARAM
+            CategoryOperation _PARAM
             {
-                COperation _FUNC_ANNOUNCE
+                CategoryOperation _FUNC_ANNOUNCE
                 {
-                    CLine TVariable a
+                    CategoryLine TypeVariable a
                     {
                     }
                     {
@@ -29,31 +29,31 @@ COperation _STATEMENT
         }
     }
     {
-        COperation _STATEMENT
+        CategoryOperation _STATEMENT
         {
         }
         {
-            COperation _STATEMENT
+            CategoryOperation _STATEMENT
             {
-                COperation _ANNOUNCE
+                CategoryOperation _ANNOUNCE
                 {
-                    CLine TVariable b
+                    CategoryLine TypeVariable b
                     {
                     }
                     {
                     }
                 }
                 {
-                    COperation SUB
+                    CategoryOperation SUB
                     {
-                        CLine TVariable a
+                        CategoryLine TypeVariable a
                         {
                         }
                         {
                         }
                     }
                     {
-                        CValue TValue 1
+                        CategoryValue TValue 1
                         {
                         }
                         {
@@ -62,20 +62,20 @@ COperation _STATEMENT
                 }
             }
             {
-                COperation _STATEMENT
+                CategoryOperation _STATEMENT
                 {
-                    COperation IF
+                    CategoryOperation IF
                     {
-                        COperation EQUAL
+                        CategoryOperation EQUAL
                         {
-                            CLine TVariable a
+                            CategoryLine TypeVariable a
                             {
                             }
                             {
                             }
                         }
                         {
-                            CValue TValue 1
+                            CategoryValue TValue 1
                             {
                             }
                             {
@@ -83,17 +83,17 @@ COperation _STATEMENT
                         }
                     }
                     {
-                        COperation _CROSSROADS
+                        CategoryOperation _CROSSROADS
                         {
-                            COperation _STATEMENT
+                            CategoryOperation _STATEMENT
                             {
                             }
                             {
-                                COperation _STATEMENT
+                                CategoryOperation _STATEMENT
                                 {
-                                    COperation RETURN
+                                    CategoryOperation RETURN
                                     {
-                                        CValue TValue 1
+                                        CategoryValue TValue 1
                                         {
                                         }
                                         {
@@ -111,22 +111,22 @@ COperation _STATEMENT
                     }
                 }
                 {
-                    COperation _STATEMENT
+                    CategoryOperation _STATEMENT
                     {
-                        COperation RETURN
+                        CategoryOperation RETURN
                         {
-                            COperation MUL
+                            CategoryOperation MUL
                             {
-                                COperation ADD
+                                CategoryOperation ADD
                                 {
-                                    CLine TVariable b
+                                    CategoryLine TypeVariable b
                                     {
                                     }
                                     {
                                     }
                                 }
                                 {
-                                    CValue TValue 1
+                                    CategoryValue TValue 1
                                     {
                                     }
                                     {
@@ -134,18 +134,18 @@ COperation _STATEMENT
                                 }
                             }
                             {
-                                COperation _CALL
+                                CategoryOperation _CALL
                                 {
-                                    CLine TVariable fac
+                                    CategoryLine TypeVariable fac
                                     {
                                     }
                                     {
                                     }
                                 }
                                 {
-                                    COperation _PARAM
+                                    CategoryOperation _PARAM
                                     {
-                                        CLine TVariable b
+                                        CategoryLine TypeVariable b
                                         {
                                         }
                                         {
@@ -167,20 +167,20 @@ COperation _STATEMENT
     }
 }
 {
-    COperation _STATEMENT
+    CategoryOperation _STATEMENT
     {
-        COperation _FUNC
+        CategoryOperation _FUNC
         {
-            CLine TVariable main
+            CategoryLine TypeVariable main
             {
-                COperation stdType
+                CategoryOperation stdType
                 {
                 }
                 {
                 }
             }
             {
-                COperation _PARAM
+                CategoryOperation _PARAM
                 {
                 }
                 {
@@ -188,22 +188,22 @@ COperation _STATEMENT
             }
         }
         {
-            COperation _STATEMENT
+            CategoryOperation _STATEMENT
             {
             }
             {
-                COperation _STATEMENT
+                CategoryOperation _STATEMENT
                 {
-                    COperation _ANNOUNCE
+                    CategoryOperation _ANNOUNCE
                     {
-                        CLine TVariable x
+                        CategoryLine TypeVariable x
                         {
                         }
                         {
                         }
                     }
                     {
-                        CValue TValue 0
+                        CategoryValue TValue 0
                         {
                         }
                         {
@@ -211,13 +211,13 @@ COperation _STATEMENT
                     }
                 }
                 {
-                    COperation _STATEMENT
+                    CategoryOperation _STATEMENT
                     {
-                        COperation INPUT
+                        CategoryOperation INPUT
                         {
-                            COperation _PARAM
+                            CategoryOperation _PARAM
                             {
-                                CLine TVariable x
+                                CategoryLine TypeVariable x
                                 {
                                 }
                                 {
@@ -230,29 +230,29 @@ COperation _STATEMENT
                         }
                     }
                     {
-                        COperation _STATEMENT
+                        CategoryOperation _STATEMENT
                         {
-                            COperation _EQUATION
+                            CategoryOperation _EQUATION
                             {
-                                CLine TVariable x
+                                CategoryLine TypeVariable x
                                 {
                                 }
                                 {
                                 }
                             }
                             {
-                                COperation _CALL
+                                CategoryOperation _CALL
                                 {
-                                    CLine TVariable fac
+                                    CategoryLine TypeVariable fac
                                     {
                                     }
                                     {
                                     }
                                 }
                                 {
-                                    COperation _PARAM
+                                    CategoryOperation _PARAM
                                     {
-                                        CLine TVariable x
+                                        CategoryLine TypeVariable x
                                         {
                                         }
                                         {
@@ -264,13 +264,13 @@ COperation _STATEMENT
                             }
                         }
                         {
-                            COperation _STATEMENT
+                            CategoryOperation _STATEMENT
                             {
-                                COperation OUTPUT
+                                CategoryOperation OUTPUT
                                 {
-                                    COperation _PARAM
+                                    CategoryOperation _PARAM
                                     {
-                                        CLine TVariable x
+                                        CategoryLine TypeVariable x
                                         {
                                         }
                                         {
@@ -283,11 +283,11 @@ COperation _STATEMENT
                                 }
                             }
                             {
-                                COperation _STATEMENT
+                                CategoryOperation _STATEMENT
                                 {
-                                    COperation RETURN
+                                    CategoryOperation RETURN
                                     {
-                                        CValue TValue 0
+                                        CategoryValue TValue 0
                                         {
                                         }
                                         {

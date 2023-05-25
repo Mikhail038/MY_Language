@@ -86,7 +86,7 @@ enum EJumpModes
 
 //==================================================================================================================================================================
 
-enum ERegisters
+enum Registers
 {
     rax = 0,
     rbx = 3,
@@ -100,7 +100,7 @@ enum ERegisters
 
 #define DELTA 10
 
-enum ERegisters_64
+enum Registers_64
 {
     r8  = DELTA + 0,
     r9  = DELTA + 1,
@@ -116,10 +116,10 @@ enum ERegisters_64
 #define A_REG  rbx
 #define B_REG  rcx
 
-#define eSHIFT_REG  r8
-#define eCOUNT_REG  r9
-#define eTOP_REG    r10
-#define eFUNC_REG   r11
+// #define ELF_SHIFT_REG  r8
+// #define eCOUNT_REG  r9
+// #define eTOP_REG    r10
+#define ELF_FUNC_RET_REG   r11
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -129,7 +129,7 @@ enum ERegisters_64
 
 //==================================================================================================================================================================
 
-typedef struct SElfBack
+typedef struct ElfBack
 {
     EFuncConditions     func_cond       = any_f;
     EVarTableConditions table_cond      = none;
@@ -148,22 +148,22 @@ typedef struct SElfBack
     std::unordered_map<const wchar_t*, TLabel> Labels;
 
 public:
-    SElfBack(FILE* ExFile, SNode* CurNode);
+    ElfBack(FILE* ExFile, SNode* CurNode);
 
-    ~SElfBack();
+    ~ElfBack();
 
-    SElfBack(SElfBack& Another) = delete;
-    SElfBack(SElfBack&&  Another) = delete;
-
-    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    void x86_push_i (const int Number);
-    void x86_push_r (const int Register);
-    void x86_push_IrI (const int Register);
+    ElfBack(ElfBack& Another) = delete;
+    ElfBack(ElfBack&&  Another) = delete;
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_pop_r (int Register);
+    void x86_push_imm (const int Number);
+    void x86_push_reg (const int Register);
+    void x86_push_from_addr_in_reg (const int Register);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_pop_to_reg (int Register);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -189,7 +189,7 @@ public:
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_cmp_r_r    (int dstReg, int srcReg);
+    void x86_cmp_reg_reg    (int dstReg, int srcReg);
     void x86_cmp_stack  ();
 
     //------------------------  -----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -201,24 +201,24 @@ public:
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_mov_r_r    (const int dstReg, const int srcReg);
-    void x86_mov_r_i    (const int dstReg, const int Number);
-    void x86_mov_r_IrI  (const int dstReg, const int srcReg);
-    void x86_mov_r_Ir_iI(const int dstReg, const int srcReg, int Shift);
-    void x86_mov_IrI_r  (const int dstReg, const int srcReg);
-    void x86_mov_r_IiI  (int dstReg, int MemAddr);
+    void x86_mov_reg_reg    (const int dstReg, const int srcReg);
+    void x86_mov_reg_imm    (const int dstReg, const int Number);
+    void x86_mov_to_reg_from_addr_in_reg  (const int dstReg, const int srcReg);
+    void x86_mov_to_reg_from_addr_in_reg_with_imm(const int dstReg, const int srcReg, int Shift);
+    void x86_mov_to_addr_in_reg_from_reg  (const int dstReg, const int srcReg);
+    void x86_mov_to_reg_from_imm_addr  (int dstReg, int MemAddr);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_add_r_r (int dstReg, int SrcReg);
+    void x86_add_reg_reg (int dstReg, int SrcReg);
 
     void x86_add_stack ();
-    void x86_add_i (const int Register, const int Number);
+    void x86_add_reg_imm (const int Register, const int Number);
 
-    void x86_sub_r_r (int dstReg, int SrcReg);
+    void x86_sub_reg_reg (int dstReg, int SrcReg);
 
     void x86_sub_stack ();
-    void x86_sub_i (const int Register, const int Number);
+    void x86_sub_reg_imm (const int Register, const int Number);
 
     void x86_imul_stack ();
     void x86_idiv_stack ();
@@ -233,23 +233,23 @@ public:
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86___DstSrc_config    (int& dstReg, int& srcReg);
-    void x86___Dst_config       (int& dstReg);
+    void x86_macro_dest_src_config    (int& dstReg, int& srcReg);
+    void x86_macro_destination_config       (int& dstReg);
 
-    void x86___Regs_config  (const int dstReg, const int srcReg);
-    void x86___Reg_config   (const int Reg, const int ZeroPoint);
+    void x86_macro_two_registers_config  (const int dstReg, const int srcReg);
+    void x86_macro_one_register_config   (const int Reg, const int ZeroPoint);
 
-    void x86___End ();
-
-    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    void x86___paste_call_label (const wchar_t* Name);
-    void x86___paste_jump_label (const wchar_t* Name);
+    void x86_macro_exit ();
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86___make_inp_func ();
-    void x86___make_out_func ();
+    void x86_macro_paste_call_label (const wchar_t* Name);
+    void x86_macro_paste_jump_label (const wchar_t* Name);
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_macro_make_input_func ();
+    void x86_macro_make_output_func ();
 
     void x86_write_new_line ();
 
@@ -274,8 +274,8 @@ public:
     void elf_generate_expression (SNode* CurNode);
     void elf_generate_postorder (SNode* CurNode, bool RetValueMarker);
 
-    void elf_rax_var_value      (SNode* CurNode);
-    void elf_rax_var_address    (SNode* CurNode);
+    void elf_set_rax_var_value      (SNode* CurNode);
+    void elf_set_rax_var_address    (SNode* CurNode);
 
     void elf_generate_pop_var   (SNode* CurNode);
     void elf_generate_push_var  (SNode* CurNode);
@@ -283,7 +283,7 @@ public:
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     void elf_push_parameters (SNode* CurNode);
-    void elf_delete_parameters (SNode* CurNode);
+    void elf_delete_function_parameters (SNode* CurNode);
 
     void elf_pop_parameters ();
 
@@ -294,11 +294,11 @@ public:
     void elf_write_command (ECommandNums eCommand, FILE* File);
 
     void elf_add_to_var_table (SNode* CurNode, bool ParamMarker);
-    void elf_create_new_var_table (SNode* CurNode, bool ParamMarker);
+    void elf_create_new_var_table (bool ParamMarker);
     void elf_create_param_var_table (SNode* CurNode);
     void elf_delete_var_table ();
 
-    size_t elf_find_new_vars    (SNode* CurNode);
+    size_t elf_find_all_new_vars    (SNode* CurNode);
     size_t elf_find_new_var     (SNode* CurNode);
 
     int elf_find_var (SNode* CurNode);
@@ -315,7 +315,7 @@ public:
 
 #define ELF_BACK_FUNC_HEAD_PARAMETERS SNode* CurNode, SElfBack* Back
 
-#define ELF_CLEAN_TABLE if (table_cond != none) { elf_delete_var_table (); table_cond = exist; }
+#define ELF_CLEAN_TABLE() if (table_cond != none) { elf_delete_var_table (); table_cond = exist; }
 
 //==================================================================================================================================================================
 
@@ -329,6 +329,6 @@ void create_elf_body (SNode* Root, FILE* ExFile);
 
 //===================================================================================================================================================================
 
-void make_label_to_jump (wchar_t* Label_name, size_t Address);
+void prepare_name_label_to_jump (wchar_t* Label_name, size_t Address);
 
 //===================================================================================================================================================================

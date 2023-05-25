@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include "colors.h"
 
+#include <errno.h>
+
 #define LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
 
 #define DOTXT(Message) #Message
@@ -12,8 +14,8 @@
 #define MCP(Message)                                                                                       \
         do                                                                                                 \
         {                                                                                                  \
-            fprintf (stderr, KNRM "Failed check " KRED Kbright DOTXT (Message) " "                              \
-            KNRM "in " KYLW "%s" KNRM " in " KWHT Kunderscore "%s:%d\n" KNRM,                              \
+            fprintf (stderr, KNRM "errno [%d] Failed check " KRED Kbright DOTXT (Message) " "                              \
+            KNRM "in " KYLW "%s" KNRM " in " KWHT Kunderscore "%s:%d\n" KNRM, errno,                             \
              __PRETTY_FUNCTION__, __FILE__, __LINE__ );                                                    \
         } while (0)
 
@@ -28,7 +30,7 @@
             }                                         \
         } while (0)
 
-#define MLA(Condition)                                \
+#define MY_LOUD_ASSERT(Condition)                                \
         do                                            \
         {                                             \
             if (!(Condition))                         \
@@ -44,7 +46,7 @@
             if (!(Condition))                         \
             {                                         \
                 MCP (Condition);                      \
-                wprintf (L"==[%d] %d %d==\n", Tokens->number, Tokens->TokenArr[Tokens->number].category, Tokens->TokenArr[Tokens->number].type); \
+                wprintf (L"==[%d] %d %d==\n", Tokens->number, Tokens->array[Tokens->number].category, Tokens->array[Tokens->number].type); \
                 exit (0);                             \
             }                                         \
         } while (0)

@@ -43,19 +43,19 @@
 
 //=============================================================================================================================================================================
 
-void SElfBack::set_hex_int (int Number)
+void ElfBack::set_hex_int (int Number)
 {
     SET_4(Number);
 }
 
-void SElfBack::set_hex_long (long Address)
+void ElfBack::set_hex_long (long Address)
 {
     SET_8(Address);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_push_i (int Number)
+void ElfBack::x86_push_imm (int Number)
 {
     if (Number <= 127)
     {
@@ -71,7 +71,7 @@ void SElfBack::x86_push_i (int Number)
     set_hex_int (Number);
 }
 
-void SElfBack::x86_push_r (int Register)
+void ElfBack::x86_push_reg (int Register)
 {
     if (Register >= DELTA)
     {
@@ -79,10 +79,10 @@ void SElfBack::x86_push_r (int Register)
         Register-= DELTA;
     }
 
-    x86___Reg_config(Register, 0x50);
+    x86_macro_one_register_config(Register, 0x50);
 }
 
-void SElfBack::x86_push_IrI (int Register)
+void ElfBack::x86_push_from_addr_in_reg (int Register)
 {
     if (Register >= DELTA)
     {
@@ -92,12 +92,12 @@ void SElfBack::x86_push_IrI (int Register)
 
     SET(0xff);
 
-    x86___Reg_config(Register, 0x30);
+    x86_macro_one_register_config(Register, 0x30);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_pop_r (int Register)
+void ElfBack::x86_pop_to_reg (int Register)
 {
     if (Register >= DELTA)
     {
@@ -105,35 +105,35 @@ void SElfBack::x86_pop_r (int Register)
         Register-= DELTA;
     }
 
-    x86___Reg_config(Register, 0x58);
+    x86_macro_one_register_config(Register, 0x58);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-void SElfBack::x86_mov_r_r (int dstReg, int srcReg)
+void ElfBack::x86_mov_reg_reg (int dstReg, int srcReg)
 {
-    x86___DstSrc_config(dstReg, srcReg);
+    x86_macro_dest_src_config(dstReg, srcReg);
 
     SET(0x89);
 
-    x86___Regs_config(dstReg, srcReg);
+    x86_macro_two_registers_config(dstReg, srcReg);
 }
 
-void SElfBack::x86_mov_r_i (int dstReg, int Number)
+void ElfBack::x86_mov_reg_imm (int dstReg, int Number)
 {
-    x86___Dst_config(dstReg);
+    x86_macro_destination_config(dstReg);
 
     SET(0xc7);
 
-    x86___Reg_config(dstReg, 0xc0);
+    x86_macro_one_register_config(dstReg, 0xc0);
 
     set_hex_int(Number);
 }
 
-void SElfBack::x86_mov_r_IrI (int dstReg, int srcReg)
+void ElfBack::x86_mov_to_reg_from_addr_in_reg (int dstReg, int srcReg)
 {
-    x86___DstSrc_config(dstReg, srcReg);
+    x86_macro_dest_src_config(dstReg, srcReg);
 
     SET(0x8b);
 
@@ -167,9 +167,9 @@ void SElfBack::x86_mov_r_IrI (int dstReg, int srcReg)
     SET(opcode);
 }
 
-void SElfBack::x86_mov_IrI_r (int dstReg, int srcReg)
+void ElfBack::x86_mov_to_addr_in_reg_from_reg (int dstReg, int srcReg)
 {
-    x86___DstSrc_config(dstReg, srcReg);
+    x86_macro_dest_src_config(dstReg, srcReg);
 
     SET(0x89);
 
@@ -180,9 +180,9 @@ void SElfBack::x86_mov_IrI_r (int dstReg, int srcReg)
     SET(opcode);
 }
 
-void SElfBack::x86_mov_r_IiI (int dstReg, int MemAddr)
+void ElfBack::x86_mov_to_reg_from_imm_addr (int dstReg, int MemAddr)
 {
-    x86___Dst_config(dstReg);
+    x86_macro_destination_config(dstReg);
 
     SET(0x8b);
 
@@ -194,12 +194,11 @@ void SElfBack::x86_mov_r_IiI (int dstReg, int MemAddr)
     set_hex_int(MemAddr);
 }
 
-
-#define BORDER_SHORT 128
-
-void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
+void ElfBack::x86_mov_to_reg_from_addr_in_reg_with_imm (int dstReg, int srcReg, int Shift)
 {
-    x86___DstSrc_config(dstReg, srcReg);
+    const int BORDER_SHORT = 128;
+
+    x86_macro_dest_src_config(dstReg, srcReg);
 
     SET(0x8b);
 
@@ -270,89 +269,89 @@ void SElfBack::x86_mov_r_Ir_iI (int dstReg, int srcReg, int Shift)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_add_r_r (int dstReg, int SrcReg)
+void ElfBack::x86_add_reg_reg (int dstReg, int SrcReg)
 {
-    x86___DstSrc_config(dstReg, SrcReg);
+    x86_macro_dest_src_config(dstReg, SrcReg);
 
     SET(0x01);
 
-    x86___Regs_config(dstReg, SrcReg);
+    x86_macro_two_registers_config(dstReg, SrcReg);
 }
 
-void SElfBack::x86_add_stack ()
+void ElfBack::x86_add_stack ()
 {
     int a_reg = A_REG;
     int b_reg = B_REG;
 
-    x86_pop_r(b_reg);
-    x86_pop_r(a_reg);
+    x86_pop_to_reg(b_reg);
+    x86_pop_to_reg(a_reg);
 
-    x86_add_r_r (a_reg, b_reg);
+    x86_add_reg_reg (a_reg, b_reg);
 
-    x86_push_r(a_reg);
+    x86_push_reg(a_reg);
 }
 
-void SElfBack::x86_sub_r_r (int dstReg, int SrcReg)
+void ElfBack::x86_sub_reg_reg (int dstReg, int SrcReg)
 {
-    x86___DstSrc_config(dstReg, SrcReg);
+    x86_macro_dest_src_config(dstReg, SrcReg);
 
     SET(0x29);
 
-    x86___Regs_config(dstReg, SrcReg);
+    x86_macro_two_registers_config(dstReg, SrcReg);
 }
 
-void SElfBack::x86_sub_stack ()
+void ElfBack::x86_sub_stack ()
 {
     int a_reg = A_REG;
     int b_reg = B_REG;
 
-    x86_pop_r(b_reg);
-    x86_pop_r(a_reg);
+    x86_pop_to_reg(b_reg);
+    x86_pop_to_reg(a_reg);
 
-    x86_sub_r_r(a_reg, b_reg);
+    x86_sub_reg_reg(a_reg, b_reg);
 
-    x86_push_r(a_reg);
+    x86_push_reg(a_reg);
 }
 
-void SElfBack::x86_imul_stack ()
+void ElfBack::x86_imul_stack ()
 {
     int a_reg = A_REG;
 
-    x86_pop_r(a_reg);
-    x86_pop_r(rax);
+    x86_pop_to_reg(a_reg);
+    x86_pop_to_reg(rax);
 
-    x86___Dst_config(a_reg);
+    x86_macro_destination_config(a_reg);
 
     SET(0xf7);
 
-    x86___Reg_config(a_reg, 0xe8);
+    x86_macro_one_register_config(a_reg, 0xe8);
 
-    x86_push_r(rax);
+    x86_push_reg(rax);
 }
 
-void SElfBack::x86_idiv_stack ()
+void ElfBack::x86_idiv_stack ()
 {
-    x86_mov_r_i(rdx, 0);
+    x86_mov_reg_imm(rdx, 0);
 
     int a_reg = A_REG;
 
-    x86_pop_r(a_reg);
-    x86_pop_r(rax);
+    x86_pop_to_reg(a_reg);
+    x86_pop_to_reg(rax);
 
-    x86___Dst_config(a_reg);
+    x86_macro_destination_config(a_reg);
 
     SET(0xf7);
 
-    x86___Reg_config(a_reg, 0xf8);
+    x86_macro_one_register_config(a_reg, 0xf8);
 
-    x86_push_r(rax);
+    x86_push_reg(rax);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_add_i (int Register, int Number)
+void ElfBack::x86_add_reg_imm (int Register, int Number)
 {
-    x86___Dst_config(Register);
+    x86_macro_destination_config(Register);
 
     if (Number <= 127)
     {
@@ -363,7 +362,7 @@ void SElfBack::x86_add_i (int Register, int Number)
         SET(0x81);
     }
 
-    x86___Reg_config(Register, 0xc0);
+    x86_macro_one_register_config(Register, 0xc0);
 
     if (Number <= 127)
     {
@@ -375,9 +374,9 @@ void SElfBack::x86_add_i (int Register, int Number)
     }
 }
 
-void SElfBack::x86_sub_i (int Register, int Number)
+void ElfBack::x86_sub_reg_imm (int Register, int Number)
 {
-    x86___Dst_config(Register);
+    x86_macro_destination_config(Register);
 
     if (Number <= 127)
     {
@@ -388,7 +387,7 @@ void SElfBack::x86_sub_i (int Register, int Number)
         SET(0x81);
     }
 
-    x86___Reg_config(Register, 0xe8);
+    x86_macro_one_register_config(Register, 0xe8);
 
     if (Number <= 127)
     {
@@ -402,27 +401,27 @@ void SElfBack::x86_sub_i (int Register, int Number)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_inc (int Register)
+void ElfBack::x86_inc (int Register)
 {
-    x86___Dst_config(Register);
+    x86_macro_destination_config(Register);
 
     SET(0xff);
 
-    x86___Reg_config(Register, 0xc0);
+    x86_macro_one_register_config(Register, 0xc0);
 }
 
-void SElfBack::x86_dec (int Register)
+void ElfBack::x86_dec (int Register)
 {
-    x86___Dst_config(Register);
+    x86_macro_destination_config(Register);
 
     SET(0xff);
 
-    x86___Reg_config(Register, 0xc8);
+    x86_macro_one_register_config(Register, 0xc8);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_call (int Shift)
+void ElfBack::x86_call (int Shift)
 {
     // std::cout << Shift << std::endl;
 
@@ -431,7 +430,7 @@ void SElfBack::x86_call (int Shift)
     set_hex_int(Shift - CALL_SIZE);
 }
 
-void SElfBack::x86_call_label (const wchar_t* Name)
+void ElfBack::x86_call_label (const wchar_t* Name)
 {
     #ifdef LABEL_OVERSEER
     fprintf (stdout, "call <%ls>:\n", Name);
@@ -474,7 +473,7 @@ void SElfBack::x86_call_label (const wchar_t* Name)
     }
 }
 
-void SElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
+void ElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
 {
     // if (my_find (Name) == true)
     if (Labels.find(Name) != Labels.end())
@@ -489,7 +488,7 @@ void SElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
                 JumpAddr += 1;
             }
 
-            x86_jump_norm (JumpAddr, JumpMode); //TODO maybe not
+            x86_jump_norm (JumpAddr, JumpMode); //norm is hardcoded here cause of not willing to fck with different operation size
 
             return;
         }
@@ -514,21 +513,21 @@ void SElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_nop ()
+void ElfBack::x86_nop ()
 {
     SET(0x90);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_ret ()
+void ElfBack::x86_ret ()
 {
     SET (0xc3);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_syscall ()
+void ElfBack::x86_syscall ()
 {
     SET (0x0f);
     SET (0x05);
@@ -536,26 +535,26 @@ void SElfBack::x86_syscall ()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_cmp_r_r (int dstReg, int srcReg)
+void ElfBack::x86_cmp_reg_reg (int dstReg, int srcReg)
 {
-    x86___DstSrc_config(dstReg, srcReg);
+    x86_macro_dest_src_config(dstReg, srcReg);
 
     SET(0x39);
 
-    x86___Regs_config(dstReg, srcReg);
+    x86_macro_two_registers_config(dstReg, srcReg);
 }
 
-void SElfBack::x86_cmp_stack ()
+void ElfBack::x86_cmp_stack ()
 {
-    x86_pop_r(B_REG); //TODO maybe other order
-    x86_pop_r(A_REG);   // definitely other
+    x86_pop_to_reg(B_REG);
+    x86_pop_to_reg(A_REG);
 
-    x86_cmp_r_r (A_REG, B_REG);
+    x86_cmp_reg_reg (A_REG, B_REG);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86_jump_any (int Shift, int JumpMode)
+void ElfBack::x86_jump_any (int Shift, int JumpMode)
 {
     if ((Shift < 100) && (Shift > -100))
     {
@@ -569,7 +568,7 @@ void SElfBack::x86_jump_any (int Shift, int JumpMode)
     }
 }
 
-void SElfBack::x86_jump_norm (int Shift, int JumpMode)
+void ElfBack::x86_jump_norm (int Shift, int JumpMode)
 {
     switch (JumpMode)
     {
@@ -628,7 +627,7 @@ void SElfBack::x86_jump_norm (int Shift, int JumpMode)
             break;
 
         default:
-            MLA(0);
+            MY_LOUD_ASSERT(0);
     }
 
     // int current_jump_size = NORM_JUMP_SIZE;
@@ -640,7 +639,7 @@ void SElfBack::x86_jump_norm (int Shift, int JumpMode)
     set_hex_int(Shift - NORM_JUMP_SIZE);
 }
 
-void SElfBack::x86_jump_near (int Shift, int JumpMode)
+void ElfBack::x86_jump_near (int Shift, int JumpMode)
 {
     switch (JumpMode)
     {
@@ -689,7 +688,7 @@ void SElfBack::x86_jump_near (int Shift, int JumpMode)
             break;
 
         default:
-            MLA(0);
+            MY_LOUD_ASSERT(0);
     }
 
     char offset = 0x00;
@@ -701,21 +700,21 @@ void SElfBack::x86_jump_near (int Shift, int JumpMode)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86___make_inp_func ()
+void ElfBack::x86_macro_make_input_func () // TODO too large
 {
-    x86___paste_call_label(INP_LBL);
+    x86_macro_paste_call_label(INP_LBL);
 
-    x86_mov_r_r(r14, rax);
+    x86_mov_reg_reg(r14, rax);
 
     // x86_mov_r_i(rax, 3);
     // x86_mov_r_i(rbx, 0);
     // x86_mov_r_i(rdx, 16);
 
     // mov rdi, 0x0      ; file descriptor = stdin = 0
-    x86_mov_r_i(rdi, 0);
+    x86_mov_reg_imm(rdi, 0);
 
     // mov rdx, 0xa      ; number of bytes to read
-    x86_mov_r_i(rdx, 0x0a);
+    x86_mov_reg_imm(rdx, 0x0a);
 
     // lea rsi, [rsp+8]  ; buffer = address to store the bytes read
     SET(0x48);
@@ -725,7 +724,7 @@ void SElfBack::x86___make_inp_func ()
     SET(0x08);
 
     // mov rax, 0x0      ; SYSCALL number for reading from STDIN
-    x86_mov_r_i(rax, 0);
+    x86_mov_reg_imm(rax, 0);
 
     // syscall
     x86_syscall();  //read
@@ -743,12 +742,12 @@ void SElfBack::x86___make_inp_func ()
     SET(0x08);
 
     // mov rax, 0x0      ; initialize the counter which stores the number of bytes in the string representation of the integer
-    x86_mov_r_i(rax, 0);
+    x86_mov_reg_imm(rax, 0);
 
-    x86_mov_r_i(rbx, 0);
+    x86_mov_reg_imm(rbx, 0);
 
 
-    x86___paste_jump_label(L"_in_convert");
+    x86_macro_paste_jump_label(L"_in_convert");
 
     // mov dl, [rsi]
     SET(0x8a);
@@ -761,7 +760,7 @@ void SElfBack::x86___make_inp_func ()
 
     x86_jump_label(L"_in_done", je_);
 
-    x86_sub_i(rdx, '0');
+    x86_sub_reg_imm(rdx, '0');
 
     // and rdx, 0xff
     // SET(0x48);
@@ -771,24 +770,24 @@ void SElfBack::x86___make_inp_func ()
     // SET(0x00);
     // SET(0x00);
 
-    x86_push_r(rdx);
+    x86_push_reg(rdx);
 
-    x86_mov_r_r(rbx, rax);
+    x86_mov_reg_reg(rbx, rax);
 
     // imul eax, 10
-    x86_mov_r_i(rax, 10);
-    x86_push_r(rax);
+    x86_mov_reg_imm(rax, 10);
+    x86_push_reg(rax);
 
-    x86_mov_r_r(rax, rbx);
-    x86_push_r(rax);
+    x86_mov_reg_reg(rax, rbx);
+    x86_push_reg(rax);
 
     x86_imul_stack();
-    x86_pop_r(rax);
+    x86_pop_to_reg(rax);
 
-    x86_pop_r(rdx);
+    x86_pop_to_reg(rdx);
     // x86_sub_i(rdx, '0'); !!!
 
-    x86_add_r_r(rax, rdx);
+    x86_add_reg_reg(rax, rdx);
 
     x86_inc(rsi);
     x86_jump_label(L"_in_convert", jmp_);
@@ -798,25 +797,25 @@ void SElfBack::x86___make_inp_func ()
 
     //TOO inp
 
-    x86___paste_jump_label(L"_in_done");
+    x86_macro_paste_jump_label(L"_in_done");
 
-    x86_mov_IrI_r(r14, rax);
+    x86_mov_to_addr_in_reg_from_reg(r14, rax);
 
     // x86_write_new_line();
 
     x86_ret();
 }
 
-void SElfBack::x86_write_new_line ()
+void ElfBack::x86_write_new_line ()
 {
     // mov rdi, 0x1      ; file descriptor = stdout
-    x86_mov_r_i(rdi, 1);
+    x86_mov_reg_imm(rdi, 1);
 
     // mov rdx, 0x1      ; number of bytes to write
-    x86_mov_r_i(rdx, 0x01);
+    x86_mov_reg_imm(rdx, 0x01);
 
     // mov rax, 0xa      ; move the new line character to rax
-    x86_mov_r_i(rax, 0x0a);
+    x86_mov_reg_imm(rax, 0x0a);
 
     //  mov [rsp+8], rax  ; put this on the stack
     SET(0x48);
@@ -833,29 +832,29 @@ void SElfBack::x86_write_new_line ()
     SET(0x08);
 
     //  ; SYSCALL number for writing to STDOUT
-    x86_mov_r_i(rax, 0x01);
+    x86_mov_reg_imm(rax, 0x01);
 
     // syscall
     x86_syscall();  //write
 }
 
-void SElfBack::x86___make_out_func ()
+void ElfBack::x86_macro_make_output_func () // TODO too large
 {
-    x86___paste_call_label(OUT_LBL);
+    x86_macro_paste_call_label(OUT_LBL);
 
     //  xor  rdx, rdx     ; Clear rdx which stores obtains a single digit of the number to convert to ASCII bytes
-    x86_mov_r_i(rdx, 0);
+    x86_mov_reg_imm(rdx, 0);
 
     //  mov  r8, 0x0      ; Initialize the counter containing the number of digits
-    x86_mov_r_i(r8, 0);
+    x86_mov_reg_imm(r8, 0);
 
     // //  pop  rax          ; Pop the read number from the stack
     // x86_pop_r(rax);
 
     //  mov  rbx, 0xa     ; We store the divisor which is 10 for decimals (base-10) in rbx. rbx will be the divisor.
-    x86_mov_r_i(rbx, 0x0a);
+    x86_mov_reg_imm(rbx, 0x0a);
 
-    x86___paste_jump_label(L"_out_next");
+    x86_macro_paste_jump_label(L"_out_next");
 
     //  div  rbx          ; Divide the number in rdx:rax by rbx to get the remainder in rdx
     SET(0x48);
@@ -863,44 +862,44 @@ void SElfBack::x86___make_out_func ()
     SET(0xf3);
 
     //  add  rdx, 0x30    ; Add 0x30 to get the ASCII byte equivalent of the remainder which is the digit in the number to be written to display.
-    x86_add_i(rdx, '0');
+    x86_add_reg_imm(rdx, '0');
 
     //  push rdx          ; Push this byte to the stack. We do this because, we get the individial digit bytes in reverse order. So to reverse the order we use the stack
-    x86_push_r(rdx);
+    x86_push_reg(rdx);
 
     //  xor  rdx, rdx     ; Clear rdx preparing it for next division
-    x86_mov_r_i(rdx, 0);
+    x86_mov_reg_imm(rdx, 0);
 
     //  inc  r8           ; Increment the digits counter
     x86_inc (r8);
 
     //  cmp  rax, 0x0     ; Continue until the number becomes 0 when there are no more digits to write to the console.
-    x86_cmp_r_r(rax, rdx);
+    x86_cmp_reg_reg(rax, rdx);
 
     //  jne  wnext        ; Loop until there aren't any more digits.
     x86_jump_label(L"_out_next", jne_);
 
     // popnext:
-    x86___paste_jump_label(L"_out_popnext");
+    x86_macro_paste_jump_label(L"_out_popnext");
 
     // cmp  r8, 0x0      ; Check if the counter which contains the number of digits to write is 0
-    x86_mov_r_i (rcx, 0);
-    x86_cmp_r_r (r8, rcx);
+    x86_mov_reg_imm (rcx, 0);
+    x86_cmp_reg_reg (r8, rcx);
 
     // jle  endw         ; If so there are no more digits to write
     x86_jump_label(L"_out_done", jle_);
 
     // mov  rdx, 0x1     ; number of bytes to write
-    x86_mov_r_i (rdx, 1);
+    x86_mov_reg_imm (rdx, 1);
 
     // mov  rsi, rsp     ; buffer = address to write to console
-    x86_mov_r_r (rsi, rsp);
+    x86_mov_reg_reg (rsi, rsp);
 
     // mov  rdi, 0x1     ; file descriptor = stdout
-    x86_mov_r_i (rdi, 1);
+    x86_mov_reg_imm (rdi, 1);
 
     // mov  rax, 0x1     ; SYSCALL number for writing to STDOUT
-    x86_mov_r_i (rax, 1);
+    x86_mov_reg_imm (rax, 1);
 
     // syscall           ; make the syscall
     x86_syscall();
@@ -909,12 +908,12 @@ void SElfBack::x86___make_out_func ()
     x86_dec(r8);
 
     // pop  rbx          ; Pop the current digit that was already written to the display preparing the stack pointer for next digit.
-    x86_pop_r(rbx);
+    x86_pop_to_reg(rbx);
 
     // jmp  popnext      ; Loop until the counter which contains the number of digits goes down to 0.
     x86_jump_label(L"_out_popnext", jmp_);
 
-    x86___paste_jump_label(L"_out_done");
+    x86_macro_paste_jump_label(L"_out_done");
 
     x86_write_new_line();
 
@@ -923,7 +922,7 @@ void SElfBack::x86___make_out_func ()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86___paste_call_label (const wchar_t* Name)
+void ElfBack::x86_macro_paste_call_label (const wchar_t* Name)
 {
     #ifdef LABEL_OVERSEER
     fprintf (stdout, "paste |%ls|:\n", Name);
@@ -957,11 +956,11 @@ void SElfBack::x86___paste_call_label (const wchar_t* Name)
         fprintf (stdout, "|not called|:\n", Name);
         #endif
 
-        Labels.insert({Name, {cur_addr}});   //TODO fix this
+        Labels.insert({Name, {cur_addr}});
     }
 }
 
-void SElfBack::x86___paste_jump_label (const wchar_t* Name)
+void ElfBack::x86_macro_paste_jump_label (const wchar_t* Name)
 {
     if (Labels.find(Name) != Labels.end())
     {
@@ -988,7 +987,7 @@ void SElfBack::x86___paste_jump_label (const wchar_t* Name)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86___DstSrc_config (int& dstReg, int& srcReg)
+void ElfBack::x86_macro_dest_src_config (int& dstReg, int& srcReg)
 {
     if ((srcReg >= DELTA) && (dstReg >= DELTA))
     {
@@ -1012,7 +1011,7 @@ void SElfBack::x86___DstSrc_config (int& dstReg, int& srcReg)
     }
 }
 
-void SElfBack::x86___Dst_config (int& dstReg)
+void ElfBack::x86_macro_destination_config (int& dstReg)
 {
     if (dstReg >= DELTA)
     {
@@ -1025,7 +1024,7 @@ void SElfBack::x86___Dst_config (int& dstReg)
     }
 }
 
-void SElfBack::x86___Regs_config(const int dstReg, const int srcReg)
+void ElfBack::x86_macro_two_registers_config(const int dstReg, const int srcReg)
 {
     char opcode = 0xc0;
     opcode += (char) dstReg;
@@ -1034,7 +1033,7 @@ void SElfBack::x86___Regs_config(const int dstReg, const int srcReg)
     SET(opcode);
 }
 
-void SElfBack::x86___Reg_config(const int Reg, const int ZeroPoint)
+void ElfBack::x86_macro_one_register_config(const int Reg, const int ZeroPoint)
 {
     char opcode = ZeroPoint;
     opcode += (char) Reg;
@@ -1044,15 +1043,15 @@ void SElfBack::x86___Reg_config(const int Reg, const int ZeroPoint)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SElfBack::x86___End ()
+void ElfBack::x86_macro_exit ()
 {
-    x86_mov_r_i(rax, 0x3c);
-    x86_mov_r_i(rdi, 0);
+    x86_mov_reg_imm(rax, 0x3c);
+    x86_mov_reg_imm(rdi, 0);
 
     x86_syscall ();
 }
 
-const wchar_t* SElfBack::my_find (const wchar_t* Name)
+const wchar_t* ElfBack::my_find (const wchar_t* Name)
 {
     for (auto iterator = Labels.begin(); iterator != Labels.end(); ++iterator)
     {

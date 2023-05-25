@@ -4,29 +4,29 @@
 
 //=============================================================================================================================================================================
 #include <cstddef>
-#define TKN_IS_OP       TKN.category = COperation
+#define TKN_IS_OP       TOKEN.category = CategoryOperation
 
 #include "stackT.h"
 
 //=============================================================================================================================================================================
 
-#define TKN_IS_OP       TKN.category = COperation
+#define TKN_IS_OP       TOKEN.category = CategoryOperation
 
-#define TKN_IS_WORD (TKN.category == CLine && TKN.type == TVariable)
+#define TKN_IS_WORD (TOKEN.category == CategoryLine && TOKEN.type == TypeVariable)
 
-#define TKN_OP_AND_IS__ TKN.category == COperation && TKN.type ==
+#define TKN_OP_AND_IS__ TOKEN.category == CategoryOperation && TOKEN.type ==
 
 #define CHECK_SYNTAX(tkn_type)  \
     MTokAss (TKN_OP_AND_IS__ tkn_type); \
     NEXT_TKN;
 
-#define TKN         Tokens->TokenArr[Tokens->number]
-#define TKN_ARGS    TKN.category, TKN.type, TKN.data
+#define TOKEN         Tokens->array[Tokens->number]
+#define TOKEN_ARGS    TOKEN.category, TOKEN.type, TOKEN.data
 
 #define NEXT_TKN    Tokens->number++; \
     if (Tokens->number >= Tokens->size + 1) \
     { \
-        wprintf (L"Error!!!\n"); /*TODO remove*/\
+        fwprintf (stderr, L"Wrong syntax!!!\n"); \
         return NULL; \
     } \
 
@@ -34,13 +34,13 @@
 #define FUNC    Funcs->Arr[counter]
 
 //TODO think about add flag here
-#define FUNC_HEAD_ARGUMENTS STokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker, bool* PrintFlag
+#define FUNC_HEAD_ARGUMENTS AllTokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker, bool* PrintFlag
 #define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker, PrintFlag
 
-#define SHOUT   \
+#define TOKEN_FUNC_DEBUG_INFO   \
     if (*PrintFlag) \
     {   \
-        wprintf (L"=[%d/%d] %s %s:%d\n", Tokens->number, Tokens->size, LOCATION);    \
+        fwprintf (stderr, L"=[%d/%d] %s %s:%d\n", Tokens->number, Tokens->size, LOCATION);    \
     }
 
 #define LEXEM_IS(str) \
@@ -50,10 +50,14 @@
 
 #define FORBIDDEN_TERMINATING_SYMBOL "@"
 
-#define VAR_TABLE_CAPACITY 30
+const int VAR_TABLE_CAPACITY = 30;
+// #define VAR_TABLE_CAPACITY 30
 
-#define MAX_VARS_ARRAY  50
-#define MAX_FUNCS_ARRAY 50
+const int MAX_VARS_ARRAY = 50;
+// #define MAX_VARS_ARRAY  50
+
+const int MAX_FUNCS_ARRAY = 50;
+// #define MAX_FUNCS_ARRAY 50
 
 //===================================================================================================================================================================
 
@@ -73,19 +77,19 @@ typedef struct
     CharT* Arr = NULL;
     size_t size = 0;
 }
-SSrc;
+CodeSource;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SSrc* construct_source (SSrc* Source, FILE* SourceText);
+CodeSource* construct_source (CodeSource* Source, FILE* SourceText);
 
 //===================================================================================================================================================================
 //seekers//
 //===================================================================================================================================================================
 
-void seek (SSrc* Source);
+void seek (CodeSource* Source);
 
-void seek_out (SSrc* Source);
+void seek_out (CodeSource* Source);
 
 //===================================================================================================================================================================
 //lexer//
@@ -100,50 +104,50 @@ typedef union
 #define DEF_OP(d_type, ...) \
     d_type,
 
-enum ETokenType
+enum TokenType
 {
     #include "Operations.h"
 };
 #undef DEF_OP
 
-enum ECategory
+enum Category
 {
-    CValue     = 0,
-    CLine      = 1,
-    COperation = 2
+    CategoryValue     = 0,
+    CategoryLine      = 1,
+    CategoryOperation = 2
 };
 
 typedef struct
 {
-    ECategory  category = CValue;
-    ETokenType type     = TValue;
+    Category  category = CategoryValue;
+    TokenType type     = TValue;
     UData      data     = {};
 }
-SToken;
+Token;
 
 typedef struct
 {
     int     number;
     int     size;
-    SToken* TokenArr;
+    Token*  array;
 }
-STokens;
+AllTokens;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-STokens* lex_src (SSrc* Source, bool* PrintFlag);
+AllTokens* lex_src (CodeSource* Source, bool* PrintFlag);
 
-void make_lexem (SSrc* Source, CharT** Lexem);
+void make_lexem (CodeSource* Source, CharT** Lexem);
 
-int do_token (SSrc* Source,  STokens* Tokens, bool* PrintFlag);
+int do_token (CodeSource* Source,  AllTokens* Tokens, bool* PrintFlag);
 
-int parse_token (CharT* Lexem, STokens* Tokens, bool* PrintFlag);
+int parse_token (CharT* Lexem, AllTokens* Tokens, bool* PrintFlag);
 
-void print_tokens (STokens* Tokens, bool* PrintFlag);
+void print_tokens (AllTokens* Tokens, bool* PrintFlag);
 
-// void print_token (SToken* Token);
+// void print_token (Token* CurToken);
 
-void destruct_tokens (STokens* Tokens);
+void destruct_tokens (AllTokens* Tokens);
 
 //=============================================================================================================================================================================
 //number parsers//
@@ -163,8 +167,8 @@ typedef struct SNode
 {
     SNode*      left     = NULL;
     SNode*      right    = NULL;
-    ECategory   category = CValue;
-    ETokenType  type     = TValue;
+    Category   category = CategoryValue;
+    TokenType  type     = TValue;
     UData       data     = {};
     SNode*      parent   = NULL;
 }
@@ -257,9 +261,9 @@ void destruct_funcs_table (SFuncs* Funcs, bool* PrintFlag);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SNode* construct_op_node (ETokenType Type);
+SNode* construct_op_node (TokenType Type);
 
-SNode* construct_var_node (SToken* Token);
+SNode* construct_var_node (Token* CurToken);
 
 SNode* construct_val_node (ValT Value);
 
