@@ -10,3 +10,6 @@ proc
 .cache/*
 *.png
 ger
+exec
+build.cpp
+ger
