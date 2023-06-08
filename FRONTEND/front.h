@@ -139,7 +139,7 @@ AllTokens* lex_src (CodeSource* Source, bool* PrintFlag);
 
 void make_lexem (CodeSource* Source, CharT** Lexem);
 
-int do_token (CodeSource* Source,  AllTokens* Tokens, bool* PrintFlag);
+int create_token (CodeSource* Source,  AllTokens* Tokens, bool* PrintFlag);
 
 int parse_token (CharT* Lexem, AllTokens* Tokens, bool* PrintFlag);
 

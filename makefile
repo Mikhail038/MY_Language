@@ -76,7 +76,7 @@ BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(
 $(VR_OBJ_F)/front_file_print.o: $(VR_SRC_F)/front_file_print.cpp
 	$(VR_COMPILER) -c -o  $(VR_OBJ_F)/front_file_print.o $(VR_SRC_F)/front_file_print.cpp $(VR_FLAGS)
 
-$(VR_OBJ_F)/front.o: $(VR_SRC_F)/front_graph_viz.cpp
+$(VR_OBJ_F)/front_graph_viz.o: $(VR_SRC_F)/front_graph_viz.cpp
 	$(VR_COMPILER) -c -o  $(VR_OBJ_F)/front_graph_viz.o $(VR_SRC_F)/front_graph_viz.cpp $(VR_FLAGS)
 
 $(VR_OBJ_F)/front.o: $(VR_SRC_F)/front.cpp

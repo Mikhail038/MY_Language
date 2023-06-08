@@ -35,33 +35,34 @@
 
 //=============================================================================================================================================================================
 
-ElfBack::ElfBack(FILE* ExFile, AstNode* Root)
+void construct_elf_back (ElfBack* Back, FILE* ExFile)
 {
-    Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
-    Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
-    Funcs->top_index = 0;
+    Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
+    Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
+    Back->Funcs->top_index = 0;
 
-    VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
+    Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
-    file = ExFile;
+    Back->file = ExFile;
 
-    table_cond = none;
+    Back->table_cond = none;
 
-    stack_constructor (VarStack, 4);
+    stack_constructor (Back->VarStack, 4);
 
-    Array = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
-    cur_addr = 0;
+    Back->Array = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
+    Back->cur_addr = 0;
 }
 
-ElfBack::~ElfBack()
+void destruct_elf_back (ElfBack* Back)
 {
-    free_tables (VarStack);
+    free_tables (Back->VarStack);
 
-    free (Funcs->Table);
-    free (Funcs);
+    free (Back->Funcs->Table);
+    free (Back->Funcs);
 
-    free (Array);
+    free (Back->Array);
 }
+
 
 //=============================================================================================================================================================================
 
@@ -72,11 +73,13 @@ void make_elf_file (AstNode* Root, FILE* ExFile)
 {
     MY_LOUD_ASSERT (ExFile != NULL);
 
-    ElfBack Back {ExFile, Root};
+    ElfBack Back;
+
+    construct_elf_back (&Back, ExFile);
 
     //generate_user_functions (Root, Back);
 
-    Back.generate_elf_array(Root);
+    generate_elf_array (&Back, Root);
 
     fwrite (Back.Array, sizeof (char), Back.cur_addr, Back.file);
 
@@ -85,6 +88,8 @@ void make_elf_file (AstNode* Root, FILE* ExFile)
     //     printf ("'%ls'[%d]\n", Back->Funcs->Table[i]);
     // }
 
+    destruct_elf_back (&Back);
+
     return;
 }
 
@@ -92,7 +97,7 @@ void make_elf_file (AstNode* Root, FILE* ExFile)
 //Make ELF//
 //=============================================================================================================================================================================
 
-void ElfBack::elf_head_start ()
+void elf_head_start (ElfBack* Back)
 {
     SET_BYTE (0x7f); //MAGIC SIGNATURE
 
@@ -122,7 +127,7 @@ void ElfBack::elf_head_start ()
     FILL_4;     //nothing
 }
 
-void ElfBack::elf_head_start_params ()
+void elf_head_start_params (ElfBack* Back)
 {
     SET_BYTE (0x00); //Flags (no flags = 0)
     FILL_4;     //nothing
@@ -146,7 +151,7 @@ void ElfBack::elf_head_start_params ()
     SET_BYTE_2_BYTES(ShstrTabIndex);
 }
 
-void ElfBack::elf_head_program_header_params (const size_t FileVirtualAddress)
+void elf_head_program_header_params (ElfBack* Back, const size_t FileVirtualAddress)
 {
     SET_BYTE (0x01); //Segment type (load = 0)
     FILL_4;     //nothing
@@ -157,16 +162,16 @@ void ElfBack::elf_head_program_header_params (const size_t FileVirtualAddress)
     SET_BYTE (0x00); //Segment offset (0)
     FILL_8;     //nothing
 
-    memcpy ((size_t*) &(Array[cur_addr]),
+    memcpy ((size_t*) &(Back->Array[Back->cur_addr]),
             &FileVirtualAddress, sizeof (size_t));  //Virtual address
-    cur_addr += 8;
+    Back->cur_addr += 8;
 
-    memcpy ((size_t*) &(Array[cur_addr]),
+    memcpy ((size_t*) &(Back->Array[Back->cur_addr]),
             &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
-    cur_addr += 8;
+    Back->cur_addr += 8;
 }
 
-void ElfBack::elf_head_shstrtable ( size_t& SegmentSize, size_t& addrSegmentSize,
+void elf_head_shstrtable (ElfBack* Back, size_t& SegmentSize, size_t& addrSegmentSize,
                                     size_t& SegmentFileSize, size_t& addrSegmentFileSize,
                                     size_t& TableAddress, size_t& addrTableAddress,
                                     size_t& TableLoadAddress, size_t& addrTableLoadAddress,
@@ -180,14 +185,14 @@ void ElfBack::elf_head_shstrtable ( size_t& SegmentSize, size_t& addrSegmentSize
     PASTE_8(TableAddress, addrTableAddress);
 
     TableLoadAddress = TableAddress + FileVirtualAddress;
-    memcpy ((size_t*) &(Array[addrTableLoadAddress]),
+    memcpy ((size_t*) &(Back->Array[addrTableLoadAddress]),
     &TableLoadAddress, sizeof (size_t));
 
 
     SET_BYTE (0x00); //begin section header string table
 
-    TextNameOffset = cur_addr - SegmentSize;
-    memcpy ((unsigned int*) &(Array[addrTextNameOffset]),
+    TextNameOffset = Back->cur_addr - SegmentSize;
+    memcpy ((unsigned int*) &(Back->Array[addrTextNameOffset]),
     &TextNameOffset, sizeof (unsigned int));
 
     SET_BYTE ('.');
@@ -197,8 +202,8 @@ void ElfBack::elf_head_shstrtable ( size_t& SegmentSize, size_t& addrSegmentSize
     SET_BYTE ('t');
     SET_BYTE (0x00); //end
 
-    TableNameOffset = cur_addr - SegmentSize;
-    memcpy ((unsigned int*) &(Array[addrTableNameOffset]),
+    TableNameOffset = Back->cur_addr - SegmentSize;
+    memcpy ((unsigned int*) &(Back->Array[addrTableNameOffset]),
     &TableNameOffset, sizeof (unsigned int));
 
     SET_BYTE ('.');
@@ -213,9 +218,9 @@ void ElfBack::elf_head_shstrtable ( size_t& SegmentSize, size_t& addrSegmentSize
     SET_BYTE (0x00); //end
 }
 
-void ElfBack::generate_elf_array (AstNode* Root)
+void generate_elf_array (ElfBack* Back, AstNode* Root)
 {
-    elf_head_start ();
+    elf_head_start (Back);
 
     size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
 
@@ -225,13 +230,13 @@ void ElfBack::generate_elf_array (AstNode* Root)
 
     SKIP_8(SectionHeadersStart, addrSectionHeadersStart);
 
-    elf_head_start_params ();
+    elf_head_start_params (Back);
 
     //=======================================================================
 
     PASTE_8(ProgramHeadersStart, addrProgramHeadersStart);
 
-    elf_head_program_header_params (FileVirtualAddress);
+    elf_head_program_header_params (Back, FileVirtualAddress);
 
     SKIP_8(SegmentSize, addrSegmentSize);
 
@@ -269,8 +274,8 @@ void ElfBack::generate_elf_array (AstNode* Root)
     SET_BYTE (0x06); //Section flags (r w x )
     FILL_8;     //nothing
 
-    size_t addrAnotherEntryVA = cur_addr;
-    cur_addr += 8; //skip
+    size_t addrAnotherEntryVA = Back->cur_addr;
+    Back->cur_addr += 8; //skip
 
     SKIP_8(TextOffset, addrTextOffset);
 
@@ -320,11 +325,11 @@ void ElfBack::generate_elf_array (AstNode* Root)
     //=======================================================================
     //entry
 
-    EntryVA = cur_addr + FileVirtualAddress;
-    memcpy ((size_t*) &(Array[addrEntryVA]),
+    EntryVA = Back->cur_addr + FileVirtualAddress;
+    memcpy ((size_t*) &(Back->Array[addrEntryVA]),
     &EntryVA, sizeof (size_t));
 
-    memcpy ((size_t*) &(Array[addrAnotherEntryVA]),
+    memcpy ((size_t*) &(Back->Array[addrAnotherEntryVA]),
     &EntryVA, sizeof (size_t));
 
     //=======================================================================
@@ -334,18 +339,18 @@ void ElfBack::generate_elf_array (AstNode* Root)
 
     //----------------------------------------------------------------------
 
-    elf_generate_code (Root);
+    elf_generate_code (Back, Root);
 
     //----------------------------------------------------------------------
 
-    TextSize = cur_addr - TextOffset;
-    memcpy ((size_t*) &(Array[addrTextSize]),
+    TextSize = Back->cur_addr - TextOffset;
+    memcpy ((size_t*) &(Back->Array[addrTextSize]),
     &TextSize, sizeof (size_t));
 
     //=======================================================================
     //shstrtable
 
-    elf_head_shstrtable (SegmentSize, addrSegmentSize,
+    elf_head_shstrtable (Back, SegmentSize, addrSegmentSize,
                         SegmentFileSize, addrSegmentFileSize,
                         TableAddress, addrTableAddress,
                         TableLoadAddress, addrTableLoadAddress,
@@ -354,8 +359,8 @@ void ElfBack::generate_elf_array (AstNode* Root)
 
     //=======================================================================
 
-    TableSize = cur_addr - SegmentSize;
-    memcpy ((size_t*) &(Array[addrTableSize]),
+    TableSize = Back->cur_addr - SegmentSize;
+    memcpy ((size_t*) &(Back->Array[addrTableSize]),
     &TableSize, sizeof (size_t));
 
     return;
@@ -366,130 +371,130 @@ void ElfBack::generate_elf_array (AstNode* Root)
 
 #define BUFFER_SIZE 20
 
-void ElfBack::elf_generate_code (AstNode* Root)
+void elf_generate_code (ElfBack* Back, AstNode* Root)
 {
-    x86_call_label(MAIN_LBL);
+    x86_call_label(Back, MAIN_LBL);
 
-    x86_extra_exit();
+    x86_extra_exit(Back);
 
-    buffer = cur_addr;
+    Back->buffer = Back->cur_addr;
 
     for (size_t cnt = 0; cnt < BUFFER_SIZE; ++cnt)
     {
         SET_BYTE(0x00);
     }
 
-    x86_extra_make_input_func ();
+    x86_extra_make_input_func (Back);
 
-    x86_extra_make_output_func ();
+    x86_extra_make_output_func (Back);
 
-    elf_generate_statement(Root);
+    elf_generate_statement(Back, Root);
 
     return;
 }
 
-void ElfBack::elf_generate_statement (AstNode* CurNode)
+void elf_generate_statement (ElfBack* Back, AstNode* CurNode)
 {
     if (CurNode->left != NULL)
     {
-        elf_generate_op_node (CurNode->left, false);
+        elf_generate_op_node (Back, CurNode->left, false);
     }
 
     if (CurNode->right != NULL)
     {
-        elf_generate_statement (CurNode->right);
+        elf_generate_statement (Back, CurNode->right);
     }
 
     return;
 }
 
-void ElfBack::elf_generate_function (AstNode* CurNode)
+void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 {
 
     if (wcscoll (CurNode->left->data.var, MAIN_LBL) == 0)
     {
-        func_cond = main_f;
+        Back->func_cond = main_f;
     }
     else
     {
-        func_cond = any_f;
+        Back->func_cond = any_f;
     }
 
-    x86_extra_paste_call_label(CurNode->left->data.var);
+    x86_extra_paste_call_label(Back, CurNode->left->data.var);
     // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
 
-    Funcs->Table[Funcs->top_index].Name = CurNode->left->data.var;
+    Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
 
-    table_cond = none;
-    elf_create_param_var_table (CurNode->left->right);
+    Back->table_cond = none;
+    elf_create_param_var_table (Back, CurNode->left->right);
 
     size_t AmountVars = 0;
 
     SVarTable* Table = NULL;
-    if (VarStack->size != 0)
+    if (Back->VarStack->size != 0)
     {
 
-        pop_from_stack (VarStack, &Table);
+        pop_from_stack (Back->VarStack, &Table);
 
-        AmountVars = elf_find_all_new_vars(CurNode->right);
+        AmountVars = elf_find_all_new_vars(Back, CurNode->right);
 
         Table->amount = AmountVars;
 
-        push_in_stack(VarStack, Table);
+        push_in_stack(Back->VarStack, Table);
 
         // printf ("Vars Amount: [%d]\n", AmountVars);
     }
 
-    x86_push_reg(rbp);
-    x86_mov_reg_reg(rbp, rsp);
+    x86_push_reg(Back, rbp);
+    x86_mov_reg_reg(Back, rbp, rsp);
 
-    x86_sub_reg_imm(rbp, AmountVars * VAR_SIZE);
+    x86_sub_reg_imm(Back, rbp, AmountVars * VAR_SIZE);
 
-    x86_mov_reg_reg(rsp, rbp);
+    x86_mov_reg_reg(Back, rsp, rbp);
 
-    Funcs->top_index++;
-
-
-    int old_delta_rbp = delta_rbp;
-    delta_rbp = (AmountVars) * VAR_SIZE;
+    Back->Funcs->top_index++;
 
 
-    elf_generate_statement (CurNode->right);
+    int old_delta_rbp = Back->delta_rbp;
+    Back->delta_rbp = (AmountVars) * VAR_SIZE;
+
+
+    elf_generate_statement (Back, CurNode->right);
     ELF_CLEAN_TABLE ();
 
-    delta_rbp = old_delta_rbp;
+    Back->delta_rbp = old_delta_rbp;
 
 
 
-    x86_add_reg_imm(rbp, AmountVars * VAR_SIZE);
+    x86_add_reg_imm(Back, rbp, AmountVars * VAR_SIZE);
 
-    x86_pop_to_reg(rbp);
-    x86_mov_reg_reg(rsp, rbp);
+    x86_pop_to_reg(Back, rbp);
+    x86_mov_reg_reg(Back, rsp, rbp);
 
     return;
 }
 
-void ElfBack::elf_generate_node (AstNode* CurNode)
+void elf_generate_node (ElfBack* Back, AstNode* CurNode)
 {
     if (CurNode->category == CategoryOperation)
     {
-        elf_generate_op_node (CurNode, true);
+        elf_generate_op_node (Back, CurNode, true);
     }
 
     if (CurNode->category == CategoryValue)
     {
-        x86_push_imm(CurNode->data.val);
+        x86_push_imm(Back, CurNode->data.val);
     }
 
     if (CurNode->category == CategoryLine && CurNode->type == TypeVariable)
     {
-        elf_generate_push_var (CurNode);
+        elf_generate_push_var (Back, CurNode);
     }
 
     return;
 }
 
-void ElfBack::elf_generate_op_node (AstNode* CurNode, bool RetValueMarker)
+void elf_generate_op_node (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
 {
     switch (CurNode->type)
     {
@@ -506,37 +511,37 @@ void ElfBack::elf_generate_op_node (AstNode* CurNode, bool RetValueMarker)
     return;
 }
 
-void ElfBack::elf_generate_announce (AstNode* CurNode)
+void elf_generate_announce (ElfBack* Back, AstNode* CurNode)
 {
-    elf_generate_expression (CurNode->right);
+    elf_generate_expression (Back, CurNode->right);
 
-    elf_add_to_var_table (CurNode->left, false);
+    elf_add_to_var_table (Back, CurNode->left, false);
 
-    elf_generate_pop_var (CurNode->left);
+    elf_generate_pop_var (Back, CurNode->left);
 
     // elf_incr_top_reg ();
 
     return;
 }
 
-void ElfBack::elf_generate_equation (AstNode* CurNode)
+void elf_generate_equation (ElfBack* Back, AstNode* CurNode)
 {
-    elf_generate_expression (CurNode->right);
+    elf_generate_expression (Back, CurNode->right);
 
-    elf_generate_pop_var (CurNode->left);
+    elf_generate_pop_var (Back, CurNode->left);
 
     return;
 }
 
-void ElfBack::elf_generate_input (AstNode* CurNode)
+void elf_generate_input (ElfBack* Back, AstNode* CurNode)
 {
     AstNode* Node = CurNode->left;
 
     do
     {
-        elf_set_rax_var_address (Node->left);
+        elf_set_rax_var_address (Back, Node->left);
 
-        x86_call_label(INP_LBL);
+        x86_call_label(Back, INP_LBL);
 
         Node = Node->right;
     } while (Node != NULL);
@@ -544,15 +549,15 @@ void ElfBack::elf_generate_input (AstNode* CurNode)
     return;
 }
 
-void ElfBack::elf_generate_output (AstNode* CurNode)
+void elf_generate_output (ElfBack* Back, AstNode* CurNode)
 {
     AstNode* Node = CurNode->left;
 
     do
     {
-        elf_set_rax_var_value (Node->left);
+        elf_set_rax_var_value (Back, Node->left);
 
-        x86_call_label(OUT_LBL);
+        x86_call_label(Back, OUT_LBL);
 
         Node = Node->right;
     } while (Node != NULL);
@@ -560,31 +565,31 @@ void ElfBack::elf_generate_output (AstNode* CurNode)
     return;
 }
 
-void ElfBack::elf_generate_if (AstNode* CurNode)
+void elf_generate_if (ElfBack* Back, AstNode* CurNode)
 {
-    elf_generate_expression (CurNode->left);
+    elf_generate_expression (Back, CurNode->left);
 
-    x86_push_imm(MY_FALSE);
+    x86_push_imm(Back, MY_FALSE);
 
     wchar_t* Label_true_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    prepare_name_label_to_jump (Label_true_name, cur_addr);
+    prepare_name_label_to_jump (Label_true_name, Back->cur_addr);
 
-    x86_cmp_stack();
-    x86_jump_label(Label_true_name, x86_je);
+    x86_cmp_stack(Back);
+    x86_jump_label(Back, Label_true_name, x86_je);
 
 
     CurNode = CurNode->right;
 
-    table_cond = none;
-    elf_generate_statement (CurNode->left);
+    Back->table_cond = none;
+    elf_generate_statement (Back, CurNode->left);
     ELF_CLEAN_TABLE ();
 
     wchar_t* Label_false_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    prepare_name_label_to_jump (Label_false_name, cur_addr);
+    prepare_name_label_to_jump (Label_false_name, Back->cur_addr);
 
-    x86_jump_label(Label_false_name, x86_jmp);
+    x86_jump_label(Back, Label_false_name, x86_jmp);
 
-    x86_extra_paste_jump_label(Label_true_name);
+    x86_extra_paste_jump_label(Back, Label_true_name);
 
     CurNode = CurNode->right;
 
@@ -592,17 +597,17 @@ void ElfBack::elf_generate_if (AstNode* CurNode)
     {
         if (CurNode->category == CategoryOperation && CurNode->type == TypeIf)
         {
-            elf_generate_if (CurNode);
+            elf_generate_if (Back, CurNode);
         }
         else
         {
-            table_cond = none;
-            elf_generate_statement (CurNode);
+            Back->table_cond = none;
+            elf_generate_statement (Back, CurNode);
             ELF_CLEAN_TABLE ();
         }
     }
 
-    x86_extra_paste_jump_label(Label_false_name);
+    x86_extra_paste_jump_label(Back, Label_false_name);
 
     free (Label_true_name);
     free (Label_false_name);
@@ -610,27 +615,27 @@ void ElfBack::elf_generate_if (AstNode* CurNode)
     return;
 }
 
-void ElfBack::elf_generate_while (AstNode* CurNode)
+void elf_generate_while (ElfBack* Back, AstNode* CurNode)
 {
     wchar_t* Label_body_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    prepare_name_label_to_jump (Label_body_name, cur_addr);
+    prepare_name_label_to_jump (Label_body_name, Back->cur_addr);
 
-    x86_extra_paste_jump_label(Label_body_name);
+    x86_extra_paste_jump_label(Back, Label_body_name);
     // int Label_1 = label_cnt;
     // fprintf (file,  LABEL "%d:\n", Label_1);
     // label_cnt++;
 
     // x86_nop();
-    elf_generate_expression (CurNode->left);
+    elf_generate_expression (Back, CurNode->left);
     // x86_nop();
 
-    x86_push_imm(MY_FALSE);
+    x86_push_imm(Back, MY_FALSE);
 
     wchar_t* Label_end_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    prepare_name_label_to_jump (Label_end_name, cur_addr);
+    prepare_name_label_to_jump (Label_end_name, Back->cur_addr);
 
-    x86_cmp_stack();
-    x86_jump_label(Label_end_name, x86_je);
+    x86_cmp_stack(Back);
+    x86_jump_label(Back, Label_end_name, x86_je);
 
     // PUT (je);
     // int Label_2 = label_cnt;
@@ -638,14 +643,14 @@ void ElfBack::elf_generate_while (AstNode* CurNode)
     // label_cnt++;
 
     // x86_nop();
-    table_cond = none;
-    elf_generate_statement (CurNode->right);
+    Back->table_cond = none;
+    elf_generate_statement (Back, CurNode->right);
     ELF_CLEAN_TABLE ();
     // x86_nop();
 
-    x86_jump_label(Label_body_name, x86_jmp);
+    x86_jump_label(Back, Label_body_name, x86_jmp);
 
-    x86_extra_paste_jump_label(Label_end_name);
+    x86_extra_paste_jump_label(Back, Label_end_name);
 
     free (Label_body_name);
     free (Label_end_name);
@@ -653,19 +658,19 @@ void ElfBack::elf_generate_while (AstNode* CurNode)
     return;
 }
 
-void ElfBack::elf_generate_call (AstNode* CurNode, bool RetValueMarker)
+void elf_generate_call (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
 {
     // x86_push_r(eTOP_REG);
 
-    elf_push_parameters (CurNode->right);
+    elf_push_parameters (Back, CurNode->right);
 
     // x86_push_r(eTOP_REG);
 
     // x86_pop_r(ELF_SHIFT_REG);
 
-    x86_call_label(CurNode->left->data.var);
+    x86_call_label(Back, CurNode->left->data.var);
 
-    elf_delete_function_parameters (CurNode->right);
+    elf_delete_function_parameters (Back, CurNode->right);
 
     // PUT (call);
     // fprintf (file, " " LABEL "%ls\n", CurNode->left->data.var);
@@ -675,7 +680,7 @@ void ElfBack::elf_generate_call (AstNode* CurNode, bool RetValueMarker)
     if (RetValueMarker == true)
     {
         // printf (KRED "WAAGH!\n" KNRM);
-        x86_push_reg(ELF_FUNC_RET_REG);
+        x86_push_reg(Back, ELF_FUNC_RET_REG);
     }
     else
     {
@@ -685,106 +690,106 @@ void ElfBack::elf_generate_call (AstNode* CurNode, bool RetValueMarker)
     return;
 }
 
-void ElfBack::elf_generate_return (AstNode* CurNode)
+void elf_generate_return (ElfBack* Back, AstNode* CurNode)
 {
-    elf_generate_expression (CurNode->left);
+    elf_generate_expression (Back, CurNode->left);
 
-    x86_pop_to_reg(ELF_FUNC_RET_REG);
+    x86_pop_to_reg(Back, ELF_FUNC_RET_REG);
 
     size_t AmountVars = 0;
 
     SVarTable* Table = NULL;
 
-    if (VarStack->size != 0)
+    if (Back->VarStack->size != 0)
     {
-        peek_from_stack (VarStack, &Table);
+        peek_from_stack (Back->VarStack, &Table);
         AmountVars = Table->amount;
     }
-    x86_add_reg_imm(rbp, AmountVars * VAR_SIZE);
+    x86_add_reg_imm(Back, rbp, AmountVars * VAR_SIZE);
 
-    x86_mov_reg_reg(rsp, rbp);
+    x86_mov_reg_reg(Back, rsp, rbp);
 
-    x86_pop_to_reg(rbp);
+    x86_pop_to_reg(Back, rbp);
 
-    x86_ret();
+    x86_ret(Back);
 
     return;
 }
 
-void ElfBack::elf_generate_expression (AstNode* CurNode)
+void elf_generate_expression (ElfBack* Back, AstNode* CurNode)
 {
-    elf_generate_postorder (CurNode, true);
+    elf_generate_postorder (Back, CurNode, true);
 
     return;
 }
 
-void ElfBack::elf_generate_postorder (AstNode* CurNode, bool RetValueMarker)
+void elf_generate_postorder (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
 {
     if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->left != NULL)
     {
-        elf_generate_postorder (CurNode->left, RetValueMarker);
+        elf_generate_postorder (Back, CurNode->left, RetValueMarker);
     }
 
     if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->right != NULL)
     {
-        elf_generate_postorder (CurNode->right, RetValueMarker);
+        elf_generate_postorder (Back, CurNode->right, RetValueMarker);
         // x86_push_r(ELF_FUNC_RET_REG);
     }
 
-    elf_generate_node (CurNode);
+    elf_generate_node (Back, CurNode);
 
     return;
 }
 
 //=============================================================================================================================================================================
 
-void ElfBack::elf_set_rax_var_value (AstNode* CurNode)
+void elf_set_rax_var_value (ElfBack* Back, AstNode* CurNode)
 {
-    int Index = elf_find_var (CurNode);
+    int Index = elf_find_var (Back, CurNode);
 
     // printf("value param = ");
     if (Index < 0)
     {
         // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
-        x86_mov_to_reg_from_addr_in_reg_with_imm(rax, rbp, delta_rbp - Index * VAR_SIZE);
+        x86_mov_to_reg_from_addr_in_reg_with_imm(Back, rax, rbp, Back->delta_rbp - Index * VAR_SIZE);
 
         return;
     }
 
     // printf("Index: %d\n", Index);
-    x86_mov_to_reg_from_addr_in_reg_with_imm(rax, rbp, Index);
+    x86_mov_to_reg_from_addr_in_reg_with_imm(Back, rax, rbp, Index);
 
     return;
 }
 
-void ElfBack::elf_set_rax_var_address (AstNode* CurNode)
+void elf_set_rax_var_address (ElfBack* Back, AstNode* CurNode)
 {
-    int Index = elf_find_var (CurNode);
+    int Index = elf_find_var (Back, CurNode);
     // printf("addr  param = ");
 
-    x86_mov_reg_reg(rax, rbp);
+    x86_mov_reg_reg(Back, rax, rbp);
 
     if (Index < 0)
     {
         // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
-        x86_add_reg_imm(rax, delta_rbp - Index * VAR_SIZE);
+        x86_add_reg_imm(Back, rax, Back->delta_rbp - Index * VAR_SIZE);
 
         return;
     }
 
     // printf("Index: %d\n", Index);
-    x86_add_reg_imm(rax, Index);
+    x86_add_reg_imm(Back, rax, Index);
 
     return;
 }
 
-void ElfBack::elf_generate_pop_var (AstNode* CurNode)
+void elf_generate_pop_var (ElfBack* Back, AstNode* CurNode)
 {
-    elf_set_rax_var_address(CurNode);
+    elf_set_rax_var_address(Back, CurNode);
 
-    x86_pop_to_reg(FIRST_REG);
+    x86_pop_to_reg(Back, FIRST_REG);
 
-    x86_mov_to_addr_in_reg_from_reg(rax, FIRST_REG);
+    x86_mov_to_addr_in_reg_from_reg(Back, rax, FIRST_REG);
 
 //     int Index = elf_find_var (CurNode);
 //
@@ -800,11 +805,11 @@ void ElfBack::elf_generate_pop_var (AstNode* CurNode)
     return;
 }
 
-void ElfBack::elf_generate_push_var (AstNode* CurNode)
+void elf_generate_push_var (ElfBack* Back, AstNode* CurNode)
 {
-    elf_set_rax_var_value(CurNode);
+    elf_set_rax_var_value(Back, CurNode);
 
-    x86_push_reg(rax);
+    x86_push_reg(Back, rax);
 
 //     int Index = elf_find_var (CurNode);
 //
@@ -818,64 +823,64 @@ void ElfBack::elf_generate_push_var (AstNode* CurNode)
 
 //=============================================================================================================================================================================
 
-void ElfBack::elf_push_parameters (AstNode* CurNode)
+void elf_push_parameters (ElfBack* Back, AstNode* CurNode)
 {
     if (CurNode->right != NULL)
     {
-        elf_push_parameters (CurNode->right);
+        elf_push_parameters (Back, CurNode->right);
     }
 
     if (CurNode != NULL && CurNode->left != NULL)
     {
-        elf_generate_expression (CurNode->left);
+        elf_generate_expression (Back, CurNode->left);
     }
 
     return;
 }
 
-void ElfBack::elf_delete_function_parameters (AstNode* CurNode)
+void elf_delete_function_parameters (ElfBack* Back, AstNode* CurNode)
 {
     if (CurNode->right != NULL)
     {
-        elf_delete_function_parameters (CurNode->right);
+        elf_delete_function_parameters (Back, CurNode->right);
     }
 
     if (CurNode != NULL && CurNode->left != NULL)
     {
-        x86_add_reg_imm(rsp, VAR_SIZE);
+        x86_add_reg_imm(Back, rsp, VAR_SIZE);
     }
 
     return;
 }
 
-void ElfBack::elf_standard_if_jump (int JumpMode)
+void elf_standard_if_jump (ElfBack* Back, int JumpMode)
 {
     const int STD_JUMP_FIRST_SHIFT  = 6;
     const int STD_JUMP_SECOND_SHIFT = 4;
 
     if (JumpMode != x86_jmp)
     {
-        x86_cmp_stack ();
+        x86_cmp_stack (Back);
     }
 
-    x86_jump_any(STD_JUMP_FIRST_SHIFT, JumpMode);
+    x86_jump_any(Back, STD_JUMP_FIRST_SHIFT, JumpMode);
 
     // fprintf (file, " " LABEL "%d\n", label_cnt);
     // label_cnt++;
 
-    x86_push_imm(MY_FALSE);
+    x86_push_imm(Back, MY_FALSE);
 
     // PUT (push);
     // fprintf (file, " %d\n", MY_FALSE);
 
-    x86_jump_any(STD_JUMP_SECOND_SHIFT, x86_jmp);
+    x86_jump_any(Back, STD_JUMP_SECOND_SHIFT, x86_jmp);
 
     // PUT (jump);
     // fprintf (file, " " LABEL "%d\n", label_cnt);
 
     // fprintf (file, LABEL "%d:\n", label_cnt - 1);
 
-    x86_push_imm(MY_TRUE);
+    x86_push_imm(Back, MY_TRUE);
 
     // PUT (push);
     // fprintf (file, " %d\n", MY_TRUE);
@@ -887,7 +892,7 @@ void ElfBack::elf_standard_if_jump (int JumpMode)
     return;
 }
 
-void ElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
+void elf_write_command (ElfBack* Back, ECommandNums eCommand, FILE* File)
 {
     #define DEF_CMD(def_line, def_enum, ...) \
     else if (eCommand == def_enum) \
@@ -910,17 +915,17 @@ void ElfBack::elf_write_command (ECommandNums eCommand, FILE* File)
 
 //=============================================================================================================================================================================
 
-void ElfBack:: elf_add_to_var_table (AstNode* CurNode, bool ParamMarker)
+void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
 {
-    if (table_cond == EVarTableConditions::none)
+    if (Back->table_cond == EVarTableConditions::none)
     {
-        elf_create_new_var_table (ParamMarker);
+        elf_create_new_var_table (Back, ParamMarker);
     }
 
     MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
-    peek_from_stack (VarStack, &Table);
+    peek_from_stack (Back->VarStack, &Table);
 
     Table->Arr[Table->cur_size].name  = CurNode->data.var; //copy address from node
 
@@ -954,11 +959,11 @@ void ElfBack:: elf_add_to_var_table (AstNode* CurNode, bool ParamMarker)
     return;
 }
 
-void ElfBack::elf_create_new_var_table (bool ParamMarker)
+void elf_create_new_var_table (ElfBack* Back, bool ParamMarker)
 {
     PRINT_DEBUG_INFO;
 
-    delta_rbp = 0;
+    Back->delta_rbp = 0;
 
     SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
@@ -987,19 +992,19 @@ void ElfBack::elf_create_new_var_table (bool ParamMarker)
         // printf("func params\n");
     }
 
-    push_in_stack (VarStack, NewTable);
+    push_in_stack (Back->VarStack, NewTable);
 
-    table_cond = exist;
+    Back->table_cond = exist;
 
     return;
 }
 
-size_t ElfBack::elf_find_all_new_vars (AstNode* CurNode)
+size_t elf_find_all_new_vars (ElfBack* Back, AstNode* CurNode)
 {
-    return elf_find_new_var(CurNode);
+    return elf_find_new_var(Back, CurNode);
 }
 
-size_t ElfBack::elf_find_new_var (AstNode* CurNode)
+size_t elf_find_new_var (ElfBack* Back, AstNode* CurNode)
 {
     size_t OneMoreVar = 0;
 
@@ -1013,11 +1018,11 @@ size_t ElfBack::elf_find_new_var (AstNode* CurNode)
         return OneMoreVar;
     }
 
-    return OneMoreVar + elf_find_new_var(CurNode->right);
+    return OneMoreVar + elf_find_new_var(Back, CurNode->right);
 }
 
 
-void ElfBack::elf_create_param_var_table (AstNode* CurNode)
+void elf_create_param_var_table (ElfBack* Back, AstNode* CurNode)
 {
     PRINT_DEBUG_INFO;
 
@@ -1027,8 +1032,8 @@ void ElfBack::elf_create_param_var_table (AstNode* CurNode)
     {
         if (CurNode->left != NULL)
         {
-            elf_add_to_var_table (CurNode->left->left, true);
-            Funcs->Table[Funcs->top_index].parameters++;
+            elf_add_to_var_table (Back, CurNode->left->left, true);
+            Back->Funcs->Table[Back->Funcs->top_index].parameters++;
             TableCreationMark = true;
         }
 
@@ -1038,19 +1043,19 @@ void ElfBack::elf_create_param_var_table (AstNode* CurNode)
     if (TableCreationMark == false)
     {
         // printf (KRED "forced\n" KNRM);
-        elf_create_new_var_table(true);
+        elf_create_new_var_table(Back, true);
     }
 
     return;
 }
 
-void ElfBack::elf_delete_var_table ()
+void elf_delete_var_table (ElfBack* Back)
 {
     PRINT_DEBUG_INFO;
 
     SVarTable* Table = NULL;
 
-    pop_from_stack (VarStack, &Table);
+    pop_from_stack (Back->VarStack, &Table);
 
     free (Table->Arr);
 
@@ -1059,7 +1064,7 @@ void ElfBack::elf_delete_var_table ()
     return;
 }
 
-AstNode* ElfBack::elf_find_parent_statement (AstNode* CurNode)
+AstNode* elf_find_parent_statement (AstNode* CurNode)
 {
     AstNode* Node = NULL;
     while (CurNode->parent != NULL)
@@ -1074,12 +1079,12 @@ AstNode* ElfBack::elf_find_parent_statement (AstNode* CurNode)
     return Node;
 }
 
-int ElfBack::elf_find_var (AstNode* CurNode)
+int elf_find_var (ElfBack* Back, AstNode* CurNode)
 {
     int RetIndex = WrongValue;
     bool ParamMarker = false;
 
-    MY_LOUD_ASSERT (VarStack->size != 0);
+    MY_LOUD_ASSERT (Back->VarStack->size != 0);
     MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
@@ -1087,10 +1092,10 @@ int ElfBack::elf_find_var (AstNode* CurNode)
     int depth = 1;
     do
     {
-        Table = VarStack->data[VarStack->size - depth];
+        Table = Back->VarStack->data[Back->VarStack->size - depth];
         //printf ("=%p=%d/%d=\n", Table, depth, VarStack->size);
         depth++;
-    } while ((elf_find_in_table (CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (depth <= VarStack->size));
+    } while ((elf_find_in_table (Back, CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (depth <= Back->VarStack->size));
 
     if (RetIndex == WrongValue)
     {
@@ -1103,7 +1108,7 @@ int ElfBack::elf_find_var (AstNode* CurNode)
 
 //=============================================================================================================================================================================
 
-bool ElfBack::elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker)
+bool elf_find_in_table (ElfBack* Back, CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker)
 {
     MY_LOUD_ASSERT (Table != NULL);
 

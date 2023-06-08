@@ -38,7 +38,7 @@ LEXEM_IS (L"+"),
 },
 L"ADD",
 {
-    x86_add_stack();
+    x86_add_stack(Back);
 })
 
 DEF_OP (TypeArithSub,
@@ -48,7 +48,7 @@ LEXEM_IS (L"-"),
 },
 L"SUB",
 {
-    x86_sub_stack();
+    x86_sub_stack(Back);
 })
 
 DEF_OP (TypeArithMul,
@@ -58,7 +58,7 @@ LEXEM_IS (L"*"),
 },
 L"MUL",
 {
-    x86_imul_stack();
+    x86_imul_stack(Back);
 })
 
 DEF_OP (TypeArithDiv,
@@ -68,7 +68,7 @@ LEXEM_IS (L"/"),
 },
 L"DIV",
 {
-    x86_idiv_stack();
+    x86_idiv_stack(Back);
 })
 
 DEF_OP (TypeArithPow,
@@ -88,7 +88,7 @@ LEXEM_IS (L"<"),
 },
 L"LESS",
 {
-    elf_standard_if_jump (x86_jl);
+    elf_standard_if_jump (Back, x86_jl);
 })
 
 DEF_OP (TypeLogicMore,
@@ -98,7 +98,7 @@ LEXEM_IS (L">"),
 },
 L"MORE",
 {
-    elf_standard_if_jump (x86_jg);
+    elf_standard_if_jump (Back, x86_jg);
 })
 
 DEF_OP (TypeLogicLessEqual,
@@ -108,7 +108,7 @@ LEXEM_IS (L"<="),
 },
 L"LESS OR EQUAL",
 {
-    elf_standard_if_jump (x86_jle);
+    elf_standard_if_jump (Back, x86_jle);
 })
 
 DEF_OP (TypeLogicMoreEqual,
@@ -118,7 +118,7 @@ LEXEM_IS (L">="),
 },
 L"MORE OR EQUAL",
 {
-    elf_standard_if_jump (x86_jge);
+    elf_standard_if_jump (Back, x86_jge);
 })
 
 DEF_OP (TypeLogicEqual,
@@ -128,7 +128,7 @@ LEXEM_IS (L"=="),
 },
 L"EQUAL",
 {
-    elf_standard_if_jump (x86_je);
+    elf_standard_if_jump (Back, x86_je);
 })
 
 DEF_OP (TypeLogicNotEqual,
@@ -138,7 +138,7 @@ LEXEM_IS (L"!="),
 },
 L"NOT EQUAL",
 {
-    elf_standard_if_jump (x86_jne);
+    elf_standard_if_jump (Back, x86_jne);
 })
 
 //TODO Not is not working
@@ -158,11 +158,11 @@ LEXEM_IS (L"&&"),
 },
 L"AND",
 {
-    x86_imul_stack();
+    x86_imul_stack(Back);
 
-    x86_push_imm(MY_FALSE);
+    x86_push_imm(Back, MY_FALSE);
 
-    elf_standard_if_jump (x86_jne);
+    elf_standard_if_jump (Back, x86_jne);
 })
 
 //TODO ABS ERROR THINK LATER
@@ -173,11 +173,11 @@ LEXEM_IS (L"||"),
 },
 L"OR",
 {
-    x86_add_stack();
+    x86_add_stack(Back);
 
-    x86_push_imm(MY_FALSE);
+    x86_push_imm(Back, MY_FALSE);
 
-    elf_standard_if_jump (x86_jne);
+    elf_standard_if_jump (Back, x86_jne);
 })
 
 DEF_OP (TypeOpenRoundBracket,
@@ -232,7 +232,7 @@ LEXEM_IS (L"if"),
 },
 L"IF",
 {
-    elf_generate_if (CurNode);
+    elf_generate_if (Back, CurNode);
 })
 
 DEF_OP (TypeElse,
@@ -251,7 +251,7 @@ LEXEM_IS (L"while"),
 },
 L"WHILE",
 {
-    elf_generate_while (CurNode);
+    elf_generate_while (Back, CurNode);
 })
 
 DEF_OP (TypeStdVarType,
@@ -279,7 +279,7 @@ LEXEM_IS (L"in"),
 },
 L"INPUT",
 {
-    elf_generate_input (CurNode);
+    elf_generate_input (Back, CurNode);
 })
 
 DEF_OP (TypeOutput,
@@ -289,7 +289,7 @@ LEXEM_IS (L"out"),
 },
 L"OUTPUT",
 {
-    elf_generate_output (CurNode);
+    elf_generate_output (Back, CurNode);
 })
 
 DEF_OP (TypeReturn,
@@ -299,7 +299,7 @@ LEXEM_IS (L"return"),
 },
 L"RETURN",
 {
-    elf_generate_return (CurNode);
+    elf_generate_return (Back, CurNode);
 })
 
 DEF_OP (TypeLinkerStatement,
@@ -318,7 +318,7 @@ DEF_OP (TypeLinkerFunction,
 },
 L"_FUNC",
 {
-    elf_generate_function (CurNode);
+    elf_generate_function (Back, CurNode);
 })
 
 DEF_OP (TypeLinkerCall,
@@ -328,7 +328,7 @@ DEF_OP (TypeLinkerCall,
 },
 L"_CALL",
 {
-    elf_generate_call (CurNode, RetValueMarker);
+    elf_generate_call (Back, CurNode, RetValueMarker);
 })
 
 // DEF_OP (TypeLinkerFuncParameters,
@@ -365,7 +365,7 @@ DEF_OP (TypeLinkerAnnounce,
 },
 L"_ANNOUNCE",
 {
-    elf_generate_announce (CurNode);
+    elf_generate_announce (Back, CurNode);
 })
 
 DEF_OP (TypeLinkerEquation,
@@ -375,7 +375,7 @@ DEF_OP (TypeLinkerEquation,
 },
 L"_EQUATION",
 {
-    elf_generate_equation (CurNode);
+    elf_generate_equation (Back, CurNode);
 })
 
 DEF_OP (TypeLinkerFuncAnnounce,

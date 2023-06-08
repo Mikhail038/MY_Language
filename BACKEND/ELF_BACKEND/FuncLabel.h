@@ -11,21 +11,21 @@
 #define MAX_CALLS_OF_ONE_FUNC 50
 #define NULL_FINISH 0
 
-typedef struct TLabel
+typedef struct FuncLabel
 {
     size_t  amount = 0;
     size_t* start;
     // std::list<size_t> start;
     size_t finish = NULL_FINISH;
 
-    TLabel()
+    FuncLabel()
     {
         START_;
 
         start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
     }
 
-    TLabel(size_t Finish)
+    FuncLabel(size_t Finish)
     {
         START_;
 
@@ -34,7 +34,7 @@ typedef struct TLabel
         amount = 0;
     }
 
-    TLabel(size_t FirstStart, size_t Finish)
+    FuncLabel(size_t FirstStart, size_t Finish)
     {
         START_;
 
@@ -45,7 +45,7 @@ typedef struct TLabel
         amount = 1;
     }
 
-    TLabel (const TLabel& other)
+    FuncLabel (const FuncLabel& other)
     {
         START_;
 
@@ -56,7 +56,7 @@ typedef struct TLabel
         memcpy(start, other.start, MAX_CALLS_OF_ONE_FUNC);
     }
 
-    TLabel& operator= (const TLabel& other)
+    FuncLabel& operator= (const FuncLabel& other)
     {
         START_;
 
@@ -74,7 +74,7 @@ typedef struct TLabel
         return *this;
     }
 
-    TLabel& operator= (TLabel&& other)
+    FuncLabel& operator= (FuncLabel&& other)
     {
         START_;
 
@@ -92,7 +92,7 @@ typedef struct TLabel
         return *this;
     }
 
-    TLabel (TLabel&& other)
+    FuncLabel (FuncLabel&& other)
     {
         START_;
 
@@ -103,7 +103,7 @@ typedef struct TLabel
         other.start = nullptr;
     }
 
-    ~TLabel()
+    ~FuncLabel()
     {
         START_;
 
