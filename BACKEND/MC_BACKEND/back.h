@@ -33,7 +33,7 @@ typedef wchar_t CharT; //will not work with char
 
 #define NODE_IS_OP_AND__ Node->category == CategoryOperation && Node->type ==
 
-#define BACK_FUNC_HEAD_PARAMETERS SNode* CurNode, SBack* Back
+#define BACK_FUNC_HEAD_PARAMETERS AstNode* CurNode, SBack* Back
 
 #define BACK_FUNC_PARAMETERS CurNode, Back
 
@@ -128,9 +128,9 @@ void my_b_main (int argc, char** argv);
 //Readres//
 //===================================================================================================================================================================
 
-SNode* read_tree (const char* FileName);
+AstNode* read_tree (const char* FileName);
 
-SNode* read_node (CodeSource* Tree);
+AstNode* read_node (CodeSource* Tree);
 
 //===================================================================================================================================================================
 //Make ASM//
@@ -140,9 +140,9 @@ SBack* back_constructor (FILE* ExFile);
 
 void back_destructor (SBack* Back);
 
-void make_asm_file (SNode* Root, FILE* File);
+void make_asm_file (AstNode* Root, FILE* File);
 
-void generate_code (SNode* Root, SBack* Back);
+void generate_code (AstNode* Root, SBack* Back);
 
 void generate_main (BACK_FUNC_HEAD_PARAMETERS);
 
@@ -206,7 +206,7 @@ void free_tables (SStack<SVarTable*>* VarStack);
 
 //===================================================================================================================================================================
 
-SNode* find_main (SNode* Root);
+AstNode* find_main (AstNode* Root);
 
 void write_command (ECommandNums eCommand, FILE* File);
 

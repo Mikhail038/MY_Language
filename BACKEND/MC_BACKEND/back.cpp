@@ -32,13 +32,15 @@ void my_b_main (int argc, char** argv)
     setlocale(LC_CTYPE, "");
 
 
-    SNode* Root = read_tree ("FILES/ParsedSrc.tr");
+    AstNode* Root = read_tree ("AST/ParsedSrc.tr");
 
     if (Root != NULL)
     {
-        FILE* ExFile = fopen ("EXAMPLES_ASM/code.asm", "w");
+        FILE* ExFile = fopen ("EXAMPLES/EXAMPLES_ASM/code.asm", "w");
 
+        #ifdef DEBUG_AST_VIZ
         make_graf_viz_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
+        #endif
 
         make_asm_file (Root, ExFile);
 
@@ -56,7 +58,7 @@ void my_b_main (int argc, char** argv)
 //Readers
 //=============================================================================================================================================================================
 
-SNode* read_tree (const char* FileName)
+AstNode* read_tree (const char* FileName)
 {
     FILE* InputFile = fopen (FileName, "r");
     MY_LOUD_ASSERT (InputFile != NULL);
@@ -73,16 +75,16 @@ SNode* read_tree (const char* FileName)
 
     //wprintf (L"%ls\n", Tree.Arr);
 
-    SNode* Root = read_node (&Tree);
+    AstNode* Root = read_node (&Tree);
 
     free (Tree.Arr);
 
     return Root;
 }
 
-SNode* read_node (CodeSource* Tree)
+AstNode* read_node (CodeSource* Tree)
 {
-    SNode* Node = (SNode*) calloc (1, sizeof (SNode));
+    AstNode* Node = (AstNode*) calloc (1, sizeof (AstNode));
 
     CharT* Category = NULL;
     seek (Tree);
@@ -250,9 +252,9 @@ void seek_out (CodeSource* Source)
 //Tree//
 //=============================================================================================================================================================================
 
-SNode* construct_op_node (TokenType Type)
+AstNode* construct_op_node (TokenType Type)
 {
-    SNode* Node = (SNode*) calloc (1, sizeof (*Node));
+    AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
     Node->category = CategoryOperation;
 
@@ -261,9 +263,9 @@ SNode* construct_op_node (TokenType Type)
     return Node;
 }
 
-SNode* construct_var_node (Token* CurToken)
+AstNode* construct_var_node (Token* CurToken)
 {
-    SNode* Node = (SNode*) calloc (1, sizeof (*Node));
+    AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
     Node->category = CategoryLine;
 
@@ -276,9 +278,9 @@ SNode* construct_var_node (Token* CurToken)
     return Node;
 }
 
-SNode* construct_val_node (ValT Value)
+AstNode* construct_val_node (ValT Value)
 {
-    SNode* Node = (SNode*) calloc (1, sizeof (*Node));
+    AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
     Node->category = CategoryValue;
 
@@ -289,7 +291,7 @@ SNode* construct_val_node (ValT Value)
     return Node;
 }
 
-void delete_tree (SNode** Node)
+void delete_tree (AstNode** Node)
 {
     if (*Node == NULL)
     {
@@ -328,7 +330,7 @@ void delete_tree (SNode** Node)
 //GraphViz//
 //===================================================================================================================================================================
 
-void make_graf_viz_tree (SNode* Root, const char* FileName, bool Display)
+void make_graf_viz_tree (AstNode* Root, const char* FileName, bool Display)
 {
     FILE* gvInputFile = fopen (FileName, "w");
     MY_LOUD_ASSERT (gvInputFile != NULL);
@@ -351,7 +353,7 @@ void make_graf_viz_tree (SNode* Root, const char* FileName, bool Display)
     return;
 }
 
-void make_gv_node (FILE* File, SNode* Node)
+void make_gv_node (FILE* File, AstNode* Node)
 {
     MY_LOUD_ASSERT (File != NULL);
 
@@ -422,7 +424,7 @@ void make_gv_node (FILE* File, SNode* Node)
     make_gv_node (File, Node->right);
 }
 
-void print_gv_node (FILE* File, SNode* Node)
+void print_gv_node (FILE* File, AstNode* Node)
 {
     MY_LOUD_ASSERT (File != NULL);
 
@@ -519,7 +521,7 @@ void back_destructor (SBack* Back)
     return;
 }
 
-void make_asm_file (SNode* Root, FILE* File)
+void make_asm_file (AstNode* Root, FILE* File)
 {
     MY_LOUD_ASSERT (File != NULL);
 
@@ -539,7 +541,7 @@ void make_asm_file (SNode* Root, FILE* File)
     return;
 }
 
-void generate_code (SNode* Root, SBack* Back)
+void generate_code (AstNode* Root, SBack* Back)
 {
     fprintf (Back->file, SEP_LINE "\n\n");
 
@@ -683,7 +685,7 @@ void generate_equation (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_input (BACK_FUNC_HEAD_PARAMETERS)
 {
-    SNode* Node = CurNode->left;
+    AstNode* Node = CurNode->left;
 
     do
     {
@@ -699,7 +701,7 @@ void generate_input (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_output (BACK_FUNC_HEAD_PARAMETERS)
 {
-    SNode* Node = CurNode->left;
+    AstNode* Node = CurNode->left;
 
     do
     {

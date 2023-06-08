@@ -43,11 +43,11 @@ const int NoErr  = 0;
 
 //=============================================================================================================================================================================
 
-void my_f_main (int argc, char** argv)
+void my_front_main (int argc, char** argv)
 {
     setlocale(LC_CTYPE, "");
 
-    FILE* SourceText = ((argc > 1) && (strlen (argv[1]) > 3)) ? fopen (argv[1], "r") : fopen ("EXAMPLES/kvad.ger", "r") ;
+    FILE* SourceText = ((argc > 1) && (strlen (argv[1]) > 3)) ? fopen (argv[1], "r") : fopen ("EXAMPLES/EXAMPLES_GER/elf_fact.ger", "r") ;
     if (argc > 2)
     {
         fopen (argv[2], "r");
@@ -85,12 +85,12 @@ void my_f_main (int argc, char** argv)
     SStack<SVarTable*>* Vars = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
     stack_constructor (Vars, BASE_SCOPES_NUM);
 
-    SFuncs* Funcs   = construct_funcs_table (MAX_FUNCS_ARRAY);
+    FunctionArr* Funcs   = construct_funcs_table (MAX_FUNCS_ARRAY);
 
     int* marker = (int*) calloc (1, sizeof (int));
     *marker = 0;
 
-    SNode* Root = get_All (Tokens, Vars, Funcs, marker, &PrintFlag);
+    AstNode* Root = get_All (Tokens, Vars, Funcs, marker, &PrintFlag);
 
     free (marker);
 
@@ -121,7 +121,7 @@ void my_f_main (int argc, char** argv)
     {
         make_graf_viz_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump", false);
 
-        write_tree (Root, "FILES/ParsedSrc.tr");
+        write_tree (Root, "AST/ParsedSrc.tr");
 
         delete_tree (&Root);
     }
@@ -135,18 +135,11 @@ void my_f_main (int argc, char** argv)
 
 CodeSource* construct_source (CodeSource* Source, FILE* SourceText)
 {
-    //Source->Code = (CharT*) calloc (MAX_MEMORY, sizeof (*(Source->Code)));
-    //Source->size = MAX_MEMORY;
 
     fwscanf (SourceText, L"%ml[^~]", &Source->Arr); // Asked Danya how to remove this shit!! nikak
-    //wprintf (L"|\n%ls|\n", Source->Arr);
 
     Source->ip   = 0;
     Source->size = wcslen (Source->Arr);
-
-    //fread (Source->Code, MAX_MEMORY, sizeof (CharT), SourceText);
-    //fwscanf (SourceText, L"%m[^.]", &(Source->Code));
-    //wprintf (L"\n'%ls'\n", Source->Code);
 
     return Source;
 }
@@ -159,7 +152,6 @@ void seek (CodeSource* Source)
 {
     for (; Source->ip < Source->size; Source->ip++)
     {
-        // if ((wcscmp (Buffer->Array[Buffer->ip], L"\n")) && ((wcscmp (Buffer->Array[Buffer->ip], L" "))))
         if ((Source->Arr[Source->ip] != L'\n') && ((Source->Arr[Source->ip] != L' ')))
         {
             return;
@@ -173,7 +165,6 @@ void seek_out (CodeSource* Source)
 {
     for (; Source->ip < Source->size; Source->ip++)
     {
-        // if ((wcscmp (Buffer->Array[Buffer->ip], L"\n")) && ((wcscmp (Buffer->Array[Buffer->ip], L" "))))
         if ((Source->Arr[Source->ip] == L'\n'))// || ((Buffer->Array[Buffer->ip] == L' ')))
         {
             Source->ip++;
@@ -197,7 +188,7 @@ AllTokens* lex_src (CodeSource* Source, bool* PrintFlag)
 
     while (Source->ip < Source->size)
     {
-        if (do_token (Source, Tokens, PrintFlag) != NoErr)
+        if (create_token (Source, Tokens, PrintFlag) != NoErr)
         {
             free (Tokens->array);
 
@@ -213,7 +204,7 @@ AllTokens* lex_src (CodeSource* Source, bool* PrintFlag)
     return Tokens;
 }
 
-int do_token (CodeSource* Source,  AllTokens* Tokens, bool* PrintFlag)
+int create_token (CodeSource* Source,  AllTokens* Tokens, bool* PrintFlag)
 {
     seek (Source);
     CharT* Lexem = NULL;
@@ -247,8 +238,6 @@ int do_token (CodeSource* Source,  AllTokens* Tokens, bool* PrintFlag)
         return StdErr;
     }
 
-    //Source->ip += wcslen (Lexem);
-    //Source->ip++;
 
     free (Lexem);
 
@@ -515,7 +504,6 @@ double parse_frac (CharT* Lexem, int* Counter)
 
 double parse_int (CharT* Lexem, int* Counter)
 {
-    //wprintf (L"|%d|\n", *Counter);
     double Value = 0;
 
     int OldPtr = *Counter;
@@ -651,16 +639,16 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SFuncs* construct_funcs_table (size_t Capacity)
+FunctionArr* construct_funcs_table (size_t Capacity)
 {
-    SFuncs* Funcs = (SFuncs*) calloc (1, sizeof (*Funcs));
+    FunctionArr* Funcs = (FunctionArr*) calloc (1, sizeof (*Funcs));
 
-    Funcs->Arr = (SFunc*) calloc (Capacity, sizeof (*Funcs->Arr));
+    Funcs->Arr = (Function*) calloc (Capacity, sizeof (*Funcs->Arr));
 
     return Funcs;
 }
 
-int add_to_funcs_table (CharT* Name, SFuncs* Funcs)
+int add_to_funcs_table (CharT* Name, FunctionArr* Funcs)
 {
         for (int counter = 0; counter < MAX_FUNCS_ARRAY; counter++)
         {
@@ -683,7 +671,7 @@ int add_to_funcs_table (CharT* Name, SFuncs* Funcs)
         return Err;
 }
 
-void add_parameters (int Number, SNode* Node, SFuncs* Funcs)
+void add_parameters (int Number, AstNode* Node, FunctionArr* Funcs)
 {
     MY_LOUD_ASSERT (Funcs->Arr[Number].name != NULL);
     Funcs->Arr[Number].parameters = count_parameters (Node);
@@ -691,9 +679,9 @@ void add_parameters (int Number, SNode* Node, SFuncs* Funcs)
     return;
 }
 
-int count_parameters (SNode* Node)
+int count_parameters (AstNode* Node)
 {
-    SNode* CurNode = Node;
+    AstNode* CurNode = Node;
 
     MY_LOUD_ASSERT (Node != NULL);
     int counter = 0;
@@ -711,7 +699,7 @@ int count_parameters (SNode* Node)
     return counter;
 }
 
-bool check_funcs_table (CharT* Name, SFuncs* Funcs)
+bool check_funcs_table (CharT* Name, FunctionArr* Funcs)
 {
     for (int counter = 0; counter < Funcs->size; counter++)
     {
@@ -724,7 +712,7 @@ bool check_funcs_table (CharT* Name, SFuncs* Funcs)
     return false;
 }
 
-void show_funcs_table (SFuncs* Funcs, bool* PrintFlag)
+void show_funcs_table (FunctionArr* Funcs, bool* PrintFlag)
 {
     if (*PrintFlag)
     {
@@ -743,7 +731,7 @@ void show_funcs_table (SFuncs* Funcs, bool* PrintFlag)
     }
 }
 
-void destruct_funcs_table (SFuncs* Funcs, bool* PrintFlag)
+void destruct_funcs_table (FunctionArr* Funcs, bool* PrintFlag)
 {
     show_funcs_table (Funcs, PrintFlag);
 
@@ -767,9 +755,9 @@ void destruct_funcs_table (SFuncs* Funcs, bool* PrintFlag)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SNode* construct_op_node (TokenType Type)
+AstNode* construct_op_node (TokenType Type)
 {
-    SNode* Node = (SNode*) calloc (1, sizeof (*Node));
+    AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
     Node->category = CategoryOperation;
 
@@ -778,9 +766,9 @@ SNode* construct_op_node (TokenType Type)
     return Node;
 }
 
-SNode* construct_var_node (Token* CurToken)
+AstNode* construct_var_node (Token* CurToken)
 {
-    SNode* Node = (SNode*) calloc (1, sizeof (*Node));
+    AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
     Node->category = CategoryLine;
 
@@ -793,9 +781,9 @@ SNode* construct_var_node (Token* CurToken)
     return Node;
 }
 
-SNode* construct_val_node (ValT Value)
+AstNode* construct_val_node (ValT Value)
 {
-    SNode* Node = (SNode*) calloc (1, sizeof (*Node));
+    AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
     Node->category = CategoryValue;
 
@@ -806,7 +794,7 @@ SNode* construct_val_node (ValT Value)
     return Node;
 }
 
-void delete_tree (SNode** Node)
+void delete_tree (AstNode** Node)
 {
     if (*Node == NULL)
     {
@@ -822,10 +810,6 @@ void delete_tree (SNode** Node)
     {
         delete_tree (&((*Node)->right));
     }
-
-    //free (Node->data);
-
-    //printf ("\n%p freed\n", *Node);
 
     if ((*Node)->category == CategoryLine)
     {
@@ -845,18 +829,16 @@ void delete_tree (SNode** Node)
 //grammar//
 //=============================================================================================================================================================================
 
-SNode* get_All (FUNC_HEAD_ARGUMENTS)
+AstNode* get_All (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Root = get_Statement (FUNC_ARGUMENTS);
-
-    //make_gv_tree (Root, "GRAPH_VIZ/gvDiff_func.dot");
+    AstNode* Root = get_Statement (FUNC_ARGUMENTS);
 
     return Root;
 }
 
-SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Statement (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
@@ -870,21 +852,21 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
 
     if (TKN_OP_AND_IS__ TypeFinish)
     {
-        NEXT_TKN; //Tokens->number++;
+        NEXT_TKN;
 
         return get_Statement (FUNC_ARGUMENTS);
     }
 
     if (TKN_OP_AND_IS__ TypeCloseBracket)
     {
-        NEXT_TKN; //Tokens->number++;
+        NEXT_TKN;
 
         f_delete_var_table (Vars, PrintFlag);
 
         return NULL;
     }
 
-    SNode* Node = construct_op_node (TypeLinkerStatement);
+    AstNode* Node = construct_op_node (TypeLinkerStatement);
 
 
     Node->left  = get_Function (FUNC_ARGUMENTS);
@@ -913,7 +895,7 @@ SNode* get_Statement (FUNC_HEAD_ARGUMENTS)
     return Node;
 }
 
-SNode* get_Function (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Function (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
@@ -921,7 +903,7 @@ SNode* get_Function (FUNC_HEAD_ARGUMENTS)
     (Tokens->array[Tokens->number + 1].category == CategoryLine) &&
     (Tokens->array[Tokens->number + 2].type == TypeOpenRoundBracket))
     {
-        SNode* Node = construct_op_node (TypeLinkerFunction);
+        AstNode* Node = construct_op_node (TypeLinkerFunction);
 
         // if (Vars != NULL && (Vars->size > 0))
         // {
@@ -941,13 +923,13 @@ SNode* get_Function (FUNC_HEAD_ARGUMENTS)
     return get_IfElse (FUNC_ARGUMENTS);
 }
 
-SNode* get_Head (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Head (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Left_son = get_Type (FUNC_ARGUMENTS);
+    AstNode* Left_son = get_Type (FUNC_ARGUMENTS);
 
-    SNode* Node = construct_var_node (&TOKEN);
+    AstNode* Node = construct_var_node (&TOKEN);
 
     int table_number = add_to_funcs_table (TOKEN.data.var, Funcs);
 
@@ -968,37 +950,37 @@ SNode* get_Head (FUNC_HEAD_ARGUMENTS)
     return Node;
 }
 
-SNode* get_Type (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Type (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     MTokAss ((TKN_OP_AND_IS__ TypeStdVarType) || (TKN_OP_AND_IS__ TypeVoidVarType));
 
-    SNode* Node = construct_op_node (TOKEN.type);
+    AstNode* Node = construct_op_node (TOKEN.type);
 
     NEXT_TKN; //Tokens->number++;
 
     return Node;
 }
 
-SNode* get_Parameters (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Parameters (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     CHECK_SYNTAX (TypeOpenRoundBracket);
 
-    SNode* Node = get_headParam (FUNC_ARGUMENTS);
+    AstNode* Node = get_headParam (FUNC_ARGUMENTS);
 
     CHECK_SYNTAX (TypeCloseRoundBracket);
 
     return Node;
 }
 
-SNode* get_headParam (FUNC_HEAD_ARGUMENTS)
+AstNode* get_headParam (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Node = construct_op_node (TypeLinkerParameter);
+    AstNode* Node = construct_op_node (TypeLinkerParameter);
 
     Node->left = get_func_Announce (FUNC_ARGUMENTS);
 
@@ -1016,11 +998,11 @@ SNode* get_headParam (FUNC_HEAD_ARGUMENTS)
     return Node;
 }
 
-SNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Node = construct_op_node (TypeLinkerParameter);
+    AstNode* Node = construct_op_node (TypeLinkerParameter);
 
     //MY_LOUD_ASSERT (f_check_vars_table (TOKEN.data.var, Vars) == true);
 
@@ -1032,8 +1014,6 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 
         Node->right = get_Param (FUNC_ARGUMENTS, false);
 
-        //NEXT_TKN;
-
         return Node;
     }
 
@@ -1042,13 +1022,13 @@ SNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
     return Node;
 }
 
-SNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
+AstNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     if (TKN_OP_AND_IS__ TypeIf)
     {
-        SNode* Node = construct_op_node (TOKEN.type);
+        AstNode* Node = construct_op_node (TOKEN.type);
         NEXT_TKN;
 
 
@@ -1066,11 +1046,11 @@ SNode* get_IfElse (FUNC_HEAD_ARGUMENTS)
     return get_While (FUNC_ARGUMENTS);
 }
 
-SNode* get_IfStatements (FUNC_HEAD_ARGUMENTS)
+AstNode* get_IfStatements (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Node = construct_op_node (TypeLinkerCrossroads);
+    AstNode* Node = construct_op_node (TypeLinkerCrossroads);
 
     Node->left = get_Statement (FUNC_ARGUMENTS);
 
@@ -1091,13 +1071,13 @@ SNode* get_IfStatements (FUNC_HEAD_ARGUMENTS)
     return Node;
 }
 
-SNode* get_While (FUNC_HEAD_ARGUMENTS)
+AstNode* get_While (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     if (TKN_OP_AND_IS__ TypeWhile)
     {
-        SNode* Node = construct_op_node (TOKEN.type);
+        AstNode* Node = construct_op_node (TOKEN.type);
         NEXT_TKN;
 
 
@@ -1115,13 +1095,13 @@ SNode* get_While (FUNC_HEAD_ARGUMENTS)
     return get_Input (FUNC_ARGUMENTS);
 }
 
-SNode* get_Input (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Input (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     if (TKN_OP_AND_IS__ TypeInput)
     {
-        SNode* Node = construct_op_node (TOKEN.type);
+        AstNode* Node = construct_op_node (TOKEN.type);
         NEXT_TKN;
 
         CHECK_SYNTAX (TypeOpenRoundBracket);
@@ -1138,13 +1118,13 @@ SNode* get_Input (FUNC_HEAD_ARGUMENTS)
     return get_Output (FUNC_ARGUMENTS);
 }
 
-SNode* get_Output (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Output (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     if (TKN_OP_AND_IS__ TypeOutput)
     {
-        SNode* Node = construct_op_node (TOKEN.type);
+        AstNode* Node = construct_op_node (TOKEN.type);
         NEXT_TKN;
 
         CHECK_SYNTAX (TypeOpenRoundBracket);
@@ -1161,13 +1141,13 @@ SNode* get_Output (FUNC_HEAD_ARGUMENTS)
     return get_Return (FUNC_ARGUMENTS);
 }
 
-SNode* get_Return (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Return (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     if (TKN_OP_AND_IS__ TypeReturn)
     {
-        SNode* Node = construct_op_node (TOKEN.type);
+        AstNode* Node = construct_op_node (TOKEN.type);
         NEXT_TKN;
 
         Node->left  = get_Expression (FUNC_ARGUMENTS, false);
@@ -1180,7 +1160,7 @@ SNode* get_Return (FUNC_HEAD_ARGUMENTS)
     return get_Announce (FUNC_ARGUMENTS);
 }
 
-SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
@@ -1188,7 +1168,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN;
 
-        SNode* Node = construct_op_node (TypeLinkerAnnounce);
+        AstNode* Node = construct_op_node (TypeLinkerAnnounce);
 
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
@@ -1198,9 +1178,6 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
 
             Node->right = get_Expression (FUNC_ARGUMENTS, false);
         }
-
-        // if (f_add_to_var_table (Node->left->data.var, Vars) == false)
-        // if (f_check_vars_table (Node->left->data.var, Vars) == true)
 
         MY_LOUD_ASSERT (Vars->size != 0);
 
@@ -1241,7 +1218,7 @@ SNode* get_Announce (FUNC_HEAD_ARGUMENTS)
     return get_Equation (FUNC_ARGUMENTS);
 }
 
-SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
+AstNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
@@ -1249,11 +1226,10 @@ SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN;
 
-        SNode* Node = construct_op_node (TypeLinkerFuncAnnounce);
+        AstNode* Node = construct_op_node (TypeLinkerFuncAnnounce);
 
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
-        // if (f_check_vars_table (Node->left->data.var, Vars) == true)
         if (f_find_in_table (Node->left->data.var, Vars->data[Vars->size - 1], PrintFlag) == true)
         {
             wprintf (L"==ERROR==\n""Variable '%ls' has been already announced!\n", Node->left->data.var);
@@ -1265,40 +1241,24 @@ SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
             f_add_to_var_table (Node->left->data.var, Vars, PrintFlag);
         }
 
-//         if (TKN_OP_AND_IS__ TypeAssign)
-//         {
-//             NEXT_TKN; //Tokens->number++;
-//
-//             Node->right = get_Expression (FUNC_ARGUMENTS);
-//         }
-
-        // if (Node->right != NULL)
-        // {
-        //     add_to_vars_table (Node->left->data.var, Node->right->data.val, Vars);
-        // }
-        // else
-        // {
-        //     add_to_vars_table (Node->left->data.var, UNINITIALIZED, Vars);
-        // }
-
         return Node;
     }
 
     return NULL;
 }
 
-SNode* get_Variable (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Variable (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Node = construct_var_node (&TOKEN);
+    AstNode* Node = construct_var_node (&TOKEN);
 
     NEXT_TKN; //Tokens->number++;
 
     return Node;
 }
 
-SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Equation (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
@@ -1308,7 +1268,7 @@ SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
     {
         if (f_check_vars_table (TOKEN.data.var, Vars, PrintFlag) == true)
         {
-            SNode* Node = construct_op_node (TypeLinkerEquation);
+            AstNode* Node = construct_op_node (TypeLinkerEquation);
 
             Node->left  = construct_var_node (&TOKEN);
             NEXT_TKN;
@@ -1331,13 +1291,13 @@ SNode* get_Equation (FUNC_HEAD_ARGUMENTS)
     return get_Call (FUNC_ARGUMENTS);
 }
 
-SNode* get_Call (FUNC_HEAD_ARGUMENTS)
+AstNode* get_Call (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
     if (TOKEN.category == CategoryLine && TOKEN.type == TypeVariable && check_funcs_table (TOKEN.data.var, Funcs) == true)
     {
-        SNode* Node = construct_op_node (TypeLinkerCall);
+        AstNode* Node = construct_op_node (TypeLinkerCall);
 
         Node->left = construct_var_node (&TOKEN);
 
@@ -1369,20 +1329,20 @@ SNode* get_Call (FUNC_HEAD_ARGUMENTS)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SNode* get_Expression (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_Expression (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Node = get_Logic (FUNC_ARGUMENTS, ZeroRetPermisiion);
+    AstNode* Node = get_Logic (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     return Node;
 }
 
-SNode* get_Logic (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_Logic (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* LeftSon = get_Compare (FUNC_ARGUMENTS, ZeroRetPermisiion);
+    AstNode* LeftSon = get_Compare (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if
     (
@@ -1394,7 +1354,7 @@ SNode* get_Logic (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
         TokenType CurrentType = TOKEN.type;
         NEXT_TKN;
 
-        SNode* Node = construct_op_node (CurrentType);
+        AstNode* Node = construct_op_node (CurrentType);
 
         Node->left = LeftSon;
 
@@ -1406,11 +1366,11 @@ SNode* get_Logic (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
     return LeftSon;
 }
 
-SNode* get_Compare (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_Compare (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* LeftSon = get_AddSub (FUNC_ARGUMENTS, ZeroRetPermisiion);
+    AstNode* LeftSon = get_AddSub (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if
     (
@@ -1425,7 +1385,7 @@ SNode* get_Compare (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
         TokenType CurrentType = TOKEN.type;
         NEXT_TKN;
 
-        SNode* Node = construct_op_node (CurrentType);
+        AstNode* Node = construct_op_node (CurrentType);
 
         Node->left = LeftSon;
 
@@ -1437,18 +1397,18 @@ SNode* get_Compare (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
     return LeftSon;
 }
 
-SNode* get_AddSub (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_AddSub (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* LeftSon = get_MulDiv (FUNC_ARGUMENTS, ZeroRetPermisiion);
+    AstNode* LeftSon = get_MulDiv (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if ((TKN_OP_AND_IS__ TypeArithAdd)|| (TKN_OP_AND_IS__ TypeArithSub))
     {
         TokenType CurrentType = TOKEN.type;
         NEXT_TKN;
 
-        SNode* Node = construct_op_node (CurrentType);
+        AstNode* Node = construct_op_node (CurrentType);
 
         Node->left = LeftSon;
 
@@ -1460,18 +1420,18 @@ SNode* get_AddSub (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
     return LeftSon;
 }
 
-SNode* get_MulDiv (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_MulDiv (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* LeftSon =  get_Pow (FUNC_ARGUMENTS, ZeroRetPermisiion);
+    AstNode* LeftSon =  get_Pow (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if ((TKN_OP_AND_IS__ TypeArithMul)|| (TKN_OP_AND_IS__ TypeArithDiv))
     {
         TokenType CurrentType = TOKEN.type;
         NEXT_TKN;
 
-        SNode* Node = construct_op_node (CurrentType);
+        AstNode* Node = construct_op_node (CurrentType);
 
         Node->left = LeftSon;
 
@@ -1483,18 +1443,18 @@ SNode* get_MulDiv (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
     return LeftSon;
 }
 
-SNode* get_Pow (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_Pow (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* LeftSon = get_Bracket (FUNC_ARGUMENTS, ZeroRetPermisiion);
+    AstNode* LeftSon = get_Bracket (FUNC_ARGUMENTS, ZeroRetPermisiion);
 
     if (TKN_OP_AND_IS__ TypeArithPow)
     {
         TokenType CurrentType = TOKEN.type;
         NEXT_TKN;
 
-        SNode* Node = construct_op_node (CurrentType);
+        AstNode* Node = construct_op_node (CurrentType);
 
         Node->left = LeftSon;
 
@@ -1506,11 +1466,11 @@ SNode* get_Pow (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
     return LeftSon;
 }
 
-SNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
+AstNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    SNode* Node = NULL;
+    AstNode* Node = NULL;
 
     if (TKN_OP_AND_IS__ TypeOpenRoundBracket)
     {
@@ -1580,255 +1540,3 @@ SNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 
     return NULL;
 }
-
-//=============================================================================================================================================================================
-//GraphViz//
-//===================================================================================================================================================================
-
-void make_graf_viz_tree (SNode* Root, const char* FileName, bool Display)
-{
-    FILE* gvInputFile = fopen (FileName, "w");
-    MY_LOUD_ASSERT (gvInputFile != NULL);
-
-    fprintf (gvInputFile,
-        R"(digraph {
-    rankdir = VR
-    graph [splines = curved];
-    bgcolor = "white";
-    node [shape = "plaintext", style = "solid"];)");
-
-    make_gv_node (gvInputFile, Root);
-
-    fprintf (gvInputFile, "\n}\n");
-
-    fclose (gvInputFile);
-
-    show_gv_tree (FileName, Display);
-
-    return;
-}
-
-void make_gv_node (FILE* File, SNode* Node)
-{
-    MY_LOUD_ASSERT (File != NULL);
-
-    if (Node == NULL)
-    {
-        return;
-    }
-
-    fprintf (File,
-        R"(
-
-                    node_%p
-                    [
-                        label=
-                        <
-                        <table border="0" cellborder="1" cellspacing="0">
-                            <tr>)", Node);
-
-    print_gv_node (File, Node);
-
-    fprintf (File,
-            R"(</td>
-                            </tr>)");
-
-    // if (Node->left != NULL)
-    // {
-    //     fprintf(File,
-    //     R"(
-    //                         <tr>
-    //                             <td bgcolor = "#61de4b" port="left" > %p   </td>
-    //                             <td bgcolor = "#f27798" port="right"> %p   </td>
-    //                         </tr>)", Node->left, Node->right);
-    // }
-
-    fprintf (File, R"(
-                        </table>
-                        >
-                    ]
-                    )");
-
-    if (Node->left != NULL)
-    {
-        fprintf (File,  "\n                    node_%p -> node_%p;", Node, Node->left);
-    }
-
-    if (Node->right != NULL)
-    {
-        fprintf (File,  "\n                    node_%p -> node_%p;", Node, Node->right);
-    }
-
-
-    // if (Node->parent != NULL) //TOO !!!was working
-    // {
-    //     //wprintf (L"!%d!\n", Node->branch);
-    //     if ((Node->parent != NULL) && (Node->parent->left == Node))
-    //     {
-    //         fprintf (File,  "\n                    node_%p -> node_%p;",
-    //                     Node->parent, Node);
-    //     }
-    //     else if ((Node->parent != NULL) && (Node->parent->right == Node))
-    //     {
-    //         fprintf (File,  "\n                    node_%p -> node_%p;",
-    //                     Node->parent, Node);
-    //     }
-    // }
-
-    make_gv_node (File, Node->left);
-    make_gv_node (File, Node->right);
-}
-
-void print_gv_node (FILE* File, SNode* Node)
-{
-    MY_LOUD_ASSERT (File != NULL);
-
-    switch (Node->category)
-    {
-        case CategoryOperation:
-            switch (Node->type)
-            {
-                #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
-                case d_type: \
-                    fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_OP_COLOUR "\">"  " %ls ", d_print); \
-                    break;
-
-                #include "Operations.h"
-
-                #undef DEF_OP
-
-                default:
-                MCA (0, (void) 0);
-            }
-            break;
-
-        case CategoryLine:
-            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAR_COLOUR "\"> " VAR_SPEC " ", Node->data.var);
-            break;
-
-        case CategoryValue:
-            fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAL_COLOUR "\"> " VAL_SPEC " ", Node->data.val);
-            break;
-
-        default:
-            MCA (0, (void) 0);
-    }
-
-    return;
-}
-
-void show_gv_tree (const char* FileName, bool Display)
-{
-    size_t length = strlen (FileName) + 60;
-
-    char* Command = (char*) calloc (sizeof (*FileName), length);
-
-    sprintf (Command, "dot -Tpng %s -o %s.png", FileName, FileName);
-
-    system (Command);
-
-    if (Display)
-    {
-        sprintf (Command, "xdg-open %s.png", FileName);
-
-        system (Command);
-    }
-
-    free (Command);
-
-    return;
-}
-
-//===================================================================================================================================================================
-//WriteTree//
-//===================================================================================================================================================================
-
-void write_tree (SNode* Root, const char* FileName)
-{
-    FILE* OutputFile = fopen (FileName, "w");
-    MY_LOUD_ASSERT (OutputFile != NULL);
-
-    file_wprint (Root, 0, OutputFile);
-
-    fwprintf (OutputFile, L"" FORBIDDEN_TERMINATING_SYMBOL);
-
-    fclose (OutputFile);
-
-    return;
-}
-
-void file_wprint (SNode* Node, int n, FILE* OutputFile)
-{
-    if (Node == NULL)
-    {
-        return;
-    }
-
-    do_tab (n, OutputFile);
-
-    print_node (Node, OutputFile);
-
-    //if (Node->left != NULL)
-    {
-        do_tab (n, OutputFile);
-        fwprintf (OutputFile, L"{\n");
-        file_wprint (Node->left, n + 1, OutputFile);
-        do_tab (n, OutputFile);
-        fwprintf (OutputFile, L"}\n");
-    }
-
-    //if (Node->right != NULL)
-    {
-        //wprintf (L"i m here %ls\n", Node->data);
-        do_tab (n, OutputFile);
-        fwprintf (OutputFile, L"{\n");
-        file_wprint (Node->right, n + 1, OutputFile);
-        do_tab (n, OutputFile);
-        fwprintf (OutputFile, L"}\n");
-    }
-
-    return;
-}
-
-void do_tab (int n, FILE* OutputFile)
-{
-    for (int i = 0; i < n; i++)
-    {
-        fwprintf (OutputFile, L"" TAB);
-    }
-
-    return;
-}
-
-void print_node (SNode* Node, FILE* OutputFile)
-{
-    switch (Node->category)
-    {
-        case CategoryValue:
-            fwprintf (OutputFile, L"CategoryValue TValue %lg", Node->data.val);
-            break;
-
-        case CategoryLine:
-            fwprintf (OutputFile, L"CategoryLine TypeVariable %ls", Node->data.var);
-            break;
-
-        case CategoryOperation:
-            switch (Node->type)
-            {
-                #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
-                case d_type: \
-                    fwprintf (OutputFile, L"CategoryOperation %ls", d_print); \
-                    break;
-
-                #include "Operations.h"
-
-                #undef DEF_OP
-            }
-            break;
-    }
-
-    fwprintf (OutputFile, L"\n");
-    return;
-}
-
-//===================================================================================================================================================================

@@ -45,12 +45,12 @@
 
 void ElfBack::set_hex_int (int Number)
 {
-    SET_4(Number);
+    SET_BYTE_4_BYTES(Number);
 }
 
 void ElfBack::set_hex_long (long Address)
 {
-    SET_8(Address);
+    SET_BYTE_8_BYTES(Address);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,14 +59,14 @@ void ElfBack::x86_push_imm (int Number)
 {
     if (Number <= 127)
     {
-        SET(0x6a);
+        SET_BYTE(0x6a);
 
-        SET((char) Number);
+        SET_BYTE((char) Number);
 
         return;
     }
 
-    SET(0x68);
+    SET_BYTE(0x68);
 
     set_hex_int (Number);
 }
@@ -75,24 +75,24 @@ void ElfBack::x86_push_reg (int Register)
 {
     if (Register >= DELTA)
     {
-        SET(0x41);
+        SET_BYTE(0x41);
         Register-= DELTA;
     }
 
-    x86_macro_one_register_config(Register, 0x50);
+    x86_extra_one_register_config(Register, 0x50);
 }
 
 void ElfBack::x86_push_from_addr_in_reg (int Register)
 {
     if (Register >= DELTA)
     {
-        SET(0x41);
+        SET_BYTE(0x41);
         Register-= DELTA;
     }
 
-    SET(0xff);
+    SET_BYTE(0xff);
 
-    x86_macro_one_register_config(Register, 0x30);
+    x86_extra_one_register_config(Register, 0x30);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,11 +101,11 @@ void ElfBack::x86_pop_to_reg (int Register)
 {
     if (Register >= DELTA)
     {
-        SET(0x41);
+        SET_BYTE(0x41);
         Register-= DELTA;
     }
 
-    x86_macro_one_register_config(Register, 0x58);
+    x86_extra_one_register_config(Register, 0x58);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,38 +113,38 @@ void ElfBack::x86_pop_to_reg (int Register)
 
 void ElfBack::x86_mov_reg_reg (int dstReg, int srcReg)
 {
-    x86_macro_dest_src_config(dstReg, srcReg);
+    x86_extra_dest_src_config(dstReg, srcReg);
 
-    SET(0x89);
+    SET_BYTE(0x89);
 
-    x86_macro_two_registers_config(dstReg, srcReg);
+    x86_extra_two_registers_config(dstReg, srcReg);
 }
 
 void ElfBack::x86_mov_reg_imm (int dstReg, int Number)
 {
-    x86_macro_destination_config(dstReg);
+    x86_extra_destination_config(dstReg);
 
-    SET(0xc7);
+    SET_BYTE(0xc7);
 
-    x86_macro_one_register_config(dstReg, 0xc0);
+    x86_extra_one_register_config(dstReg, 0xc0);
 
     set_hex_int(Number);
 }
 
 void ElfBack::x86_mov_to_reg_from_addr_in_reg (int dstReg, int srcReg)
 {
-    x86_macro_dest_src_config(dstReg, srcReg);
+    x86_extra_dest_src_config(dstReg, srcReg);
 
-    SET(0x8b);
+    SET_BYTE(0x8b);
 
     if ((srcReg == rsp) || (srcReg == r12))
     {
         char opcode = 0x04;
         opcode += (char) dstReg * 8;
 
-        SET(opcode);
+        SET_BYTE(opcode);
 
-        SET(0x24);
+        SET_BYTE(0x24);
 
         return;
     }
@@ -153,9 +153,9 @@ void ElfBack::x86_mov_to_reg_from_addr_in_reg (int dstReg, int srcReg)
         char opcode = 0x45;
         opcode += (char) dstReg * 8;
 
-        SET(opcode);
+        SET_BYTE(opcode);
 
-        SET(0x00);
+        SET_BYTE(0x00);
 
         return;
     }
@@ -164,32 +164,32 @@ void ElfBack::x86_mov_to_reg_from_addr_in_reg (int dstReg, int srcReg)
     opcode += (char) dstReg;
     opcode += (char) srcReg * 8;
 
-    SET(opcode);
+    SET_BYTE(opcode);
 }
 
 void ElfBack::x86_mov_to_addr_in_reg_from_reg (int dstReg, int srcReg)
 {
-    x86_macro_dest_src_config(dstReg, srcReg);
+    x86_extra_dest_src_config(dstReg, srcReg);
 
-    SET(0x89);
+    SET_BYTE(0x89);
 
     char opcode = 0x00;
     opcode += (char) dstReg;
     opcode += (char) srcReg * 8;
 
-    SET(opcode);
+    SET_BYTE(opcode);
 }
 
 void ElfBack::x86_mov_to_reg_from_imm_addr (int dstReg, int MemAddr)
 {
-    x86_macro_destination_config(dstReg);
+    x86_extra_destination_config(dstReg);
 
-    SET(0x8b);
+    SET_BYTE(0x8b);
 
     char opcode = 0x05;
     opcode += (char) dstReg;
 
-    SET(opcode);
+    SET_BYTE(opcode);
 
     set_hex_int(MemAddr);
 }
@@ -198,22 +198,22 @@ void ElfBack::x86_mov_to_reg_from_addr_in_reg_with_imm (int dstReg, int srcReg, 
 {
     const int BORDER_SHORT = 128;
 
-    x86_macro_dest_src_config(dstReg, srcReg);
+    x86_extra_dest_src_config(dstReg, srcReg);
 
-    SET(0x8b);
+    SET_BYTE(0x8b);
 
     if ((srcReg == rsp) || (srcReg == r12))
     {
         char opcode = 0x44;
         opcode += (char) dstReg * 8;
 
-        SET(opcode);
+        SET_BYTE(opcode);
 
-        SET(0x24);
+        SET_BYTE(0x24);
 
         if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
         {
-            SET((char) Shift);
+            SET_BYTE((char) Shift);
         }
         else
         {
@@ -227,11 +227,11 @@ void ElfBack::x86_mov_to_reg_from_addr_in_reg_with_imm (int dstReg, int srcReg, 
         char opcode = 0x45;
         opcode += (char) dstReg * 8;
 
-        SET(opcode);
+        SET_BYTE(opcode);
 
         if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
         {
-            SET((char) Shift);
+            SET_BYTE((char) Shift);
         }
         else
         {
@@ -246,11 +246,11 @@ void ElfBack::x86_mov_to_reg_from_addr_in_reg_with_imm (int dstReg, int srcReg, 
         opcode += (char) dstReg;
         opcode += (char) srcReg * 8;
 
-        SET(opcode);
+        SET_BYTE(opcode);
 
         if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
         {
-            SET((char) Shift);
+            SET_BYTE((char) Shift);
         }
         else
         {
@@ -263,7 +263,7 @@ void ElfBack::x86_mov_to_reg_from_addr_in_reg_with_imm (int dstReg, int srcReg, 
         opcode += (char) dstReg;
         opcode += (char) srcReg * 8;
 
-        SET(opcode);
+        SET_BYTE(opcode);
     }
 }
 
@@ -271,17 +271,17 @@ void ElfBack::x86_mov_to_reg_from_addr_in_reg_with_imm (int dstReg, int srcReg, 
 
 void ElfBack::x86_add_reg_reg (int dstReg, int SrcReg)
 {
-    x86_macro_dest_src_config(dstReg, SrcReg);
+    x86_extra_dest_src_config(dstReg, SrcReg);
 
-    SET(0x01);
+    SET_BYTE(0x01);
 
-    x86_macro_two_registers_config(dstReg, SrcReg);
+    x86_extra_two_registers_config(dstReg, SrcReg);
 }
 
 void ElfBack::x86_add_stack ()
 {
-    int a_reg = A_REG;
-    int b_reg = B_REG;
+    int a_reg = FIRST_REG;
+    int b_reg = SECOND_REG;
 
     x86_pop_to_reg(b_reg);
     x86_pop_to_reg(a_reg);
@@ -293,17 +293,17 @@ void ElfBack::x86_add_stack ()
 
 void ElfBack::x86_sub_reg_reg (int dstReg, int SrcReg)
 {
-    x86_macro_dest_src_config(dstReg, SrcReg);
+    x86_extra_dest_src_config(dstReg, SrcReg);
 
-    SET(0x29);
+    SET_BYTE(0x29);
 
-    x86_macro_two_registers_config(dstReg, SrcReg);
+    x86_extra_two_registers_config(dstReg, SrcReg);
 }
 
 void ElfBack::x86_sub_stack ()
 {
-    int a_reg = A_REG;
-    int b_reg = B_REG;
+    int a_reg = FIRST_REG;
+    int b_reg = SECOND_REG;
 
     x86_pop_to_reg(b_reg);
     x86_pop_to_reg(a_reg);
@@ -315,16 +315,16 @@ void ElfBack::x86_sub_stack ()
 
 void ElfBack::x86_imul_stack ()
 {
-    int a_reg = A_REG;
+    int a_reg = FIRST_REG;
 
     x86_pop_to_reg(a_reg);
     x86_pop_to_reg(rax);
 
-    x86_macro_destination_config(a_reg);
+    x86_extra_destination_config(a_reg);
 
-    SET(0xf7);
+    SET_BYTE(0xf7);
 
-    x86_macro_one_register_config(a_reg, 0xe8);
+    x86_extra_one_register_config(a_reg, 0xe8);
 
     x86_push_reg(rax);
 }
@@ -333,16 +333,16 @@ void ElfBack::x86_idiv_stack ()
 {
     x86_mov_reg_imm(rdx, 0);
 
-    int a_reg = A_REG;
+    int a_reg = FIRST_REG;
 
     x86_pop_to_reg(a_reg);
     x86_pop_to_reg(rax);
 
-    x86_macro_destination_config(a_reg);
+    x86_extra_destination_config(a_reg);
 
-    SET(0xf7);
+    SET_BYTE(0xf7);
 
-    x86_macro_one_register_config(a_reg, 0xf8);
+    x86_extra_one_register_config(a_reg, 0xf8);
 
     x86_push_reg(rax);
 }
@@ -351,22 +351,22 @@ void ElfBack::x86_idiv_stack ()
 
 void ElfBack::x86_add_reg_imm (int Register, int Number)
 {
-    x86_macro_destination_config(Register);
+    x86_extra_destination_config(Register);
 
     if (Number <= 127)
     {
-        SET(0x83);
+        SET_BYTE(0x83);
     }
     else
     {
-        SET(0x81);
+        SET_BYTE(0x81);
     }
 
-    x86_macro_one_register_config(Register, 0xc0);
+    x86_extra_one_register_config(Register, 0xc0);
 
     if (Number <= 127)
     {
-        SET((char) Number);
+        SET_BYTE((char) Number);
     }
     else
     {
@@ -376,22 +376,22 @@ void ElfBack::x86_add_reg_imm (int Register, int Number)
 
 void ElfBack::x86_sub_reg_imm (int Register, int Number)
 {
-    x86_macro_destination_config(Register);
+    x86_extra_destination_config(Register);
 
     if (Number <= 127)
     {
-        SET(0x83);
+        SET_BYTE(0x83);
     }
     else
     {
-        SET(0x81);
+        SET_BYTE(0x81);
     }
 
-    x86_macro_one_register_config(Register, 0xe8);
+    x86_extra_one_register_config(Register, 0xe8);
 
     if (Number <= 127)
     {
-        SET((char) Number);
+        SET_BYTE((char) Number);
     }
     else
     {
@@ -403,20 +403,20 @@ void ElfBack::x86_sub_reg_imm (int Register, int Number)
 
 void ElfBack::x86_inc (int Register)
 {
-    x86_macro_destination_config(Register);
+    x86_extra_destination_config(Register);
 
-    SET(0xff);
+    SET_BYTE(0xff);
 
-    x86_macro_one_register_config(Register, 0xc0);
+    x86_extra_one_register_config(Register, 0xc0);
 }
 
 void ElfBack::x86_dec (int Register)
 {
-    x86_macro_destination_config(Register);
+    x86_extra_destination_config(Register);
 
-    SET(0xff);
+    SET_BYTE(0xff);
 
-    x86_macro_one_register_config(Register, 0xc8);
+    x86_extra_one_register_config(Register, 0xc8);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -425,7 +425,7 @@ void ElfBack::x86_call (int Shift)
 {
     // std::cout << Shift << std::endl;
 
-    SET(0xe8);
+    SET_BYTE(0xe8);
 
     set_hex_int(Shift - CALL_SIZE);
 }
@@ -515,41 +515,41 @@ void ElfBack::x86_jump_label (const wchar_t* Name, const int JumpMode)
 
 void ElfBack::x86_nop ()
 {
-    SET(0x90);
+    SET_BYTE(0x90);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void ElfBack::x86_ret ()
 {
-    SET (0xc3);
+    SET_BYTE (0xc3);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void ElfBack::x86_syscall ()
 {
-    SET (0x0f);
-    SET (0x05);
+    SET_BYTE (0x0f);
+    SET_BYTE (0x05);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void ElfBack::x86_cmp_reg_reg (int dstReg, int srcReg)
 {
-    x86_macro_dest_src_config(dstReg, srcReg);
+    x86_extra_dest_src_config(dstReg, srcReg);
 
-    SET(0x39);
+    SET_BYTE(0x39);
 
-    x86_macro_two_registers_config(dstReg, srcReg);
+    x86_extra_two_registers_config(dstReg, srcReg);
 }
 
 void ElfBack::x86_cmp_stack ()
 {
-    x86_pop_to_reg(B_REG);
-    x86_pop_to_reg(A_REG);
+    x86_pop_to_reg(SECOND_REG);
+    x86_pop_to_reg(FIRST_REG);
 
-    x86_cmp_reg_reg (A_REG, B_REG);
+    x86_cmp_reg_reg (FIRST_REG, SECOND_REG);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -573,57 +573,57 @@ void ElfBack::x86_jump_norm (int Shift, int JumpMode)
     switch (JumpMode)
     {
         case x86_jmp:
-            SET(0xe9);
+            SET_BYTE(0xe9);
             break;
 
         case x86_ja:
-            SET(0x0f);
-            SET(0x87);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x87);
             break;
 
         case x86_jae:
-            SET(0x0f);
-            SET(0x83);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x83);
             break;
 
         case x86_jb:
-            SET(0x0f);
-            SET(0x82);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x82);
             break;
 
         case x86_jbe:
-            SET(0x0f);
-            SET(0x86);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x86);
             break;
 
         case x86_je:
-            SET(0x0f);
-            SET(0x84);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x84);
             break;
 
         case x86_jne:
-            SET(0x0f);
-            SET(0x85);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x85);
             break;
 
         case x86_jl:
-            SET(0x0f);
-            SET(0x8c);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x8c);
             break;
 
         case x86_jle:
-            SET(0x0f);
-            SET(0x8e);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x8e);
             break;
 
         case x86_jg:
-            SET(0x0f);
-            SET(0x8f);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x8f);
             break;
 
         case x86_jge:
-            SET(0x0f);
-            SET(0x8d);
+            SET_BYTE(0x0f);
+            SET_BYTE(0x8d);
             break;
 
         default:
@@ -644,47 +644,47 @@ void ElfBack::x86_jump_near (int Shift, int JumpMode)
     switch (JumpMode)
     {
         case x86_jmp:
-            SET(0xeb);
+            SET_BYTE(0xeb);
             break;
 
         case x86_ja:
-            SET(0x77);
+            SET_BYTE(0x77);
             break;
 
         case x86_jae:
-            SET(0x73);
+            SET_BYTE(0x73);
             break;
 
         case x86_jb:
-            SET(0x72);
+            SET_BYTE(0x72);
             break;
 
         case x86_jbe:
-            SET(0x76);
+            SET_BYTE(0x76);
             break;
 
         case x86_je:
-            SET(0x74);
+            SET_BYTE(0x74);
             break;
 
         case x86_jne:
-            SET(0x75);
+            SET_BYTE(0x75);
             break;
 
         case x86_jl:
-            SET(0x7c);
+            SET_BYTE(0x7c);
             break;
 
         case x86_jle:
-            SET(0x7e);
+            SET_BYTE(0x7e);
             break;
 
         case x86_jg:
-            SET(0x7f);
+            SET_BYTE(0x7f);
             break;
 
         case x86_jge:
-            SET(0x7d);
+            SET_BYTE(0x7d);
             break;
 
         default:
@@ -695,14 +695,14 @@ void ElfBack::x86_jump_near (int Shift, int JumpMode)
 
     offset += Shift;
 
-    SET(offset - NEAR_JUMP_SIZE);
+    SET_BYTE(offset - NEAR_JUMP_SIZE);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElfBack::x86_macro_make_input_func ()
+void ElfBack::x86_extra_make_input_func ()
 {
-    x86_macro_paste_call_label(INP_LBL);
+    x86_extra_paste_call_label(INP_LBL);
 
     x86_mov_reg_reg(r14, rax);
 
@@ -713,11 +713,11 @@ void ElfBack::x86_macro_make_input_func ()
     x86_mov_reg_imm(rdx, 0x0a);
 
     // lea rsi, [rsp+8]  ; buffer = address to store the bytes read
-    SET(0x48);
-    SET(0x8d);
-    SET(0x74);
-    SET(0x24);
-    SET(0x08);
+    SET_BYTE(0x48);
+    SET_BYTE(0x8d);
+    SET_BYTE(0x74);
+    SET_BYTE(0x24);
+    SET_BYTE(0x08);
 
     // mov rax, 0x0      ; SYSCALL number for reading from STDIN
     x86_mov_reg_imm(rax, 0);
@@ -726,23 +726,23 @@ void ElfBack::x86_macro_make_input_func ()
     x86_syscall();  //read
 
     // xor rax, rax      ; clear off rax
-    SET(0x48);
-    SET(0x31);
-    SET(0xc0);
+    SET_BYTE(0x48);
+    SET_BYTE(0x31);
+    SET_BYTE(0xc0);
 
     // lea rsi, [rsp+8]  ; Get the address on the stack where the first ASCII byte of the integer is stored.
-    SET(0x48);
-    SET(0x8d);
-    SET(0x74);
-    SET(0x24);
-    SET(0x08);
+    SET_BYTE(0x48);
+    SET_BYTE(0x8d);
+    SET_BYTE(0x74);
+    SET_BYTE(0x24);
+    SET_BYTE(0x08);
 
     // mov rax, 0x0      ; initialize the counter which stores the number of bytes in the string representation of the integer
     x86_mov_reg_imm(rax, 0);
 
     x86_mov_reg_imm(rbx, 0);
 
-    x86_macro_make_input_func_body ();
+    x86_extra_make_input_func_body ();
 
     x86_mov_to_addr_in_reg_from_reg(r14, rax);
 
@@ -751,30 +751,30 @@ void ElfBack::x86_macro_make_input_func ()
     x86_ret();
 }
 
-void ElfBack::x86_macro_make_input_func_body ()
+void ElfBack::x86_extra_make_input_func_body ()
 {
-    x86_macro_paste_jump_label(L"_in_convert");
+    x86_extra_paste_jump_label(L"_in_convert");
 
     // mov dl, [rsi]
-    SET(0x8a);
-    SET(0x16);
+    SET_BYTE(0x8a);
+    SET_BYTE(0x16);
 
     //cmp dl, 0x0a
-    SET(0x80);
-    SET(0xfa);
-    SET(0x0a);
+    SET_BYTE(0x80);
+    SET_BYTE(0xfa);
+    SET_BYTE(0x0a);
 
     x86_jump_label(L"_in_done", x86_je);
 
     x86_sub_reg_imm(rdx, '0');
 
     // and rdx, 0xff
-    // SET(0x48);
-    // SET(0x81);
-    // SET(0xed);
-    // SET(0xff);
-    // SET(0x00);
-    // SET(0x00);
+    // SET_BYTE(0x48);
+    // SET_BYTE(0x81);
+    // SET_BYTE(0xed);
+    // SET_BYTE(0xff);
+    // SET_BYTE(0x00);
+    // SET_BYTE(0x00);
 
     x86_push_reg(rdx);
 
@@ -801,7 +801,7 @@ void ElfBack::x86_macro_make_input_func_body ()
     // inc esi
     // jmp convert
 
-    x86_macro_paste_jump_label(L"_in_done");
+    x86_extra_paste_jump_label(L"_in_done");
 }
 
 void ElfBack::x86_write_new_line ()
@@ -816,18 +816,18 @@ void ElfBack::x86_write_new_line ()
     x86_mov_reg_imm(rax, 0x0a);
 
     //  mov [rsp+8], rax  ; put this on the stack
-    SET(0x48);
-    SET(0x89);
-    SET(0x44);
-    SET(0x24);
-    SET(0x08);
+    SET_BYTE(0x48);
+    SET_BYTE(0x89);
+    SET_BYTE(0x44);
+    SET_BYTE(0x24);
+    SET_BYTE(0x08);
 
     // lea rsi, [rsp+8]  ; buffer = address to write to consol
-    SET(0x48);
-    SET(0x8d);
-    SET(0x74);
-    SET(0x24);
-    SET(0x08);
+    SET_BYTE(0x48);
+    SET_BYTE(0x8d);
+    SET_BYTE(0x74);
+    SET_BYTE(0x24);
+    SET_BYTE(0x08);
 
     //  ; SYSCALL number for writing to STDOUT
     x86_mov_reg_imm(rax, 0x01);
@@ -836,9 +836,9 @@ void ElfBack::x86_write_new_line ()
     x86_syscall();  //write
 }
 
-void ElfBack::x86_macro_make_output_func ()
+void ElfBack::x86_extra_make_output_func ()
 {
-    x86_macro_paste_call_label(OUT_LBL);
+    x86_extra_paste_call_label(OUT_LBL);
 
     //  xor  rdx, rdx     ; Clear rdx which stores obtains a single digit of the number to convert to ASCII bytes
     x86_mov_reg_imm(rdx, 0);
@@ -852,21 +852,21 @@ void ElfBack::x86_macro_make_output_func ()
     //  mov  rbx, 0xa     ; We store the divisor which is 10 for decimals (base-10) in rbx. rbx will be the divisor.
     x86_mov_reg_imm(rbx, 0x0a);
 
-    x86_macro_make_output_func_body ();
+    x86_extra_make_output_func_body ();
 
     x86_write_new_line();
 
     x86_ret();
 }
 
-void ElfBack::x86_macro_make_output_func_body ()
+void ElfBack::x86_extra_make_output_func_body ()
 {
-    x86_macro_paste_jump_label(L"_out_next");
+    x86_extra_paste_jump_label(L"_out_next");
 
     //  div  rbx          ; Divide the number in rdx:rax by rbx to get the remainder in rdx
-    SET(0x48);
-    SET(0xf7);
-    SET(0xf3);
+    SET_BYTE(0x48);
+    SET_BYTE(0xf7);
+    SET_BYTE(0xf3);
 
     //  add  rdx, 0x30    ; Add 0x30 to get the ASCII byte equivalent of the remainder which is the digit in the number to be written to display.
     x86_add_reg_imm(rdx, '0');
@@ -887,7 +887,7 @@ void ElfBack::x86_macro_make_output_func_body ()
     x86_jump_label(L"_out_next", x86_jne);
 
     // popnext:
-    x86_macro_paste_jump_label(L"_out_popnext");
+    x86_extra_paste_jump_label(L"_out_popnext");
 
     // cmp  r8, 0x0      ; Check if the counter which contains the number of digits to write is 0
     x86_mov_reg_imm (rcx, 0);
@@ -920,12 +920,12 @@ void ElfBack::x86_macro_make_output_func_body ()
     // jmp  popnext      ; Loop until the counter which contains the number of digits goes down to 0.
     x86_jump_label(L"_out_popnext", x86_jmp);
 
-    x86_macro_paste_jump_label(L"_out_done");
+    x86_extra_paste_jump_label(L"_out_done");
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElfBack::x86_macro_paste_call_label (const wchar_t* Name)
+void ElfBack::x86_extra_paste_call_label (const wchar_t* Name)
 {
     #ifdef LABEL_OVERSEER
     fprintf (stdout, "paste |%ls|:\n", Name);
@@ -963,7 +963,7 @@ void ElfBack::x86_macro_paste_call_label (const wchar_t* Name)
     }
 }
 
-void ElfBack::x86_macro_paste_jump_label (const wchar_t* Name)
+void ElfBack::x86_extra_paste_jump_label (const wchar_t* Name)
 {
     if (Labels.find(Name) != Labels.end())
     {
@@ -990,63 +990,63 @@ void ElfBack::x86_macro_paste_jump_label (const wchar_t* Name)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElfBack::x86_macro_dest_src_config (int& dstReg, int& srcReg)
+void ElfBack::x86_extra_dest_src_config (int& dstReg, int& srcReg)
 {
     if ((srcReg >= DELTA) && (dstReg >= DELTA))
     {
-        SET(0x4d);
+        SET_BYTE(0x4d);
         srcReg-= DELTA;
         dstReg-= DELTA;
     }
     else if (srcReg >= DELTA)
     {
-        SET(0x4c);
+        SET_BYTE(0x4c);
         srcReg-= DELTA;
     }
     else if (dstReg >= DELTA)
     {
-        SET(0x49);
+        SET_BYTE(0x49);
         dstReg-= DELTA;
     }
     else
     {
-        SET(0x48);
+        SET_BYTE(0x48);
     }
 }
 
-void ElfBack::x86_macro_destination_config (int& dstReg)
+void ElfBack::x86_extra_destination_config (int& dstReg)
 {
     if (dstReg >= DELTA)
     {
-        SET(0x49);
+        SET_BYTE(0x49);
         dstReg-= DELTA;
     }
     else
     {
-        SET(0x48);
+        SET_BYTE(0x48);
     }
 }
 
-void ElfBack::x86_macro_two_registers_config(const int dstReg, const int srcReg)
+void ElfBack::x86_extra_two_registers_config(const int dstReg, const int srcReg)
 {
     char opcode = 0xc0;
     opcode += (char) dstReg;
     opcode += (char) srcReg * 8;
 
-    SET(opcode);
+    SET_BYTE(opcode);
 }
 
-void ElfBack::x86_macro_one_register_config(const int Reg, const int ZeroPoint)
+void ElfBack::x86_extra_one_register_config(const int Reg, const int ZeroPoint)
 {
     char opcode = ZeroPoint;
     opcode += (char) Reg;
 
-    SET(opcode);
+    SET_BYTE(opcode);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void ElfBack::x86_macro_exit ()
+void ElfBack::x86_extra_exit ()
 {
     x86_mov_reg_imm(rax, 0x3c);
     x86_mov_reg_imm(rdi, 0);

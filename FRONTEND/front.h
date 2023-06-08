@@ -34,7 +34,7 @@
 #define FUNC    Funcs->Arr[counter]
 
 //TODO think about add flag here
-#define FUNC_HEAD_ARGUMENTS AllTokens* Tokens, SStack<SVarTable*>* Vars, SFuncs* Funcs, int* marker, bool* PrintFlag
+#define FUNC_HEAD_ARGUMENTS AllTokens* Tokens, SStack<SVarTable*>* Vars, FunctionArr* Funcs, int* marker, bool* PrintFlag
 #define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker, PrintFlag
 
 #define TOKEN_FUNC_DEBUG_INFO   \
@@ -61,7 +61,7 @@ const int MAX_FUNCS_ARRAY = 50;
 
 //===================================================================================================================================================================
 
-void my_f_main (int argc, char** argv);
+void my_front_main (int argc, char** argv);
 
 //===================================================================================================================================================================
 //source//
@@ -163,16 +163,16 @@ double parse_int (CharT* Lexem, int* Counter);
 //grammar//
 //===================================================================================================================================================================
 
-typedef struct SNode
+typedef struct AstNode
 {
-    SNode*      left     = NULL;
-    SNode*      right    = NULL;
-    Category   category = CategoryValue;
-    TokenType  type     = TValue;
+    AstNode*    left     = NULL;
+    AstNode*    right    = NULL;
+    Category    category = CategoryValue;
+    TokenType   type     = TValue;
     UData       data     = {};
-    SNode*      parent   = NULL;
+    AstNode*    parent   = NULL;
 }
-SNode;
+AstNode;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -209,14 +209,14 @@ typedef struct
     CharT*  name        = NULL;
     int     parameters  = 0;
 }
-SFunc;
+Function;
 
 typedef struct
 {
-    SFunc*   Arr    = NULL;
+    Function*   Arr    = NULL;
     int      size   = 0;
 }
-SFuncs;
+FunctionArr;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -245,83 +245,83 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SFuncs* construct_funcs_table (size_t Capacity);
+FunctionArr* construct_funcs_table (size_t Capacity);
 
-int add_to_funcs_table (CharT* Name, SFuncs* Funcs, bool* PrintFlag);
+int add_to_funcs_table (CharT* Name, FunctionArr* Funcs, bool* PrintFlag);
 
-void add_parameters (int Number, SNode* Node, SFuncs* Funcs, bool* PrintFlag);
+void add_parameters (int Number, AstNode* Node, FunctionArr* Funcs, bool* PrintFlag);
 
-int count_parameters (SNode* Node);
+int count_parameters (AstNode* Node);
 
-bool check_funcs_table (CharT* Name, SFuncs* Funcs, bool* PrintFlag);
+bool check_funcs_table (CharT* Name, FunctionArr* Funcs, bool* PrintFlag);
 
-void show_funcs_table (SFuncs* Funcs, bool* PrintFlag);
+void show_funcs_table (FunctionArr* Funcs, bool* PrintFlag);
 
-void destruct_funcs_table (SFuncs* Funcs, bool* PrintFlag);
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-SNode* construct_op_node (TokenType Type);
-
-SNode* construct_var_node (Token* CurToken);
-
-SNode* construct_val_node (ValT Value);
-
-void delete_tree (SNode** Node);
+void destruct_funcs_table (FunctionArr* Funcs, bool* PrintFlag);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SNode* get_All          (FUNC_HEAD_ARGUMENTS);
+AstNode* construct_op_node (TokenType Type);
 
-SNode* get_Statement    (FUNC_HEAD_ARGUMENTS);
+AstNode* construct_var_node (Token* CurToken);
 
-SNode* get_Function     (FUNC_HEAD_ARGUMENTS);
+AstNode* construct_val_node (ValT Value);
 
-SNode* get_Head         (FUNC_HEAD_ARGUMENTS);
+void delete_tree (AstNode** Node);
 
-SNode* get_Type         (FUNC_HEAD_ARGUMENTS);
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-SNode* get_Parameters   (FUNC_HEAD_ARGUMENTS);
+AstNode* get_All          (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_headParam    (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Statement    (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_Function     (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_IfElse       (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Head         (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_IfStatements (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Type         (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_While        (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Parameters   (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Call         (FUNC_HEAD_ARGUMENTS);
+AstNode* get_headParam    (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Input        (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_Output       (FUNC_HEAD_ARGUMENTS);
+AstNode* get_IfElse       (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Return       (FUNC_HEAD_ARGUMENTS);
+AstNode* get_IfStatements (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Announce     (FUNC_HEAD_ARGUMENTS);
+AstNode* get_While        (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_func_Announce (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Call         (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Equation     (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Input        (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Variable     (FUNC_HEAD_ARGUMENTS);
+AstNode* get_Output       (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Expression   (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_Return       (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Logic        (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_Announce     (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Compare      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_func_Announce (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_AddSub       (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_Equation     (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_MulDiv       (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_Variable     (FUNC_HEAD_ARGUMENTS);
 
-SNode* get_Pow          (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_Expression   (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
-SNode* get_Bracket      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+AstNode* get_Logic        (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+
+AstNode* get_Compare      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+
+AstNode* get_AddSub       (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+
+AstNode* get_MulDiv       (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+
+AstNode* get_Pow          (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
+
+AstNode* get_Bracket      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
 //===================================================================================================================================================================
 //GraphViz//
@@ -336,11 +336,11 @@ SNode* get_Bracket      (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void make_graf_viz_tree (SNode* Root, const char* FileName, bool Display);
+void make_graf_viz_tree (AstNode* Root, const char* FileName, bool Display);
 
-void make_gv_node (FILE* File, SNode* Node);
+void make_gv_node (FILE* File, AstNode* Node);
 
-void print_gv_node (FILE* File, SNode* Node);
+void print_gv_node (FILE* File, AstNode* Node);
 
 void show_gv_tree (const char* FileName, bool Display);
 
@@ -348,13 +348,13 @@ void show_gv_tree (const char* FileName, bool Display);
 //WriteTree//
 //===================================================================================================================================================================
 
-void write_tree (SNode* Root, const char* FileName);
+void write_tree (AstNode* Root, const char* FileName);
 
-void file_wprint (SNode* Node, int n, FILE* OutputFile);
+void file_wprint (AstNode* Node, int n, FILE* OutputFile);
 
 void do_tab (int n, FILE* OutputFile);
 
-void print_node (SNode* Node, FILE* OutputFile);
+void print_node (AstNode* Node, FILE* OutputFile);
 
 //===================================================================================================================================================================
 

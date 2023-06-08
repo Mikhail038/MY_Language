@@ -16,7 +16,7 @@
 
 int main (int argc, char** argv)
 {
-    my_f_main (argc, argv);
+    my_front_main (argc, argv);
 
     return 0;
 }

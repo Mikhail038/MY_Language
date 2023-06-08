@@ -8,7 +8,7 @@
 
 int main (int argc, char** argv)
 {
-    FILE* Bin = argc > 1 ? fopen (argv[1], "rb") : fopen ("EXAMPLES_MC/code.mc", "r");
+    FILE* Bin = argc > 1 ? fopen (argv[1], "rb") : fopen ("EXAMPLES/EXAMPLES_MC/code.mc", "r");
     MCA (Bin != NULL, 1);
 
     StructMachineCode Code = {};
@@ -26,7 +26,7 @@ int main (int argc, char** argv)
 
     make_text_from_code (&Array, &Code);
 
-    FILE* Text = argc > 2 ? fopen (argv[2], "w") : fopen ("EXAMPLES_DISASM/code.disasm", "w");
+    FILE* Text = argc > 2 ? fopen (argv[2], "w") : fopen ("EXAMPLES/EXAMPLES_DISASM/code.disasm", "w");
     MCA (Text != NULL, 1);
 
 

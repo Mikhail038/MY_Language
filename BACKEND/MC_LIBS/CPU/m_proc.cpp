@@ -6,7 +6,7 @@
 
 int main (int argc, char** argv)
 {
-    FILE* Bin = argc > 2 ? fopen (argv[2], "r") : fopen ("EXAMPLES_MC/code.mc", "r");
+    FILE* Bin = argc > 2 ? fopen (argv[2], "r") : fopen ("EXAMPLES/EXAMPLES_MC/code.mc", "r");
     MCA (Bin != NULL, 1);
 
     StructCPU CPU = {};

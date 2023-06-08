@@ -39,13 +39,15 @@ int main (int argc, char** argv)
 {
     setlocale(LC_CTYPE, "");
 
-    SNode* Root = read_tree ("FILES/ParsedSrc.tr");
+    AstNode* Root = read_tree ("AST/ParsedSrc.tr");
 
     if (Root != NULL)
     {
         const char* FileName = (argc > 1)  ? argv[1] : "a.elf";
 
+        #ifdef DEBUG_AST_VIZ
         make_graf_viz_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
+        #endif
 
         FILE* ExFile = fopen (FileName, "w");
 
@@ -63,9 +65,6 @@ int main (int argc, char** argv)
 
         sprintf (Command, "chmod +rwx %s", FileName);
         system (Command);
-
-        // sprintf (Command, "./%s", FileName);
-        // system (FileName);
 
         free (Command);
     }

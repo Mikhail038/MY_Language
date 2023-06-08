@@ -13,3 +13,4 @@ ger
 exec
 build.cpp
 ger
+*.elf

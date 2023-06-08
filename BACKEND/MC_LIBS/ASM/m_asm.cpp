@@ -6,7 +6,7 @@
 
 int main (int argc, char** argv)
 {
-    FILE* SourceFile = argc > 1 ? fopen (argv[1], "r") : fopen ("EXAMPLES_ASM/code.asm", "rb");
+    FILE* SourceFile = argc > 1 ? fopen (argv[1], "r") : fopen ("EXAMPLES/EXAMPLES_ASM/code.asm", "rb");
     MCA (SourceFile != NULL, 1);
 
     StructSource Source = {};
@@ -33,14 +33,14 @@ int main (int argc, char** argv)
 
     Code.ip = 0;
 
-    const char* Filename = argc > 3 ? argv[3] : "EXAMPLES_LOGS/code.log";
+    const char* Filename = argc > 3 ? argv[3] : "EXAMPLES/EXAMPLES_LOGS/code.log";
 
     make_array_of_code (Amnt_lines, &Source, &Code, Filename);
 
     free (Source.Buffer);
 
 
-    FILE* Bin = argc > 2 ? fopen (argv[2], "wb") : fopen ("EXAMPLES_MC/code.mc", "wb");
+    FILE* Bin = argc > 2 ? fopen (argv[2], "wb") : fopen ("EXAMPLES/EXAMPLES_MC/code.mc", "wb");
     MCA (Bin != NULL, 1);
 
     make_bin_file (Bin, &Code);

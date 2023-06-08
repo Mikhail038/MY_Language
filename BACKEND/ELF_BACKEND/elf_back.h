@@ -46,28 +46,28 @@ const int MAX_ELF_SIZE = 100000;
 
 //==================================================================================================================================================================
 
-#define SET(x) Array[cur_addr] = (x); cur_addr++;
+#define SET_BYTE(x) Array[cur_addr] = (x); cur_addr++;
 
-#define SET_2(x)     \
+#define SET_BYTE_2_BYTES(x)     \
     memcpy ((unsigned short int*) &(Array[cur_addr]),    \
                         &(x), sizeof (unsigned short int));  \
     cur_addr += 2;
 
-#define SET_4(x)     \
+#define SET_BYTE_4_BYTES(x)     \
     memcpy ((unsigned int*) &(Array[cur_addr]),    \
                         &(x), sizeof (unsigned int));  \
     cur_addr += 4;
 
-#define SET_8(x)     \
+#define SET_BYTE_8_BYTES(x)     \
     memcpy ((size_t*) &(Array[cur_addr]),    \
                         &(x), sizeof (size_t));  \
     cur_addr += 8;
 
-#define FILL_2  SET (0x00);
+#define FILL_2  SET_BYTE (0x00);
 
-#define FILL_4  SET (0x00); SET (0x00); SET (0x00);
+#define FILL_4  for (int cnt = 0; cnt != 3; ++cnt) { SET_BYTE (0x00); }
 
-#define FILL_8  SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00); SET (0x00);
+#define FILL_8  for (int cnt = 0; cnt != 7; ++cnt) { SET_BYTE (0x00); }
 
 #define PASTE_8(x,y)  \
     (x) = cur_addr;    \
@@ -118,8 +118,8 @@ enum Registers_64
 };
 
 //DO NOT MAKE THEM RAX or RDX
-#define A_REG  rbx
-#define B_REG  rcx
+#define FIRST_REG  rbx
+#define SECOND_REG  rcx
 
 // #define ELF_SHIFT_REG  r8
 // #define eCOUNT_REG  r9
@@ -153,7 +153,7 @@ typedef struct ElfBack
     std::unordered_map<const wchar_t*, TLabel> Labels;
 
 public:
-    ElfBack(FILE* ExFile, SNode* CurNode);
+    ElfBack(FILE* ExFile, AstNode* CurNode);
 
     ~ElfBack();
 
@@ -238,26 +238,26 @@ public:
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_macro_dest_src_config    (int& dstReg, int& srcReg);
-    void x86_macro_destination_config       (int& dstReg);
+    void x86_extra_dest_src_config    (int& dstReg, int& srcReg);
+    void x86_extra_destination_config       (int& dstReg);
 
-    void x86_macro_two_registers_config  (const int dstReg, const int srcReg);
-    void x86_macro_one_register_config   (const int Reg, const int ZeroPoint);
+    void x86_extra_two_registers_config  (const int dstReg, const int srcReg);
+    void x86_extra_one_register_config   (const int Reg, const int ZeroPoint);
 
-    void x86_macro_exit ();
-
-    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    void x86_macro_paste_call_label (const wchar_t* Name);
-    void x86_macro_paste_jump_label (const wchar_t* Name);
+    void x86_extra_exit ();
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void x86_macro_make_input_func ();
-    void x86_macro_make_input_func_body ();
+    void x86_extra_paste_call_label (const wchar_t* Name);
+    void x86_extra_paste_jump_label (const wchar_t* Name);
 
-    void x86_macro_make_output_func ();
-    void x86_macro_make_output_func_body ();
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    void x86_extra_make_input_func ();
+    void x86_extra_make_input_func_body ();
+
+    void x86_extra_make_output_func ();
+    void x86_extra_make_output_func_body ();
 
     void x86_write_new_line ();
 
@@ -273,37 +273,37 @@ public:
                                 unsigned int& TextNameOffset, size_t& addrTextNameOffset,
                                 unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
 
-    void generate_elf_array (SNode* Root);
+    void generate_elf_array (AstNode* Root);
 
-    void elf_generate_code (SNode* Root);
+    void elf_generate_code (AstNode* Root);
 
     void generate_main ();
 
-    void elf_generate_statement (SNode* CurNode);
-    void elf_generate_function (SNode* CurNode);
-    void elf_generate_node (SNode* CurNode);
-    void elf_generate_op_node (SNode* CurNode, bool RetValueMarker);
-    void elf_generate_input (SNode* CurNode);
-    void elf_generate_output (SNode* CurNode);
-    void elf_generate_if (SNode* CurNode);
-    void elf_generate_while (SNode* CurNode);
-    void elf_generate_call (SNode* CurNode, bool RetValueMarker);
-    void elf_generate_return (SNode* CurNode);
-    void elf_generate_announce (SNode* CurNode);
-    void elf_generate_equation (SNode* CurNode);
-    void elf_generate_expression (SNode* CurNode);
-    void elf_generate_postorder (SNode* CurNode, bool RetValueMarker);
+    void elf_generate_statement (AstNode* CurNode);
+    void elf_generate_function (AstNode* CurNode);
+    void elf_generate_node (AstNode* CurNode);
+    void elf_generate_op_node (AstNode* CurNode, bool RetValueMarker);
+    void elf_generate_input (AstNode* CurNode);
+    void elf_generate_output (AstNode* CurNode);
+    void elf_generate_if (AstNode* CurNode);
+    void elf_generate_while (AstNode* CurNode);
+    void elf_generate_call (AstNode* CurNode, bool RetValueMarker);
+    void elf_generate_return (AstNode* CurNode);
+    void elf_generate_announce (AstNode* CurNode);
+    void elf_generate_equation (AstNode* CurNode);
+    void elf_generate_expression (AstNode* CurNode);
+    void elf_generate_postorder (AstNode* CurNode, bool RetValueMarker);
 
-    void elf_set_rax_var_value      (SNode* CurNode);
-    void elf_set_rax_var_address    (SNode* CurNode);
+    void elf_set_rax_var_value      (AstNode* CurNode);
+    void elf_set_rax_var_address    (AstNode* CurNode);
 
-    void elf_generate_pop_var   (SNode* CurNode);
-    void elf_generate_push_var  (SNode* CurNode);
+    void elf_generate_pop_var   (AstNode* CurNode);
+    void elf_generate_push_var  (AstNode* CurNode);
 
     //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    void elf_push_parameters (SNode* CurNode);
-    void elf_delete_function_parameters (SNode* CurNode);
+    void elf_push_parameters (AstNode* CurNode);
+    void elf_delete_function_parameters (AstNode* CurNode);
 
     void elf_pop_parameters ();
 
@@ -313,17 +313,17 @@ public:
 
     void elf_write_command (ECommandNums eCommand, FILE* File);
 
-    void elf_add_to_var_table (SNode* CurNode, bool ParamMarker);
+    void elf_add_to_var_table (AstNode* CurNode, bool ParamMarker);
     void elf_create_new_var_table (bool ParamMarker);
-    void elf_create_param_var_table (SNode* CurNode);
+    void elf_create_param_var_table (AstNode* CurNode);
     void elf_delete_var_table ();
 
-    size_t elf_find_all_new_vars    (SNode* CurNode);
-    size_t elf_find_new_var     (SNode* CurNode);
+    size_t elf_find_all_new_vars    (AstNode* CurNode);
+    size_t elf_find_new_var     (AstNode* CurNode);
 
-    int elf_find_var (SNode* CurNode);
+    int elf_find_var (AstNode* CurNode);
 
-    SNode* elf_find_parent_statement (SNode* CurNode);
+    AstNode* elf_find_parent_statement (AstNode* CurNode);
     bool elf_find_in_table (CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
 
     // bool my_find (const wchar_t* Name);
@@ -339,13 +339,13 @@ public:
 
 //==================================================================================================================================================================
 
-void make_elf_file (SNode* Root, FILE* ExFile);
+void make_elf_file (AstNode* Root, FILE* ExFile);
 
 //==================================================================================================================================================================
 
-void create_elf_header (SNode* Root, FILE* ExFile);
+void create_elf_header (AstNode* Root, FILE* ExFile);
 
-void create_elf_body (SNode* Root, FILE* ExFile);
+void create_elf_body (AstNode* Root, FILE* ExFile);
 
 //===================================================================================================================================================================
 
