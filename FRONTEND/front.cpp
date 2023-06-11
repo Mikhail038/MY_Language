@@ -26,10 +26,11 @@
 
 // #define TOKEN_FUNC_DEBUG_INFO
 
-#define BASE_SCOPES_NUM 20
+const int BASE_SCOPES_NUM = 20;
 
-#define MAX_MEMORY  100000
-#define MAX_LEXEM_SIZE 30
+const int MAX_MEMORY = 100000;
+
+const int MAX_LEXEM_SIZE = 30;
 
 #define SEP_SYMBOLS "\n;,() "
 

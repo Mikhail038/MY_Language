@@ -71,6 +71,14 @@ const int MAX_ELF_SIZE = 100000;
     memcpy ((size_t*) &(Back->Array[(y)]), \
     &(x), sizeof (size_t));
 
+#define PASTE_KNOWN_4(x)  \
+    memcpy ((unsigned int*) &(Back->Array[(x)]), \
+    &(x), sizeof (unsigned int));
+
+#define PASTE_KNOWN_8(x)  \
+    memcpy ((size_t*) &(Back->Array[(x)]), \
+    &(x), sizeof (size_t));
+
 #define PASTE_4(x,y)  \
     (x) = Back->cur_addr;    \
     memcpy ((unsigned int*) &(Back->Array[(y)]), \
@@ -265,7 +273,7 @@ void elf_head_start_params (ElfBack* Back);
 void elf_head_program_header_params (ElfBack* Back, const size_t FileVirtualAddress);
 void elf_head_shstrtable (ElfBack* Back,
                             size_t& SegmentSize, size_t& addrSegmentSize,
-                            size_t& SegmentFileSize, size_t& addrSegmentFileSize,
+                                                    size_t& addrSegmentFileSize,
                             size_t& TableAddress, size_t& addrTableAddress,
                             size_t& TableLoadAddress, size_t& addrTableLoadAddress,
                             unsigned int& TextNameOffset, size_t& addrTextNameOffset,
@@ -324,7 +332,6 @@ int elf_find_var (ElfBack* Back, AstNode* CurNode);
 AstNode* elf_find_parent_statement (ElfBack* Back, AstNode* CurNode);
 bool elf_find_in_table (ElfBack* Back, CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
 
-// bool my_find (const wchar_t* Name);
 const wchar_t* my_wchar_find (ElfBack* Back, const wchar_t* Name);
 
 //==================================================================================================================================================================
