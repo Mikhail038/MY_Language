@@ -106,8 +106,14 @@ void print_node (AstNode* Node, FILE* OutputFile)
                 #include "Operations.h"
 
                 #undef DEF_OP
+
+                default:
+                    MY_LOUD_ASSERT(false);
             }
             break;
+
+        default:
+            MY_LOUD_ASSERT(false);
     }
 
     fwprintf (OutputFile, L"\n");

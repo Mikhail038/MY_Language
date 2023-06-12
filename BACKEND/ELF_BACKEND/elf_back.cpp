@@ -24,6 +24,7 @@
 #include "elf_back.h"
 
 #include "back.h"
+#include "elf_header_plus_tools.h"
 #include "front.h"
 
 
@@ -63,10 +64,6 @@ void destruct_elf_back (ElfBack* Back)
     free (Back->Array);
 }
 
-
-//=============================================================================================================================================================================
-
-
 //=============================================================================================================================================================================
 
 void make_elf_file (AstNode* Root, FILE* ExFile)
@@ -99,68 +96,67 @@ void make_elf_file (AstNode* Root, FILE* ExFile)
 
 void elf_head_start (ElfBack* Back)
 {
-    SET_BYTE (0x7f); //MAGIC SIGNATURE
+    set_one_byte(Back, 0x7f); //MAGIC SIGNATURE
 
-    SET_BYTE ('E');
-    SET_BYTE ('L');
-    SET_BYTE ('F');
+    set_one_byte(Back, 'E');
+    set_one_byte(Back, 'L');
+    set_one_byte(Back, 'F');
 
-    SET_BYTE (0x02); //Class (64-bit = 2)
+    set_one_byte(Back, 0x02); //Class (64-bit = 2)
 
-    SET_BYTE (0x01); //Endian (little endian = 1)
+    set_one_byte(Back, 0x01); //Endian (little endian = 1)
 
-    SET_BYTE (0x01); //Elf Version (only correct = 1)
+    set_one_byte(Back, 0x01); //Elf Version (only correct = 1)
 
-    SET_BYTE (0x00); //OS ABI (System V (UNIX) = 0)
+    set_one_byte(Back, 0x00); //OS ABI (System V (UNIX) = 0)
 
-    SET_BYTE (0x00); //ABI version (none = 0)
+    set_one_byte(Back, 0x00); //ABI version (none = 0)
+    align_one_byte(Back, 8);  //7 padding bytes
 
-    FILL_8;     //7 padding bytes
+    set_one_byte(Back, 0x02); //Type (executable = 2)
+    align_one_byte(Back, 2);  //1 padding byte
 
-    SET_BYTE (0x02); //Type (executable = 2)
-    FILL_2;     //nothing
+    set_one_byte(Back, 0x3e); //Machine (x86_64 = 3e)
+    align_one_byte(Back, 2);  //1 padding byte
 
-    SET_BYTE (0x3e); //Machine (x86_64 = 3e)
-    FILL_2;     //nothing
-
-    SET_BYTE (0x01); //Version (only correct = 1)
-    FILL_4;     //nothing
+    set_one_byte(Back, 0x01); //Version (only correct = 1)
+    align_one_byte(Back, 4);  //3 padding bytes
 }
 
 void elf_head_start_params (ElfBack* Back)
 {
-    SET_BYTE (0x00); //Flags (no flags = 0)
-    FILL_4;     //nothing
+    set_one_byte(Back, 0x00); //Flags (no flags = 0)
+    align_one_byte(Back, 4);
 
     unsigned short int  HeaderSize = 64; //std
-    SET_BYTE_2_BYTES (HeaderSize);
+    set_bytes(Back, HeaderSize);
 
     unsigned short int  ProgramHeaderSize = 56; //std
-    SET_BYTE_2_BYTES(ProgramHeaderSize);
+    set_bytes(Back, ProgramHeaderSize);
 
     unsigned short int  ProgramHeadersCnt = 1;
-    SET_BYTE_2_BYTES(ProgramHeadersCnt);
+    set_bytes(Back, ProgramHeadersCnt);
 
     unsigned short int  SectionHeadersSize = 64; //std
-    SET_BYTE_2_BYTES(SectionHeadersSize);
+    set_bytes(Back, SectionHeadersSize);
 
     unsigned short int  SectionHeadersCnt = 3; // maybe not
-    SET_BYTE_2_BYTES(SectionHeadersCnt);
+    set_bytes(Back, SectionHeadersCnt);
 
     unsigned short int  ShstrTabIndex  = 2; // maybe not
-    SET_BYTE_2_BYTES(ShstrTabIndex);
+    set_bytes(Back, ShstrTabIndex);
 }
 
 void elf_head_program_header_params (ElfBack* Back, const size_t FileVirtualAddress)
 {
-    SET_BYTE (0x01); //Segment type (load = 0)
-    FILL_4;     //nothing
+    set_one_byte(Back, 0x01); //Segment type (load = 0)
+    align_one_byte(Back, 4);
 
-    SET_BYTE (0x05); //Segment flag (r w x = 0 1 2)
-    FILL_4;     //nothing
+    set_one_byte(Back, 0x05); //Segment flag (r w x = 0 1 2)
+    align_one_byte(Back, 4);
 
-    SET_BYTE (0x00); //Segment offset (0)
-    FILL_8;     //nothing
+    set_one_byte(Back, 0x00); //Segment offset (0)
+    align_one_byte(Back, 8);
 
     memcpy ((size_t*) &(Back->Array[Back->cur_addr]),
             &FileVirtualAddress, sizeof (size_t));  //Virtual address
@@ -189,33 +185,33 @@ void elf_head_shstrtable (ElfBack* Back, size_t& SegmentSize, size_t& addrSegmen
     &TableLoadAddress, sizeof (size_t));
 
 
-    SET_BYTE (0x00); //begin section header string table
+    set_one_byte(Back, 0x00); //begin section header string table
 
     TextNameOffset = Back->cur_addr - SegmentSize;
     memcpy ((unsigned int*) &(Back->Array[addrTextNameOffset]),
     &TextNameOffset, sizeof (unsigned int));
 
-    SET_BYTE ('.');
-    SET_BYTE ('t');
-    SET_BYTE ('e');
-    SET_BYTE ('x');
-    SET_BYTE ('t');
-    SET_BYTE (0x00); //end
+    set_one_byte(Back, '.');
+    set_one_byte(Back, 't');
+    set_one_byte(Back, 'e');
+    set_one_byte(Back, 'x');
+    set_one_byte(Back, 't');
+    set_one_byte(Back, 0x00); //end
 
     TableNameOffset = Back->cur_addr - SegmentSize;
     memcpy ((unsigned int*) &(Back->Array[addrTableNameOffset]),
     &TableNameOffset, sizeof (unsigned int));
 
-    SET_BYTE ('.');
-    SET_BYTE ('s');
-    SET_BYTE ('h');
-    SET_BYTE ('s');
-    SET_BYTE ('t');
-    SET_BYTE ('r');
-    SET_BYTE ('t');
-    SET_BYTE ('a');
-    SET_BYTE ('b');
-    SET_BYTE (0x00); //end
+    set_one_byte(Back, '.');
+    set_one_byte(Back, 's');
+    set_one_byte(Back, 'h');
+    set_one_byte(Back, 's');
+    set_one_byte(Back, 't');
+    set_one_byte(Back, 'r');
+    set_one_byte(Back, 't');
+    set_one_byte(Back, 'a');
+    set_one_byte(Back, 'b');
+    set_one_byte(Back, 0x00); //end
 }
 
 void generate_elf_array (ElfBack* Back, AstNode* Root)
@@ -242,14 +238,14 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     SKIP_8(SegmentFileSize, addrSegmentFileSize);
 
-    SET_BYTE (0x00);
-    SET_BYTE (0x00);
-    SET_BYTE (0x20); //Alignment
-    SET_BYTE (0x00);
-    SET_BYTE (0x00);
-    SET_BYTE (0x00);
-    SET_BYTE (0x00);
-    SET_BYTE (0x00);
+    set_one_byte(Back, 0x00);
+    set_one_byte(Back, 0x00);
+    set_one_byte(Back, 0x20); //Alignment
+    set_one_byte(Back, 0x00);
+    set_one_byte(Back, 0x00);
+    set_one_byte(Back, 0x00);
+    set_one_byte(Back, 0x00);
+    set_one_byte(Back, 0x00);
 
     //=======================================================================
 
@@ -260,7 +256,7 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     for (int cnt_null_header = 0; cnt_null_header < 64; cnt_null_header++)
     {
-        SET_BYTE (0x00);
+        set_one_byte(Back, 0x00);
     }
 
     //=======================================================================
@@ -268,10 +264,10 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     SKIP_4(TextNameOffset, addrTextNameOffset);
 
-    SET_BYTE (0x01); //Section type (bits = 1)
+    set_one_byte(Back, 0x01); //Section type (bits = 1)
     FILL_4;     //nothing
 
-    SET_BYTE (0x06); //Section flags (r w x )
+    set_one_byte(Back, 0x06); //Section flags (r w x )
     FILL_8;     //nothing
 
     size_t addrAnotherEntryVA = Back->cur_addr;
@@ -281,16 +277,16 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     SKIP_8(TextSize, addrTextSize);
 
-    SET_BYTE (0x00); //Section index
+    set_one_byte(Back, 0x00); //Section index
     FILL_4;
 
-    SET_BYTE (0x00); //Dop info
+    set_one_byte(Back, 0x00); //Dop info
     FILL_4;
 
-    SET_BYTE (0x10); //Alignment
+    set_one_byte(Back, 0x10); //Alignment
     FILL_8;
 
-    SET_BYTE (0x00); //Dop sizes
+    set_one_byte(Back, 0x00); //Dop sizes
     FILL_8;
 
     //=======================================================================
@@ -298,10 +294,10 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     SKIP_4(TableNameOffset, addrTableNameOffset);
 
-    SET_BYTE (0x03); //Section type (strtable = 1)
+    set_one_byte(Back, 0x03); //Section type (strtable = 1)
     FILL_4;     //nothing
 
-    SET_BYTE (0x00);
+    set_one_byte(Back, 0x00);
     FILL_8;
 
     SKIP_8(TableLoadAddress, addrTableLoadAddress);
@@ -310,16 +306,16 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     SKIP_8(TableSize, addrTableSize);
 
-    SET_BYTE (0x00); //Section index
+    set_one_byte(Back, 0x00); //Section index
     FILL_4;
 
-    SET_BYTE (0x00); //Dop info
+    set_one_byte(Back, 0x00); //Dop info
     FILL_4;
 
-    SET_BYTE (0x01); //Alignment
+    set_one_byte(Back, 0x01); //Alignment
     FILL_8;
 
-    SET_BYTE (0x00); //Dop sizes
+    set_one_byte(Back, 0x00); //Dop sizes
     FILL_8;
 
     //=======================================================================
@@ -367,9 +363,8 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 }
 
 //=============================================================================================================================================================================
-#define VAR_SIZE 8
 
-#define BUFFER_SIZE 20
+const int VAR_SIZE_BYTES = 8;
 
 void elf_generate_code (ElfBack* Back, AstNode* Root)
 {
@@ -378,11 +373,6 @@ void elf_generate_code (ElfBack* Back, AstNode* Root)
     x86_extra_exit(Back);
 
     Back->buffer = Back->cur_addr;
-
-    for (size_t cnt = 0; cnt < BUFFER_SIZE; ++cnt)
-    {
-        SET_BYTE(0x00);
-    }
 
     x86_extra_make_input_func (Back);
 
@@ -421,7 +411,10 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
     }
 
     x86_extra_paste_call_label(Back, CurNode->left->data.var);
+
+    #ifdef DEBUG_LABELS
     // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
+    #endif
 
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
 
@@ -442,13 +435,15 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
         push_in_stack(Back->VarStack, Table);
 
+        #ifdef DEBUG_VARS
         // printf ("Vars Amount: [%d]\n", AmountVars);
+        #endif
     }
 
     x86_push_reg(Back, rbp);
     x86_mov_reg_reg(Back, rbp, rsp);
 
-    x86_sub_reg_imm(Back, rbp, AmountVars * VAR_SIZE);
+    x86_sub_reg_imm(Back, rbp, AmountVars * VAR_SIZE_BYTES);
 
     x86_mov_reg_reg(Back, rsp, rbp);
 
@@ -456,7 +451,7 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
 
     int old_delta_rbp = Back->delta_rbp;
-    Back->delta_rbp = (AmountVars) * VAR_SIZE;
+    Back->delta_rbp = (AmountVars) * VAR_SIZE_BYTES;
 
 
     elf_generate_statement (Back, CurNode->right);
@@ -464,9 +459,7 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
     Back->delta_rbp = old_delta_rbp;
 
-
-
-    x86_add_reg_imm(Back, rbp, AmountVars * VAR_SIZE);
+    x86_add_reg_imm(Back, rbp, AmountVars * VAR_SIZE_BYTES);
 
     x86_pop_to_reg(Back, rbp);
     x86_mov_reg_reg(Back, rsp, rbp);
@@ -506,6 +499,8 @@ void elf_generate_op_node (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
         #include "ELF_Operations.h"
 
         #undef DEF_OP
+        default:
+            MY_LOUD_ASSERT(false);
     }
 
     return;
@@ -518,8 +513,6 @@ void elf_generate_announce (ElfBack* Back, AstNode* CurNode)
     elf_add_to_var_table (Back, CurNode->left, false);
 
     elf_generate_pop_var (Back, CurNode->left);
-
-    // elf_incr_top_reg ();
 
     return;
 }
@@ -705,7 +698,7 @@ void elf_generate_return (ElfBack* Back, AstNode* CurNode)
         peek_from_stack (Back->VarStack, &Table);
         AmountVars = Table->amount;
     }
-    x86_add_reg_imm(Back, rbp, AmountVars * VAR_SIZE);
+    x86_add_reg_imm(Back, rbp, AmountVars * VAR_SIZE_BYTES);
 
     x86_mov_reg_reg(Back, rsp, rbp);
 
@@ -751,7 +744,7 @@ void elf_set_rax_var_value (ElfBack* Back, AstNode* CurNode)
     if (Index < 0)
     {
         // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
-        x86_mov_to_reg_from_addr_in_reg_with_imm(Back, rax, rbp, Back->delta_rbp - Index * VAR_SIZE);
+        x86_mov_to_reg_from_addr_in_reg_with_imm(Back, rax, rbp, Back->delta_rbp - Index * VAR_SIZE_BYTES);
 
         return;
     }
@@ -772,7 +765,7 @@ void elf_set_rax_var_address (ElfBack* Back, AstNode* CurNode)
     if (Index < 0)
     {
         // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
-        x86_add_reg_imm(Back, rax, Back->delta_rbp - Index * VAR_SIZE);
+        x86_add_reg_imm(Back, rax, Back->delta_rbp - Index * VAR_SIZE_BYTES);
 
         return;
     }
@@ -847,7 +840,7 @@ void elf_delete_function_parameters (ElfBack* Back, AstNode* CurNode)
 
     if (CurNode != NULL && CurNode->left != NULL)
     {
-        x86_add_reg_imm(Back, rsp, VAR_SIZE);
+        x86_add_reg_imm(Back, rsp, VAR_SIZE_BYTES);
     }
 
     return;
@@ -935,7 +928,7 @@ void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
         printf (KYLW "Amount: %d CurSize: %d Param: %d Final: %d => " KNRM, Table->amount, Table->cur_size, Table->amount_param, Table->amount - (Table->cur_size - Table->amount_param) - 1);
         #endif
 
-        Table->Arr[Table->cur_size].index = (Table->amount - (Table->cur_size - Table->amount_param) - 1) * VAR_SIZE;
+        Table->Arr[Table->cur_size].index = (Table->amount - (Table->cur_size - Table->amount_param) - 1) * VAR_SIZE_BYTES;
 
         #ifdef VAR_OVERSEER
         printf (KYLW "index <%d>\n" KNRM, Table->Arr[Table->cur_size].index);

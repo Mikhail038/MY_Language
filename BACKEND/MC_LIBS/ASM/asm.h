@@ -73,6 +73,11 @@ int check_passport (FILE* Bin, int* Size, int* VramSize);
 //Buffer//
 //=================================================================================================================================================================================================================
 
+int open_listing_file (const char* Filename, StructMachineCode* Code);
+
+int close_listing_file (StructMachineCode* Code);
+
+
 int count_lines_in_file (FILE* stream);
 
 int count_symbols_in_file (FILE* stream);
@@ -82,6 +87,8 @@ void separate_buffer_on_lines (char** ArrLinePtrs, const char* Buffer, int AmntL
 void make_array_of_code (int Amnt_lines, StructSource* Source, StructMachineCode* Code, const char* Filename);
 
 void skip_line (StructSource* Source);
+
+int add_label (char* Name, StructMachineCode* Code);
 
 int seek (StructSource* Source);
 

@@ -36,24 +36,40 @@
 //=============================================================================================================================================================================
 
 const int CALL_SIZE = 5;
-// #define CALL_SIZE 5
 
 const int NEAR_JUMP_SIZE = 2;
-// #define NEAR_JUMP_SIZE 2
 
 const int NORM_JUMP_SIZE = 6;
-// #define NORM_JUMP_SIZE 6
 
 //=============================================================================================================================================================================
+/*
+#define SET_BYTE(x) Back->Array[Back->cur_addr] = (x); Back->cur_addr++;
+
+#define SET_BYTE_2_BYTES(x)     \
+    memcpy ((unsigned short int*) &(Back->Array[Back->cur_addr]),    \
+                        &(x), sizeof (unsigned short int));  \
+    Back->cur_addr += 2;
+
+#define SET_BYTE_4_BYTES(x)     \
+    memcpy ((unsigned int*) &(Back->Array[Back->cur_addr]),    \
+                        &(x), sizeof (unsigned int));  \
+    Back->cur_addr += 4;
+
+#define SET_BYTE_8_BYTES(x)     \
+    memcpy ((size_t*) &(Back->Array[Back->cur_addr]),    \
+                        &(x), sizeof (size_t));  \
+    Back->cur_addr += 8;
+// */
+//==================================================================================================================================================================
 
 void set_hex_int (ElfBack* Back, int Number)
 {
-    SET_BYTE_4_BYTES(Number);
+    set_bytes(Back, Number);
 }
 
 void set_hex_long (ElfBack* Back, long Address)
 {
-    SET_BYTE_8_BYTES(Address);
+    set_bytes(Back, Address);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -62,24 +78,24 @@ void x86_push_imm (ElfBack* Back, int Number)
 {
     if (Number <= 127)
     {
-        SET_BYTE(0x6a);
+        set_one_byte(Back, 0x6a);
 
-        SET_BYTE((char) Number);
+        set_one_byte(Back, (char) Number);
 
         return;
     }
 
-    SET_BYTE(0x68);
+    set_one_byte(Back, 0x68);
 
     set_hex_int (Back, Number);
 }
 
 void x86_push_reg (ElfBack* Back, int Register)
 {
-    if (Register >= DELTA)
+    if (Register >= r8)
     {
-        SET_BYTE(0x41);
-        Register-= DELTA;
+        set_one_byte(Back, 0x41);
+        Register-= r8;
     }
 
     x86_extra_one_register_config(Back, Register, 0x50);
@@ -87,13 +103,13 @@ void x86_push_reg (ElfBack* Back, int Register)
 
 void x86_push_from_addr_in_reg (ElfBack* Back, int Register)
 {
-    if (Register >= DELTA)
+    if (Register >= r8)
     {
-        SET_BYTE(0x41);
-        Register-= DELTA;
+        set_one_byte(Back, 0x41);
+        Register-= r8;
     }
 
-    SET_BYTE(0xff);
+    set_one_byte(Back, 0xff);
 
     x86_extra_one_register_config(Back, Register, 0x30);
 }
@@ -102,10 +118,10 @@ void x86_push_from_addr_in_reg (ElfBack* Back, int Register)
 
 void x86_pop_to_reg (ElfBack* Back, int Register)
 {
-    if (Register >= DELTA)
+    if (Register >= r8)
     {
-        SET_BYTE(0x41);
-        Register-= DELTA;
+        set_one_byte(Back, 0x41);
+        Register-= r8;
     }
 
     x86_extra_one_register_config(Back, Register, 0x58);
@@ -118,7 +134,7 @@ void x86_mov_reg_reg (ElfBack* Back, int dstReg, int srcReg)
 {
     x86_extra_dest_src_config(Back, dstReg, srcReg);
 
-    SET_BYTE(0x89);
+    set_one_byte(Back, 0x89);
 
     x86_extra_two_registers_config(Back, dstReg, srcReg);
 }
@@ -127,7 +143,7 @@ void x86_mov_reg_imm (ElfBack* Back, int dstReg, int Number)
 {
     x86_extra_destination_config(Back, dstReg);
 
-    SET_BYTE(0xc7);
+    set_one_byte(Back, 0xc7);
 
     x86_extra_one_register_config(Back, dstReg, 0xc0);
 
@@ -138,16 +154,16 @@ void x86_mov_to_reg_from_addr_in_reg (ElfBack* Back, int dstReg, int srcReg)
 {
     x86_extra_dest_src_config(Back, dstReg, srcReg);
 
-    SET_BYTE(0x8b);
+    set_one_byte(Back, 0x8b);
 
     if ((srcReg == rsp) || (srcReg == r12))
     {
         char opcode = 0x04;
         opcode += (char) dstReg * 8;
 
-        SET_BYTE(opcode);
+        set_one_byte(Back, opcode);
 
-        SET_BYTE(0x24);
+        set_one_byte(Back, 0x24);
 
         return;
     }
@@ -156,9 +172,9 @@ void x86_mov_to_reg_from_addr_in_reg (ElfBack* Back, int dstReg, int srcReg)
         char opcode = 0x45;
         opcode += (char) dstReg * 8;
 
-        SET_BYTE(opcode);
+        set_one_byte(Back, opcode);
 
-        SET_BYTE(0x00);
+        set_one_byte(Back, 0x00);
 
         return;
     }
@@ -167,32 +183,32 @@ void x86_mov_to_reg_from_addr_in_reg (ElfBack* Back, int dstReg, int srcReg)
     opcode += (char) dstReg;
     opcode += (char) srcReg * 8;
 
-    SET_BYTE(opcode);
+    set_one_byte(Back, opcode);
 }
 
 void x86_mov_to_addr_in_reg_from_reg (ElfBack* Back, int dstReg, int srcReg)
 {
     x86_extra_dest_src_config(Back, dstReg, srcReg);
 
-    SET_BYTE(0x89);
+    set_one_byte(Back, 0x89);
 
     char opcode = 0x00;
     opcode += (char) dstReg;
     opcode += (char) srcReg * 8;
 
-    SET_BYTE(opcode);
+    set_one_byte(Back, opcode);
 }
 
 void x86_mov_to_reg_from_imm_addr (ElfBack* Back, int dstReg, int MemAddr)
 {
     x86_extra_destination_config(Back, dstReg);
 
-    SET_BYTE(0x8b);
+    set_one_byte(Back, 0x8b);
 
     char opcode = 0x05;
     opcode += (char) dstReg;
 
-    SET_BYTE(opcode);
+    set_one_byte(Back, opcode);
 
     set_hex_int(Back, MemAddr);
 }
@@ -203,20 +219,20 @@ void x86_mov_to_reg_from_addr_in_reg_with_imm (ElfBack* Back, int dstReg, int sr
 
     x86_extra_dest_src_config(Back, dstReg, srcReg);
 
-    SET_BYTE(0x8b);
+    set_one_byte(Back, 0x8b);
 
     if ((srcReg == rsp) || (srcReg == r12))
     {
         char opcode = 0x44;
         opcode += (char) dstReg * 8;
 
-        SET_BYTE(opcode);
+        set_one_byte(Back, opcode);
 
-        SET_BYTE(0x24);
+        set_one_byte(Back, 0x24);
 
         if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
         {
-            SET_BYTE((char) Shift);
+            set_one_byte(Back, (char) Shift);
         }
         else
         {
@@ -230,11 +246,11 @@ void x86_mov_to_reg_from_addr_in_reg_with_imm (ElfBack* Back, int dstReg, int sr
         char opcode = 0x45;
         opcode += (char) dstReg * 8;
 
-        SET_BYTE(opcode);
+        set_one_byte(Back, opcode);
 
         if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
         {
-            SET_BYTE((char) Shift);
+            set_one_byte(Back, (char) Shift);
         }
         else
         {
@@ -249,11 +265,11 @@ void x86_mov_to_reg_from_addr_in_reg_with_imm (ElfBack* Back, int dstReg, int sr
         opcode += (char) dstReg;
         opcode += (char) srcReg * 8;
 
-        SET_BYTE(opcode);
+        set_one_byte(Back, opcode);
 
         if (Shift >= -BORDER_SHORT && Shift <= BORDER_SHORT)
         {
-            SET_BYTE((char) Shift);
+            set_one_byte(Back, (char) Shift);
         }
         else
         {
@@ -266,7 +282,7 @@ void x86_mov_to_reg_from_addr_in_reg_with_imm (ElfBack* Back, int dstReg, int sr
         opcode += (char) dstReg;
         opcode += (char) srcReg * 8;
 
-        SET_BYTE(opcode);
+        set_one_byte(Back, opcode);
     }
 }
 
@@ -276,7 +292,7 @@ void x86_add_reg_reg (ElfBack* Back, int dstReg, int SrcReg)
 {
     x86_extra_dest_src_config(Back, dstReg, SrcReg);
 
-    SET_BYTE(0x01);
+    set_one_byte(Back, 0x01);
 
     x86_extra_two_registers_config(Back, dstReg, SrcReg);
 }
@@ -298,7 +314,7 @@ void x86_sub_reg_reg (ElfBack* Back, int dstReg, int SrcReg)
 {
     x86_extra_dest_src_config(Back, dstReg, SrcReg);
 
-    SET_BYTE(0x29);
+    set_one_byte(Back, 0x29);
 
     x86_extra_two_registers_config(Back, dstReg, SrcReg);
 }
@@ -325,7 +341,7 @@ void x86_imul_stack (ElfBack* Back)
 
     x86_extra_destination_config(Back, a_reg);
 
-    SET_BYTE(0xf7);
+    set_one_byte(Back, 0xf7);
 
     x86_extra_one_register_config(Back, a_reg, 0xe8);
 
@@ -343,7 +359,7 @@ void x86_idiv_stack (ElfBack* Back)
 
     x86_extra_destination_config(Back, a_reg);
 
-    SET_BYTE(0xf7);
+    set_one_byte(Back, 0xf7);
 
     x86_extra_one_register_config(Back, a_reg, 0xf8);
 
@@ -358,18 +374,18 @@ void x86_add_reg_imm (ElfBack* Back, int Register, int Number)
 
     if (Number <= 127)
     {
-        SET_BYTE(0x83);
+        set_one_byte(Back, 0x83);
     }
     else
     {
-        SET_BYTE(0x81);
+        set_one_byte(Back, 0x81);
     }
 
     x86_extra_one_register_config(Back, Register, 0xc0);
 
     if (Number <= 127)
     {
-        SET_BYTE((char) Number);
+        set_one_byte(Back, (char) Number);
     }
     else
     {
@@ -383,18 +399,18 @@ void x86_sub_reg_imm (ElfBack* Back, int Register, int Number)
 
     if (Number <= 127)
     {
-        SET_BYTE(0x83);
+        set_one_byte(Back, 0x83);
     }
     else
     {
-        SET_BYTE(0x81);
+        set_one_byte(Back, 0x81);
     }
 
     x86_extra_one_register_config(Back, Register, 0xe8);
 
     if (Number <= 127)
     {
-        SET_BYTE((char) Number);
+        set_one_byte(Back, (char) Number);
     }
     else
     {
@@ -408,7 +424,7 @@ void x86_inc (ElfBack* Back, int Register)
 {
     x86_extra_destination_config(Back, Register);
 
-    SET_BYTE(0xff);
+    set_one_byte(Back, 0xff);
 
     x86_extra_one_register_config(Back, Register, 0xc0);
 }
@@ -417,7 +433,7 @@ void x86_dec (ElfBack* Back, int Register)
 {
     x86_extra_destination_config(Back, Register);
 
-    SET_BYTE(0xff);
+    set_one_byte(Back, 0xff);
 
     x86_extra_one_register_config(Back, Register, 0xc8);
 }
@@ -428,7 +444,7 @@ void x86_call (ElfBack* Back, int Shift)
 {
     // std::cout << Shift << std::endl;
 
-    SET_BYTE(0xe8);
+    set_one_byte(Back, 0xe8);
 
     set_hex_int(Back, Shift - CALL_SIZE);
 }
@@ -442,7 +458,7 @@ void x86_call_label (ElfBack* Back, const wchar_t* Name)
     // if (Back->Labels.find(Name) != Labels.end())
     if (my_wchar_find(Back, Name) != NULL)
     {
-        FuncLabel Label = Back->Labels[my_wchar_find(Back, Name)];
+        JumpLabel Label = Back->Labels[my_wchar_find(Back, Name)];
 
         if (Label.finish != NULL_FINISH)
         {
@@ -517,22 +533,22 @@ void x86_jump_label (ElfBack* Back, const wchar_t* Name, const int JumpMode)
 
 void x86_nop (ElfBack* Back)
 {
-    SET_BYTE(0x90);
+    set_one_byte(Back, 0x90);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void x86_ret (ElfBack* Back)
 {
-    SET_BYTE (0xc3);
+    set_one_byte(Back, 0xc3);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void x86_syscall (ElfBack* Back)
 {
-    SET_BYTE (0x0f);
-    SET_BYTE (0x05);
+    set_one_byte(Back, 0x0f);
+    set_one_byte(Back, 0x05);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -541,7 +557,7 @@ void x86_cmp_reg_reg (ElfBack* Back, int dstReg, int srcReg)
 {
     x86_extra_dest_src_config(Back, dstReg, srcReg);
 
-    SET_BYTE(0x39);
+    set_one_byte(Back, 0x39);
 
     x86_extra_two_registers_config(Back, dstReg, srcReg);
 }
@@ -575,57 +591,57 @@ void x86_jump_norm (ElfBack* Back, int Shift, int JumpMode)
     switch (JumpMode)
     {
         case x86_jmp:
-            SET_BYTE(0xe9);
+            set_one_byte(Back, 0xe9);
             break;
 
         case x86_ja:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x87);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x87);
             break;
 
         case x86_jae:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x83);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x83);
             break;
 
         case x86_jb:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x82);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x82);
             break;
 
         case x86_jbe:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x86);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x86);
             break;
 
         case x86_je:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x84);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x84);
             break;
 
         case x86_jne:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x85);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x85);
             break;
 
         case x86_jl:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x8c);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x8c);
             break;
 
         case x86_jle:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x8e);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x8e);
             break;
 
         case x86_jg:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x8f);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x8f);
             break;
 
         case x86_jge:
-            SET_BYTE(0x0f);
-            SET_BYTE(0x8d);
+            set_one_byte(Back, 0x0f);
+            set_one_byte(Back, 0x8d);
             break;
 
         default:
@@ -646,47 +662,47 @@ void x86_jump_near (ElfBack* Back, int Shift, int JumpMode)
     switch (JumpMode)
     {
         case x86_jmp:
-            SET_BYTE(0xeb);
+            set_one_byte(Back, 0xeb);
             break;
 
         case x86_ja:
-            SET_BYTE(0x77);
+            set_one_byte(Back, 0x77);
             break;
 
         case x86_jae:
-            SET_BYTE(0x73);
+            set_one_byte(Back, 0x73);
             break;
 
         case x86_jb:
-            SET_BYTE(0x72);
+            set_one_byte(Back, 0x72);
             break;
 
         case x86_jbe:
-            SET_BYTE(0x76);
+            set_one_byte(Back, 0x76);
             break;
 
         case x86_je:
-            SET_BYTE(0x74);
+            set_one_byte(Back, 0x74);
             break;
 
         case x86_jne:
-            SET_BYTE(0x75);
+            set_one_byte(Back, 0x75);
             break;
 
         case x86_jl:
-            SET_BYTE(0x7c);
+            set_one_byte(Back, 0x7c);
             break;
 
         case x86_jle:
-            SET_BYTE(0x7e);
+            set_one_byte(Back, 0x7e);
             break;
 
         case x86_jg:
-            SET_BYTE(0x7f);
+            set_one_byte(Back, 0x7f);
             break;
 
         case x86_jge:
-            SET_BYTE(0x7d);
+            set_one_byte(Back, 0x7d);
             break;
 
         default:
@@ -697,7 +713,7 @@ void x86_jump_near (ElfBack* Back, int Shift, int JumpMode)
 
     Offset += Shift;
 
-    SET_BYTE(Offset - NEAR_JUMP_SIZE);
+    set_one_byte(Back, Offset - NEAR_JUMP_SIZE);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -734,11 +750,11 @@ void x86_extra_make_input_func (ElfBack* Back)
     x86_mov_reg_imm(Back, rdx, 0x0a);
 
     // lea rsi, [rsp+8]  ; buffer = address to store the bytes read
-    SET_BYTE(0x48);
-    SET_BYTE(0x8d);
-    SET_BYTE(0x74);
-    SET_BYTE(0x24);
-    SET_BYTE(0x08);
+    set_one_byte(Back, 0x48);
+    set_one_byte(Back, 0x8d);
+    set_one_byte(Back, 0x74);
+    set_one_byte(Back, 0x24);
+    set_one_byte(Back, 0x08);
 
     // mov rax, 0x0      ; SYSCALL number for reading from STDIN
     x86_mov_reg_imm(Back, rax, 0);
@@ -747,16 +763,16 @@ void x86_extra_make_input_func (ElfBack* Back)
     x86_syscall(Back);  //read
 
     // xor rax, rax      ; clear off rax
-    SET_BYTE(0x48);
-    SET_BYTE(0x31);
-    SET_BYTE(0xc0);
+    set_one_byte(Back, 0x48);
+    set_one_byte(Back, 0x31);
+    set_one_byte(Back, 0xc0);
 
     // lea rsi, [rsp+8]  ; Get the address on the stack where the first ASCII byte of the integer is stored.
-    SET_BYTE(0x48);
-    SET_BYTE(0x8d);
-    SET_BYTE(0x74);
-    SET_BYTE(0x24);
-    SET_BYTE(0x08);
+    set_one_byte(Back, 0x48);
+    set_one_byte(Back, 0x8d);
+    set_one_byte(Back, 0x74);
+    set_one_byte(Back, 0x24);
+    set_one_byte(Back, 0x08);
 
     // mov rax, 0x0      ; initialize the counter which stores the number of bytes in the string representation of the integer
     x86_mov_reg_imm(Back, rax, 0);
@@ -778,25 +794,25 @@ void x86_extra_make_input_func_body (ElfBack* Back)
     x86_extra_paste_jump_label(Back, L"_in_convert");
 
     // mov dl, [rsi]
-    SET_BYTE(0x8a);
-    SET_BYTE(0x16);
+    set_one_byte(Back, 0x8a);
+    set_one_byte(Back, 0x16);
 
     //cmp dl, 0x0a
-    SET_BYTE(0x80);
-    SET_BYTE(0xfa);
-    SET_BYTE(0x0a);
+    set_one_byte(Back, 0x80);
+    set_one_byte(Back, 0xfa);
+    set_one_byte(Back, 0x0a);
 
     x86_jump_label(Back, L"_in_done", x86_je);
 
     x86_sub_reg_imm(Back, rdx, '0');
 
     // and rdx, 0xff
-    // SET_BYTE(0x48);
-    // SET_BYTE(0x81);
-    // SET_BYTE(0xed);
-    // SET_BYTE(0xff);
-    // SET_BYTE(0x00);
-    // SET_BYTE(0x00);
+    // set_one_byte(Back, 0x48);
+    // set_one_byte(Back, 0x81);
+    // set_one_byte(Back, 0xed);
+    // set_one_byte(Back, 0xff);
+    // set_one_byte(Back, 0x00);
+    // set_one_byte(Back, 0x00);
 
     x86_push_reg(Back, rdx);
 
@@ -838,18 +854,18 @@ void x86_write_new_line (ElfBack* Back)
     x86_mov_reg_imm(Back, rax, 0x0a);
 
     //  mov [rsp+8], rax  ; put this on the stack
-    SET_BYTE(0x48);
-    SET_BYTE(0x89);
-    SET_BYTE(0x44);
-    SET_BYTE(0x24);
-    SET_BYTE(0x08);
+    set_one_byte(Back, 0x48);
+    set_one_byte(Back, 0x89);
+    set_one_byte(Back, 0x44);
+    set_one_byte(Back, 0x24);
+    set_one_byte(Back, 0x08);
 
     // lea rsi, [rsp+8]  ; buffer = address to write to consol
-    SET_BYTE(0x48);
-    SET_BYTE(0x8d);
-    SET_BYTE(0x74);
-    SET_BYTE(0x24);
-    SET_BYTE(0x08);
+    set_one_byte(Back, 0x48);
+    set_one_byte(Back, 0x8d);
+    set_one_byte(Back, 0x74);
+    set_one_byte(Back, 0x24);
+    set_one_byte(Back, 0x08);
 
     //  ; SYSCALL number for writing to STDOUT
     x86_mov_reg_imm(Back, rax, 0x01);
@@ -907,9 +923,9 @@ void x86_extra_make_output_func_body (ElfBack* Back)
     x86_extra_paste_jump_label(Back, L"_out_next");
 
     //  div  rbx          ; Divide the number in rdx:rax by rbx to get the remainder in rdx
-    SET_BYTE(0x48);
-    SET_BYTE(0xf7);
-    SET_BYTE(0xf3);
+    set_one_byte(Back, 0x48);
+    set_one_byte(Back, 0xf7);
+    set_one_byte(Back, 0xf3);
 
     //  add  rdx, 0x30    ; Add 0x30 to get the ASCII byte equivalent of the remainder which is the digit in the number to be written to display.
     x86_add_reg_imm(Back, rdx, '0');
@@ -978,7 +994,7 @@ void x86_extra_paste_call_label (ElfBack* Back, const wchar_t* Name)
     // if (Back->Labels.find(Name) != Back->Labels.end())
     if (my_wchar_find (Back, Name) != NULL)
     {
-        FuncLabel Label = Back->Labels[my_wchar_find(Back, Name)];
+        JumpLabel Label = Back->Labels[my_wchar_find(Back, Name)];
 
         Label.finish = Back->cur_addr;
 
@@ -1035,56 +1051,56 @@ void x86_extra_paste_jump_label (ElfBack* Back, const wchar_t* Name)
 
 void x86_extra_dest_src_config (ElfBack* Back, int& dstReg, int& srcReg)
 {
-    if ((srcReg >= DELTA) && (dstReg >= DELTA))
+    if ((srcReg >= r8) && (dstReg >= r8))
     {
-        SET_BYTE(0x4d);
-        srcReg-= DELTA;
-        dstReg-= DELTA;
+        set_one_byte(Back, 0x4d);
+        srcReg-= r8;
+        dstReg-= r8;
     }
-    else if (srcReg >= DELTA)
+    else if (srcReg >= r8)
     {
-        SET_BYTE(0x4c);
-        srcReg-= DELTA;
+        set_one_byte(Back, 0x4c);
+        srcReg-= r8;
     }
-    else if (dstReg >= DELTA)
+    else if (dstReg >= r8)
     {
-        SET_BYTE(0x49);
-        dstReg-= DELTA;
+        set_one_byte(Back, 0x49);
+        dstReg-= r8;
     }
     else
     {
-        SET_BYTE(0x48);
+        set_one_byte(Back, 0x48);
     }
 }
 
 void x86_extra_destination_config (ElfBack* Back, int& dstReg)
 {
-    if (dstReg >= DELTA)
+    if (dstReg >= r8)
     {
-        SET_BYTE(0x49);
-        dstReg-= DELTA;
+        set_one_byte(Back, 0x49);
+        dstReg-= r8;
     }
     else
     {
-        SET_BYTE(0x48);
+        set_one_byte(Back, 0x48);
     }
 }
 
 void x86_extra_two_registers_config(ElfBack* Back, const int dstReg, const int srcReg)
 {
-    char opcode = 0xc0;
+    char opcode = (char) 0xc0;
     opcode += (char) dstReg;
-    opcode += (char) srcReg * 8;
+    opcode += (char) (srcReg * 8);
 
-    SET_BYTE(opcode);
+    set_one_byte(Back, opcode);
 }
 
 void x86_extra_one_register_config(ElfBack* Back, const int Reg, const int ZeroPoint)
 {
-    char opcode = ZeroPoint;
+    char opcode = (char) ZeroPoint;
     opcode += (char) Reg;
 
-    SET_BYTE(opcode);
+    set_one_byte(Back, opcode);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

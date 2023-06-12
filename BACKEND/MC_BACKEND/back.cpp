@@ -37,6 +37,7 @@ void my_b_main (int argc, char** argv)
     if (Root != NULL)
     {
         FILE* ExFile = fopen ("EXAMPLES/EXAMPLES_ASM/code.asm", "w");
+        MY_LOUD_ASSERT(ExFile != NULL);
 
         #ifdef DEBUG_AST_VIZ
         make_graf_viz_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
@@ -653,6 +654,9 @@ void generate_op_node (BACK_FUNC_HEAD_PARAMETERS)
         #include "Operations.h"
 
         #undef DEF_OP
+
+        default:
+            MY_LOUD_ASSERT(false);
     }
 
     return;

@@ -172,6 +172,7 @@ int pop_from_stack (SStack<StackDataType>* stack, StackDataType* x)
     }
     else
     {
+        // printf ("{%d}\n", stack->size);
         *x = stack->data[stack->size - 1];
 
         stack->size--;

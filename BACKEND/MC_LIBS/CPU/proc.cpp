@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "disasm.h"
 
+#include "float_equality.h"
+
 #define STACKCTOR(d_stack, d_capacity) stack_constructor (d_stack, d_capacity)
 
 static const int REGS_CONST = 5;
@@ -135,7 +137,7 @@ void do_dump (StructCPU* CPU)
     int ram_elems_cnt = 0;
     for (; counter < CPU->size_RAM; counter++)
     {
-        if (CPU->RAM[counter] != 0)
+        if (FLOAT_IS_NOT_EQUAL(CPU->RAM[counter], 0))
         {
             if ((ram_elems_cnt % 10) > 8)
             {

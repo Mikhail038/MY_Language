@@ -229,7 +229,9 @@ void f_create_new_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag);
 
 void f_delete_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag);
 
-bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars);
+bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag);
+
+// bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars);
 
 bool f_find_in_table (CharT* Name, SVarTable* Table, bool* PrintFlag);
 
@@ -240,7 +242,13 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
 
 FunctionArr* construct_funcs_table (size_t Capacity);
 
-int add_to_funcs_table (CharT* Name, FunctionArr* Funcs, bool* PrintFlag);
+// int add_to_funcs_table (CharT* Name, FunctionArr* Funcs, bool* PrintFlag);
+
+int add_to_funcs_table (CharT* Name, FunctionArr* Funcs);
+
+void add_parameters (int Number, AstNode* Node, FunctionArr* Funcs);
+
+bool check_funcs_table (CharT* Name, FunctionArr* Funcs);
 
 void add_parameters (int Number, AstNode* Node, FunctionArr* Funcs, bool* PrintFlag);
 

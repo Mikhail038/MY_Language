@@ -12,6 +12,9 @@
 #include <type_traits>
 #include <unordered_map>
 
+#undef PUTLN
+#undef PUT
+
 #define PUTLN(d_command)
 #define PUT(d_command)
 
@@ -41,61 +44,6 @@ const int MAX_JUMP_LABEL_SIZE = 50;
 
 const int MAX_ELF_SIZE = 100000;
 
-//==================================================================================================================================================================
-
-#define SET_BYTE(x) Back->Array[Back->cur_addr] = (x); Back->cur_addr++;
-
-#define SET_BYTE_2_BYTES(x)     \
-    memcpy ((unsigned short int*) &(Back->Array[Back->cur_addr]),    \
-                        &(x), sizeof (unsigned short int));  \
-    Back->cur_addr += 2;
-
-#define SET_BYTE_4_BYTES(x)     \
-    memcpy ((unsigned int*) &(Back->Array[Back->cur_addr]),    \
-                        &(x), sizeof (unsigned int));  \
-    Back->cur_addr += 4;
-
-#define SET_BYTE_8_BYTES(x)     \
-    memcpy ((size_t*) &(Back->Array[Back->cur_addr]),    \
-                        &(x), sizeof (size_t));  \
-    Back->cur_addr += 8;
-
-#define FILL_2  SET_BYTE (0x00);
-
-#define FILL_4  for (int cnt = 0; cnt != 3; ++cnt) { SET_BYTE (0x00); }
-
-#define FILL_8  for (int cnt = 0; cnt != 7; ++cnt) { SET_BYTE (0x00); }
-
-#define PASTE_8(x,y)  \
-    (x) = Back->cur_addr;    \
-    memcpy ((size_t*) &(Back->Array[(y)]), \
-    &(x), sizeof (size_t));
-
-#define PASTE_KNOWN_4(x)  \
-    memcpy ((unsigned int*) &(Back->Array[(x)]), \
-    &(x), sizeof (unsigned int));
-
-#define PASTE_KNOWN_8(x)  \
-    memcpy ((size_t*) &(Back->Array[(x)]), \
-    &(x), sizeof (size_t));
-
-#define PASTE_4(x,y)  \
-    (x) = Back->cur_addr;    \
-    memcpy ((unsigned int*) &(Back->Array[(y)]), \
-    &(x), sizeof (unsigned int));
-
-#define SKIP_8(x,y)   \
-    size_t (x) = 0; \
-    size_t (y) = Back->cur_addr;    \
-    Back->cur_addr += 8; //we ll skip it now
-
-#define SKIP_4(x,y)   \
-    unsigned int (x) = 0; \
-    size_t (y) = Back->cur_addr;    \
-    Back->cur_addr += 4; //we ll skip it now
-
-//==================================================================================================================================================================
-
 enum Registers
 {
     rax = 0,
@@ -105,31 +53,21 @@ enum Registers
     rsp = 4,
     rbp = 5,
     rsi = 6,
-    rdi = 7
-};
-
-#define DELTA 10
-
-enum Registers_64
-{
-    r8  = DELTA + 0,
-    r9  = DELTA + 1,
-    r10 = DELTA + 2,
-    r11 = DELTA + 3,
-    r12 = DELTA + 4,
-    r13 = DELTA + 5,
-    r14 = DELTA + 6,
-    r15 = DELTA + 7
+    rdi = 7,
+    r8  = 8,
+    r9  = 9,
+    r10 = 10,
+    r11 = 11,
+    r12 = 12,
+    r13 = 13,
+    r14 = 14,
+    r15 = 15
 };
 
 //DO NOT MAKE THEM RAX or RDX
-#define FIRST_REG  rbx
-#define SECOND_REG  rcx
-
-// #define ELF_SHIFT_REG  r8
-// #define eCOUNT_REG  r9
-// #define eTOP_REG    r10
-#define ELF_FUNC_RET_REG   r11
+const int FIRST_REG         = rbx;
+const int SECOND_REG        = rcx;
+const int ELF_FUNC_RET_REG  = r11;
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -139,7 +77,7 @@ enum Registers_64
 
 //==================================================================================================================================================================
 
-typedef struct ElfBack
+struct ElfBack
 {
     EFuncConditions     func_cond       = any_f;
     EVarTableConditions table_cond      = none;
@@ -155,9 +93,12 @@ typedef struct ElfBack
 
     size_t              buffer          = 0;
 
-    std::unordered_map<const wchar_t*, FuncLabel> Labels;
+    std::unordered_map<const wchar_t*, JumpLabel> Labels;
 };
 
+//==================================================================================================================================================================
+
+#include "elf_header_plus_tools.h"
 
 //==================================================================================================================================================================
 
@@ -271,13 +212,20 @@ void x86_write_new_line (ElfBack* Back);
 void elf_head_start (ElfBack* Back);
 void elf_head_start_params (ElfBack* Back);
 void elf_head_program_header_params (ElfBack* Back, const size_t FileVirtualAddress);
-void elf_head_shstrtable (ElfBack* Back,
-                            size_t& SegmentSize, size_t& addrSegmentSize,
-                                                    size_t& addrSegmentFileSize,
-                            size_t& TableAddress, size_t& addrTableAddress,
-                            size_t& TableLoadAddress, size_t& addrTableLoadAddress,
-                            unsigned int& TextNameOffset, size_t& addrTextNameOffset,
-                            unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
+// void elf_head_shstrtable (ElfBack* Back,
+//                             size_t& SegmentSize, size_t& addrSegmentSize,
+//                                                     size_t& addrSegmentFileSize,
+//                             size_t& TableAddress, size_t& addrTableAddress,
+//                             size_t& TableLoadAddress, size_t& addrTableLoadAddress,
+//                             unsigned int& TextNameOffset, size_t& addrTextNameOffset,
+//                             unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
+
+void elf_head_shstrtable (ElfBack* Back, size_t& SegmentSize, size_t& addrSegmentSize,
+                                    size_t& SegmentFileSize, size_t& addrSegmentFileSize,
+                                    size_t& TableAddress, size_t& addrTableAddress,
+                                    size_t& TableLoadAddress, size_t& addrTableLoadAddress,
+                                    unsigned int& TextNameOffset, size_t& addrTextNameOffset,
+                                    unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
 
 void generate_elf_array (ElfBack* Back, AstNode* Root);
 
@@ -326,6 +274,8 @@ void elf_delete_var_table (ElfBack* Back);
 
 size_t elf_find_all_new_vars (ElfBack* Back, AstNode* CurNode);
 size_t elf_find_new_var (ElfBack* Back, AstNode* CurNode);
+
+AstNode* elf_find_parent_statement (AstNode* CurNode);
 
 int elf_find_var (ElfBack* Back, AstNode* CurNode);
 

@@ -102,6 +102,8 @@ const int MY_FALSE  = 0;
 #define LABEL "lbl_"
 
 #define PRINT_DEBUG_INFO printf ("==%s %s:%d\n", LOCATION);
+
+#undef PRINT_DEBUG_INFO
 #define PRINT_DEBUG_INFO
 
 #define PUTLN(d_command) writeln_command ( d_command , Back->file)
@@ -219,4 +221,3 @@ void writeln_command (ECommandNums eCommand, FILE* File);
 void execute_asm_file (FILE* ExFile);
 
 //===================================================================================================================================================================
-

@@ -6,57 +6,57 @@
 #define LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
 
 #define START_  printf ("==%s %s:%d\n", LOCATION)
+
+#undef START_
 #define START_
 
-#define MAX_CALLS_OF_ONE_FUNC 50
-#define NULL_FINISH 0
+const int MAX_CALLS_OF_ONE_LABEL = 50;
+const int NULL_FINISH = 0;
 
-typedef struct FuncLabel
+struct JumpLabel
 {
     size_t  amount = 0;
     size_t* start;
-    // std::list<size_t> start;
     size_t finish = NULL_FINISH;
 
-    FuncLabel()
+    JumpLabel()
     {
         START_;
 
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
+        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
     }
 
-    FuncLabel(size_t Finish)
+    JumpLabel(size_t Finish)
     {
         START_;
 
         finish = Finish;
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
-        amount = 0;
+        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
     }
 
-    FuncLabel(size_t FirstStart, size_t Finish)
+    JumpLabel(size_t FirstStart, size_t Finish)
     {
         START_;
 
         finish = Finish;
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
+        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
 
         start[0] = FirstStart;
         amount = 1;
     }
 
-    FuncLabel (const FuncLabel& other)
+    JumpLabel (const JumpLabel& other)
     {
         START_;
 
         finish = other.finish;
         amount = other.amount;
 
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
-        memcpy(start, other.start, MAX_CALLS_OF_ONE_FUNC);
+        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
+        memcpy(start, other.start, MAX_CALLS_OF_ONE_LABEL);
     }
 
-    FuncLabel& operator= (const FuncLabel& other)
+    JumpLabel& operator= (const JumpLabel& other)
     {
         START_;
 
@@ -68,13 +68,13 @@ typedef struct FuncLabel
         finish = other.finish;
         amount = other.amount;
 
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_FUNC, sizeof (size_t));
-        memcpy(start, other.start, MAX_CALLS_OF_ONE_FUNC);
+        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
+        memcpy(start, other.start, MAX_CALLS_OF_ONE_LABEL);
 
         return *this;
     }
 
-    FuncLabel& operator= (FuncLabel&& other)
+    JumpLabel& operator= (JumpLabel&& other)
     {
         START_;
 
@@ -92,7 +92,7 @@ typedef struct FuncLabel
         return *this;
     }
 
-    FuncLabel (FuncLabel&& other)
+    JumpLabel (JumpLabel&& other)
     {
         START_;
 
@@ -103,7 +103,7 @@ typedef struct FuncLabel
         other.start = nullptr;
     }
 
-    ~FuncLabel()
+    ~JumpLabel()
     {
         START_;
 

@@ -1,4 +1,5 @@
- #define POP(name) \
+ #include "float_equality.h"
+#define POP(name) \
     double name = 0; \
      /*printf ("  get poped %lg ip %d \n", name, CPU->ip);*/ \
     pop_from_stack (CPU->stack, &name); \
@@ -38,9 +39,9 @@
 #define STD_JUMP \
     int label = 0; \
     CPU->ip++; \
-    for (int counter = 0; counter < sizeof (int); counter++) \
+    for (int inside_int_counter = 0; inside_int_counter < sizeof (int); inside_int_counter++) \
     { \
-        ((unsigned char*) &label)[counter] = CPU->Array[CPU->ip]; \
+        ((unsigned char*) &label)[inside_int_counter] = CPU->Array[CPU->ip]; \
         CPU->ip++; \
     } \
     CPU->ip = label;
@@ -156,7 +157,7 @@ DEF_CMD ("div", m_div, 6,
 
 
     //assert (a != 0);
-    if (a == 0)
+    if (FLOAT_IS_EQUAL(a, 0))
     {
         printf ("my ass! (zero div) ip = %d\n", CPU->ip);
         //exit (0);
@@ -354,7 +355,7 @@ DEF_CMD ("je", je, 16,
     POP(a);
     POP(b);
 
-    if (a == b)
+    if (FLOAT_IS_EQUAL(a, b))
     {
         STD_JUMP
     }
@@ -377,7 +378,7 @@ DEF_CMD ("jne", jne, 17,
     POP(a);
     POP(b);
 
-    if (a != b)
+    if (FLOAT_IS_NOT_EQUAL(a, b))
     {
         STD_JUMP
     }
@@ -537,19 +538,19 @@ DEF_CMD ("vsetx", vsetx, 25,
 {
     seek (Source);
 
-    char* Name = &(Source->Buffer[Source->pointer]);
+    char* LexemName = &(Source->Buffer[Source->pointer]);
 
     int i = 0;
     for (; i < Source->amnt_symbols; i++)
     {
-        if ((Name[i] == ' ') || (Name[i] == '\n') || (Name[i] == '\0'))
+        if ((LexemName[i] == ' ') || (LexemName[i] == '\n') || (LexemName[i] == '\0'))
         {
-            Name[i] = '\0';
+            LexemName[i] = '\0';
             break;
         }
     }
 
-    if ((Name[0] <= '9') && ((Name[0] >= '1')))
+    if ((LexemName[0] <= '9') && ((LexemName[0] >= '1')))
     {
         parse_int (Source, Code, "vsetx");
     }
@@ -582,19 +583,19 @@ DEF_CMD ("vsety", vsety, 26,
 {
     seek (Source);
 
-    char* Name = &(Source->Buffer[Source->pointer]);
+    char* LexemName = &(Source->Buffer[Source->pointer]);
 
     int counter = 0;
     for (; counter < Source->amnt_symbols; counter++)
     {
-        if ((Name[counter] == ' ') || (Name[counter] == '\n') || (Name[counter] == '\0'))
+        if ((LexemName[counter] == ' ') || (LexemName[counter] == '\n') || (LexemName[counter] == '\0'))
         {
-            Name[counter] = '\0';
+            LexemName[counter] = '\0';
             break;
         }
     }
 
-    if ((Name[0] <= '9') && ((Name[0] >= '1')))
+    if ((LexemName[0] <= '9') && ((LexemName[0] >= '1')))
     {
         parse_int (Source, Code, "vsety");
     }

@@ -551,7 +551,6 @@ void parse_op (StructSource* Source, StructMachineCode* Code, const char* Comman
 
     char* Name = &(Source->Buffer[Source->pointer]);
 
-    //clear_comments (Name);
 
 
     int length = strlen (Name);
