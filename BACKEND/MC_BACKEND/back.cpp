@@ -501,7 +501,7 @@ SBack* back_constructor (FILE* ExFile)
 
     Back->file = ExFile;
 
-    Back->table_cond = none;
+    Back->table_condition = none;
 
     stack_constructor (Back->VarStack, 4);
 
@@ -515,7 +515,7 @@ void back_destructor (SBack* Back)
     free (Back->Funcs->Table);
     free (Back->Funcs);
 
-    // free (Back->Array);
+    // free (Back->ByteCodeArray);
 
     free (Back);
 
@@ -599,7 +599,7 @@ void generate_function (BACK_FUNC_HEAD_PARAMETERS)
 
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
 
-    Back->table_cond = none;
+    Back->table_condition = none;
     create_param_var_table (CurNode->left->right, Back);
 
     pop_parameters (Back);
@@ -733,7 +733,7 @@ void generate_if (BACK_FUNC_HEAD_PARAMETERS)
 
     CurNode = CurNode->right;
 
-    Back->table_cond = none;
+    Back->table_condition = none;
     generate_statement (BACK_LEFT_SON_FUNC_PARAMETERS);
     CLEAN_TABLE;
 
@@ -754,7 +754,7 @@ void generate_if (BACK_FUNC_HEAD_PARAMETERS)
         }
         else
         {
-            Back->table_cond = none;
+            Back->table_condition = none;
             generate_statement (BACK_FUNC_PARAMETERS);
             CLEAN_TABLE;
         }
@@ -781,7 +781,7 @@ void generate_while (BACK_FUNC_HEAD_PARAMETERS)
     fprintf (Back->file, " " LABEL "%d\n", Label_2);
     Back->label_cnt++;
 
-    Back->table_cond = none;
+    Back->table_condition = none;
     generate_statement (BACK_RIGHT_SON_FUNC_PARAMETERS);
     CLEAN_TABLE;
 
@@ -1066,7 +1066,7 @@ void writeln_command (ECommandNums eCommand, FILE* File)
 
 void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
 {
-    if (Back->table_cond == none)
+    if (Back->table_condition == none)
     {
         create_new_var_table (Back);
     }
@@ -1095,7 +1095,7 @@ void create_new_var_table (SBack* Back)
 
     push_in_stack (Back->VarStack, NewTable);
 
-    Back->table_cond = exist;
+    Back->table_condition = exist;
 
     return;
 }

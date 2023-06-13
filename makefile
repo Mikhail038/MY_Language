@@ -2,7 +2,7 @@
 
 DEB_FLAGS = -DVAR_OVERSEER
 
-VR_FLAGS =  -D_DEBUG -g -ggdb3 -std=c++17 -O3
+VR_FLAGS =  -D_DEBUG -DDEBUG -g -ggdb3 -std=c++17 -O3
 
 ASSAN = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
@@ -55,8 +55,8 @@ BUILD_FRONTEND:  $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_
 BUILD_BACKEND_MC:  	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o
 	$(VR_COMPILER) 	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o -o back_mc $(VR_FLAGS)
 
-BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
-	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
+BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
+	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
 
 
 # EXTRA_LIBS/STACK/OBJECTS/stack.o: EXTRA_LIBS/STACK/stack.cpp
@@ -96,6 +96,9 @@ $(VR_OBJ_MC_B)/back.o: $(VR_SRC_MC_B)/back.cpp
 $(VR_OBJ_MC_B)/main_back.o: $(VR_SRC_MC_B)/main_back.cpp
 	$(VR_COMPILER) -c -o $(VR_OBJ_MC_B)/main_back.o $(VR_SRC_MC_B)/main_back.cpp $(VR_FLAGS)
 
+
+EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o: EXTRA_LIBS/ARRAY/arrayV.cpp
+	$(VR_COMPILER) -c -o EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o EXTRA_LIBS/ARRAY/arrayV.cpp $(VR_FLAGS)
 
 $(VR_OBJ_ELF_B)/elf_header_plus_tools.o: $(VR_SRC_ELF_B)/elf_header_plus_tools.cpp
 	$(VR_COMPILER) -c -o  $(VR_OBJ_ELF_B)/elf_header_plus_tools.o $(VR_SRC_ELF_B)/elf_header_plus_tools.cpp $(VR_FLAGS)
@@ -146,7 +149,7 @@ BACKEND/OBJECTS/proc.o: BACKEND/MC_LIBS/CPU/proc.cpp
 #=============================================================================================================================================================================
 
 FOLDERS:
-	@mkdir -p EXTRA_LIBS/STACK/OBJECTS
+	@mkdir -p EXTRA_LIBS/ARRAY/OBJECTS
 	@mkdir -p $(VR_SRC_F)/OBJECTS
 	@mkdir -p $(VR_SRC_B)/OBJECTS
 	@mkdir -p $(VR_SRC_B)/GRAPH_VIZ

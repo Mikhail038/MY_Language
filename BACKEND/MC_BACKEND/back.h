@@ -43,13 +43,13 @@ typedef wchar_t CharT; //will not work with char
 
 //===================================================================================================================================================================
 
-enum EFuncConditions
+enum FuncConditions
 {
     any_f   = 1,
     main_f  = 2
 };
 
-enum EVarTableConditions
+enum VarTableConditions
 {
     none  = 1,
     exist = 2
@@ -71,8 +71,8 @@ SBackFuncTable;
 
 typedef struct
 {
-    EFuncConditions     func_cond       = any_f;
-    EVarTableConditions table_cond      = none;
+    FuncConditions     func_cond       = any_f;
+    VarTableConditions table_condition      = none;
     int                 RAM_top_index   = 0;
     int                 label_cnt       = 0;
     FILE*               file            = NULL;
@@ -109,7 +109,7 @@ const int MY_FALSE  = 0;
 #define PUTLN(d_command) writeln_command ( d_command , Back->file)
 #define PUT(d_command) write_command   ( d_command , Back->file)
 
-#define CLEAN_TABLE if (Back->table_cond != none) { delete_var_table (Back); Back->table_cond = exist; }
+#define CLEAN_TABLE if (Back->table_condition != none) { delete_var_table (Back); Back->table_condition = exist; }
 
 #define SEP_LINE ";----------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
 

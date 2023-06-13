@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -16,6 +17,7 @@
 #include <wchar.h>
 #include <string.h>
 
+#include "ARRAY/arrayV.h"
 #include "MYassert.h"
 #include "colors.h"
 
@@ -36,6 +38,8 @@
 
 //=============================================================================================================================================================================
 
+const ElfHead StandardElfHead = {};
+
 void construct_elf_back (ElfBack* Back, FILE* ExFile)
 {
     Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
@@ -44,13 +48,19 @@ void construct_elf_back (ElfBack* Back, FILE* ExFile)
 
     Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
+    Back->head = &StandardElfHead;
+
+
     Back->file = ExFile;
 
-    Back->table_cond = none;
+    Back->table_condition = none;
 
-    stack_constructor (Back->VarStack, 4);
+    stack_constructor (Back->VarStack);
 
-    Back->Array = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
+    Back->patches = (MyArray*) calloc(1, sizeof (MyArray));
+    array_constructor(Back->patches, sizeof (Patch*));
+
+    Back->ByteCodeArray = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
     Back->cur_addr = 0;
 }
 
@@ -61,7 +71,10 @@ void destruct_elf_back (ElfBack* Back)
     free (Back->Funcs->Table);
     free (Back->Funcs);
 
-    free (Back->Array);
+    free (Back->ByteCodeArray);
+
+    free_array(Back->patches);
+    array_destructor(Back->patches);
 }
 
 //=============================================================================================================================================================================
@@ -78,7 +91,7 @@ void make_elf_file (AstNode* Root, FILE* ExFile)
 
     generate_elf_array (&Back, Root);
 
-    fwrite (Back.Array, sizeof (char), Back.cur_addr, Back.file);
+    fwrite (Back.ByteCodeArray, sizeof (char), Back.cur_addr, Back.file);
 
     // for (int i = 0; i < Back->Funcs->top_index; i++)
     // {
@@ -96,147 +109,160 @@ void make_elf_file (AstNode* Root, FILE* ExFile)
 
 void elf_head_start (ElfBack* Back)
 {
-    set_one_byte(Back, 0x7f); //MAGIC SIGNATURE
+    set_one_byte(Back, Back->head->magic_signature);
+    set_bytes(Back, (void*) &(Back->head->elf_name), sizeof (Back->head->elf_name));
+    set_one_byte(Back, Back->head->elf_class);
+    set_one_byte(Back, Back->head->endian);
+    set_one_byte(Back, Back->head->elf_version);
+    set_one_byte(Back, Back->head->os_abi);
 
-    set_one_byte(Back, 'E');
-    set_one_byte(Back, 'L');
-    set_one_byte(Back, 'F');
-
-    set_one_byte(Back, 0x02); //Class (64-bit = 2)
-
-    set_one_byte(Back, 0x01); //Endian (little endian = 1)
-
-    set_one_byte(Back, 0x01); //Elf Version (only correct = 1)
-
-    set_one_byte(Back, 0x00); //OS ABI (System V (UNIX) = 0)
-
-    set_one_byte(Back, 0x00); //ABI version (none = 0)
+    set_one_byte(Back, Back->head->abi_version);
     align_one_byte(Back, 8);  //7 padding bytes
 
-    set_one_byte(Back, 0x02); //Type (executable = 2)
+    set_one_byte(Back, Back->head->elf_type);
     align_one_byte(Back, 2);  //1 padding byte
 
-    set_one_byte(Back, 0x3e); //Machine (x86_64 = 3e)
+    set_one_byte(Back, Back->head->machine);
     align_one_byte(Back, 2);  //1 padding byte
 
-    set_one_byte(Back, 0x01); //Version (only correct = 1)
+    set_one_byte(Back, Back->head->version);
     align_one_byte(Back, 4);  //3 padding bytes
 }
 
 void elf_head_start_params (ElfBack* Back)
 {
-    set_one_byte(Back, 0x00); //Flags (no flags = 0)
+    set_one_byte(Back, Back->head->flags);
     align_one_byte(Back, 4);
 
-    unsigned short int  HeaderSize = 64; //std
-    set_bytes(Back, HeaderSize);
-
-    unsigned short int  ProgramHeaderSize = 56; //std
-    set_bytes(Back, ProgramHeaderSize);
-
-    unsigned short int  ProgramHeadersCnt = 1;
-    set_bytes(Back, ProgramHeadersCnt);
-
-    unsigned short int  SectionHeadersSize = 64; //std
-    set_bytes(Back, SectionHeadersSize);
-
-    unsigned short int  SectionHeadersCnt = 3; // maybe not
-    set_bytes(Back, SectionHeadersCnt);
-
-    unsigned short int  ShstrTabIndex  = 2; // maybe not
-    set_bytes(Back, ShstrTabIndex);
+    set_bytes(Back, (void*) &(Back->head->header_size), sizeof (Back->head->header_size));
+    set_bytes(Back, (void*) &(Back->head->program_header_size), sizeof (Back->head->program_header_size));
+    set_bytes(Back, (void*) &(Back->head->program_headers_cnt), sizeof (Back->head->program_headers_cnt));
+    set_bytes(Back, (void*) &(Back->head->section_headers_size), sizeof (Back->head->section_headers_size));
+    set_bytes(Back, (void*) &(Back->head->section_headers_cnt), sizeof (Back->head->section_headers_cnt));
+    set_bytes(Back, (void*) &(Back->head->shstr_table_index), sizeof (Back->head->shstr_table_index));
 }
 
-void elf_head_program_header_params (ElfBack* Back, const size_t FileVirtualAddress)
+void elf_head_program_header_params (ElfBack* Back)
 {
-    set_one_byte(Back, 0x01); //Segment type (load = 0)
+    set_one_byte(Back, Back->head->segment_type);
     align_one_byte(Back, 4);
 
-    set_one_byte(Back, 0x05); //Segment flag (r w x = 0 1 2)
+    set_one_byte(Back, Back->head->segment_flag);
     align_one_byte(Back, 4);
 
-    set_one_byte(Back, 0x00); //Segment offset (0)
+    set_one_byte(Back, Back->head->segment_offset);
     align_one_byte(Back, 8);
 
-    memcpy ((size_t*) &(Back->Array[Back->cur_addr]),
-            &FileVirtualAddress, sizeof (size_t));  //Virtual address
-    Back->cur_addr += 8;
 
-    memcpy ((size_t*) &(Back->Array[Back->cur_addr]),
-            &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
-    Back->cur_addr += 8;
+    // create_and_skip_patch (Back->patches, Back->cur_addr, FileVirtualAddress, sizeof (long int));
+    // create_and_skip_patch (Back->patches, Back->cur_addr, FileVirtualAddress, sizeof (long int));
+
+    set_bytes(Back, (void*) &(Back->head->file_virtual_address), sizeof (Back->head->file_virtual_address));
+    // memcpy ((size_t*) &(Back->ByteCodeArray[Back->cur_addr]),
+    //         &FileVirtualAddress, sizeof (size_t));  //Virtual address
+    // Back->cur_addr += 8;
+
+    set_bytes(Back, (void*) &(Back->head->file_virtual_address), sizeof (Back->head->file_virtual_address));
+    // memcpy ((size_t*) &(Back->ByteCodeArray[Back->cur_addr]),
+    //         &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
+    // Back->cur_addr += 8;
 }
 
-void elf_head_shstrtable (ElfBack* Back, size_t& SegmentSize, size_t& addrSegmentSize,
-                                    size_t& SegmentFileSize, size_t& addrSegmentFileSize,
-                                    size_t& TableAddress, size_t& addrTableAddress,
-                                    size_t& TableLoadAddress, size_t& addrTableLoadAddress,
-                                    unsigned int& TextNameOffset, size_t& addrTextNameOffset,
-                                    unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress)
+void elf_head_shstrtable (ElfBack* Back, size_t SegmentSizeSaved)
 {
-    PASTE_8(SegmentSize, addrSegmentSize);
+    UniversalNumber UnionBuffer;
 
-    PASTE_8(SegmentFileSize, addrSegmentFileSize);
+    UnionBuffer.long_data = Back->cur_addr;
+    paste_patch(Back, SegmentFileSize, UnionBuffer);
+    // PASTE_8(SegmentFileSize, addrSegmentFileSize);
 
-    PASTE_8(TableAddress, addrTableAddress);
+    UnionBuffer.long_data = Back->cur_addr;
+    paste_patch(Back, TableAddress, UnionBuffer);
+    // PASTE_8(TableAddress, addrTableAddress);
+    size_t TableAddressSaved = UnionBuffer.long_data;
 
-    TableLoadAddress = TableAddress + FileVirtualAddress;
-    memcpy ((size_t*) &(Back->Array[addrTableLoadAddress]),
-    &TableLoadAddress, sizeof (size_t));
-
+    UnionBuffer.long_data = TableAddressSaved + Back->head->file_virtual_address;
+    paste_patch(Back, TableLoadAddress, UnionBuffer);
+    // memcpy ((size_t*) &(Back->ByteCodeArray[addrTableLoadAddress]),
+    // &TableLoadAddress, sizeof (size_t));
 
     set_one_byte(Back, 0x00); //begin section header string table
 
-    TextNameOffset = Back->cur_addr - SegmentSize;
-    memcpy ((unsigned int*) &(Back->Array[addrTextNameOffset]),
-    &TextNameOffset, sizeof (unsigned int));
+    UnionBuffer.int_data = Back->cur_addr - SegmentSizeSaved;
+    paste_patch(Back, TextNameOffset, UnionBuffer);
+    // memcpy ((unsigned int*) &(Back->ByteCodeArray[addrTextNameOffset]),
+    // &TextNameOffset, sizeof (unsigned int));
 
-    set_one_byte(Back, '.');
-    set_one_byte(Back, 't');
-    set_one_byte(Back, 'e');
-    set_one_byte(Back, 'x');
-    set_one_byte(Back, 't');
-    set_one_byte(Back, 0x00); //end
 
-    TableNameOffset = Back->cur_addr - SegmentSize;
-    memcpy ((unsigned int*) &(Back->Array[addrTableNameOffset]),
-    &TableNameOffset, sizeof (unsigned int));
+    set_bytes(Back, (void*) &(Back->head->shstrtable_text_name), sizeof (Back->head->shstrtable_text_name));
+    // set_one_byte(Back, '.');
+    // set_one_byte(Back, 't');
+    // set_one_byte(Back, 'e');
+    // set_one_byte(Back, 'x');
+    // set_one_byte(Back, 't');
+    // set_one_byte(Back, 0x00); //end
 
-    set_one_byte(Back, '.');
-    set_one_byte(Back, 's');
-    set_one_byte(Back, 'h');
-    set_one_byte(Back, 's');
-    set_one_byte(Back, 't');
-    set_one_byte(Back, 'r');
-    set_one_byte(Back, 't');
-    set_one_byte(Back, 'a');
-    set_one_byte(Back, 'b');
-    set_one_byte(Back, 0x00); //end
+    UnionBuffer.int_data = Back->cur_addr - SegmentSizeSaved;
+    paste_patch(Back, TableNameOffset, UnionBuffer);
+    // TableNameOffset = Back->cur_addr - SegmentSize;
+    // memcpy ((unsigned int*) &(Back->ByteCodeArray[addrTableNameOffset]),
+    // &TableNameOffset, sizeof (unsigned int));
+
+    set_bytes(Back, (void*) &(Back->head->shstrtable_table_name), sizeof (Back->head->shstrtable_table_name));
+    // set_one_byte(Back, '.');
+    // set_one_byte(Back, 's');
+    // set_one_byte(Back, 'h');
+    // set_one_byte(Back, 's');
+    // set_one_byte(Back, 't');
+    // set_one_byte(Back, 'r');
+    // set_one_byte(Back, 't');
+    // set_one_byte(Back, 'a');
+    // set_one_byte(Back, 'b');
+    // set_one_byte(Back, 0x00); //end
 }
 
 void generate_elf_array (ElfBack* Back, AstNode* Root)
 {
+    UniversalNumber UnionBuffer;
+
     elf_head_start (Back);
 
-    size_t FileVirtualAddress = 4096 * 40; //40 is random number, 4096 is for alignment
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::FileVirtualAddress, sizeof (long int));
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::ProgramHeadersStart, sizeof (long int));
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::SectionHeadersStart, sizeof (long int));
 
-    SKIP_8(EntryVA, addrEntryVA);
-
-    SKIP_8(ProgramHeadersStart, addrProgramHeadersStart);
-
-    SKIP_8(SectionHeadersStart, addrSectionHeadersStart);
+    // create_and_skip_patch(Back->patches, Back->cur_addr, SupportedPatches Name)
+//     Back->head->entry_virtual_address_place = Back->cur_addr;
+//     Back->cur_addr += sizeof (Back->head->entry_virtual_address);
+//
+//     Back->head->program_headers_start_place = Back->cur_addr;
+//     Back->cur_addr += sizeof (Back->head->program_headers_start);
+//
+//     Back->head->section_headers_start_place = Back->cur_addr;
+//     Back->cur_addr += sizeof (Back->head->section_headers_start);
 
     elf_head_start_params (Back);
 
     //=======================================================================
 
-    PASTE_8(ProgramHeadersStart, addrProgramHeadersStart);
+    UnionBuffer.long_data = Back->cur_addr;
 
-    elf_head_program_header_params (Back, FileVirtualAddress);
+    paste_patch(Back, SupportedPatches::ProgramHeadersStart, UnionBuffer);
+    // Back->head->program_headers_start = Back->cur_addr;
+    // set_bytes(Back,(void*) &(Back->head->program_headers_start_place),
+    //                 sizeof (Back->head->program_headers_start));
 
-    SKIP_8(SegmentSize, addrSegmentSize);
+    elf_head_program_header_params (Back);
 
-    SKIP_8(SegmentFileSize, addrSegmentFileSize);
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::SegmentSize, sizeof (long int));
+    // Back->head->segment_size_place = Back->cur_addr;
+    // Back->cur_addr += sizeof (Back->head->segment_size);
+    // // SKIP_8(SegmentSize, addrSegmentSize);
+
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::SegmentFileSize, sizeof (long int));
+    // Back->head->segment_file_size_place = Back->cur_addr;
+    // Back->cur_addr += sizeof (Back->head->segment_file_size);
+    // // SKIP_8(SegmentFileSize, addrSegmentFileSize);
 
     set_one_byte(Back, 0x00);
     set_one_byte(Back, 0x00);
@@ -249,7 +275,11 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     //=======================================================================
 
-    PASTE_8(SectionHeadersStart, addrSectionHeadersStart);
+    UnionBuffer.long_data = Back->cur_addr;
+    paste_patch(Back, SupportedPatches::SectionHeadersStart, UnionBuffer);
+    // PASTE_8(SectionHeadersStart, addrSectionHeadersStart);
+
+    // printf("====%lu====\n", UnionBuffer.long_data);
 
     //=======================================================================
     //null
@@ -262,76 +292,82 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
     //=======================================================================
     //text
 
-    SKIP_4(TextNameOffset, addrTextNameOffset);
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TextNameOffset, sizeof (int));
+    // SKIP_4(TextNameOffset, addrTextNameOffset);
 
-    set_one_byte(Back, 0x01); //Section type (bits = 1)
-    FILL_4;     //nothing
+    set_one_byte(Back, Back->head->text_section_type);
+    align_one_byte(Back, 4);
+    set_one_byte(Back, Back->head->text_section_flags);
+    align_one_byte(Back, 8);
 
-    set_one_byte(Back, 0x06); //Section flags (r w x )
-    FILL_8;     //nothing
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::EntryVirtualAddress, sizeof (size_t));
+    // size_t addrAnotherEntryVA = Back->cur_addr;
+    // Back->cur_addr += 8; //skip
 
-    size_t addrAnotherEntryVA = Back->cur_addr;
-    Back->cur_addr += 8; //skip
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TextOffset, sizeof (size_t));
+    // SKIP_8(TextOffset, addrTextOffset);
 
-    SKIP_8(TextOffset, addrTextOffset);
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TextSize, sizeof (size_t));
+    // SKIP_8(TextSize, addrTextSize);
 
-    SKIP_8(TextSize, addrTextSize);
-
-    set_one_byte(Back, 0x00); //Section index
-    FILL_4;
-
-    set_one_byte(Back, 0x00); //Dop info
-    FILL_4;
-
-    set_one_byte(Back, 0x10); //Alignment
-    FILL_8;
-
-    set_one_byte(Back, 0x00); //Dop sizes
-    FILL_8;
+    set_one_byte(Back, Back->head->text_section_index);
+    align_one_byte(Back, 4);
+    set_one_byte(Back, Back->head->text_section_extra_info);
+    align_one_byte(Back, 4);
+    set_one_byte(Back, Back->head->text_section_align);
+    align_one_byte(Back, 4);
+    set_one_byte(Back, Back->head->text_section_extra_sizes);
+    align_one_byte(Back, 4);
 
     //=======================================================================
     //strtable
 
-    SKIP_4(TableNameOffset, addrTableNameOffset);
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableNameOffset, sizeof (int));
+    // SKIP_4(TableNameOffset, addrTableNameOffset);
 
-    set_one_byte(Back, 0x03); //Section type (strtable = 1)
-    FILL_4;     //nothing
+    set_one_byte(Back, Back->head->shstrtable_section_type);
+    align_one_byte(Back, 4);
+    set_one_byte(Back, Back->head->shstrtable_section_flags);
+    align_one_byte(Back, 8);
 
-    set_one_byte(Back, 0x00);
-    FILL_8;
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableLoadAddress, sizeof (size_t));
+    // SKIP_8(TableLoadAddress, addrTableLoadAddress);
 
-    SKIP_8(TableLoadAddress, addrTableLoadAddress);
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableAddress, sizeof (size_t));
+    // SKIP_8(TableAddress, addrTableAddress);
 
-    SKIP_8(TableAddress, addrTableAddress);
+    create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableSize, sizeof (size_t));
+    // SKIP_8(TableSize, addrTableSize);
 
-    SKIP_8(TableSize, addrTableSize);
-
-    set_one_byte(Back, 0x00); //Section index
-    FILL_4;
-
-    set_one_byte(Back, 0x00); //Dop info
-    FILL_4;
-
-    set_one_byte(Back, 0x01); //Alignment
-    FILL_8;
-
-    set_one_byte(Back, 0x00); //Dop sizes
-    FILL_8;
+    set_one_byte(Back, Back->head->shstrtable_section_index);
+    align_one_byte(Back, 4);
+    set_one_byte(Back, Back->head->shstrtable_section_extra_info);
+    align_one_byte(Back, 4);
+    set_one_byte(Back, Back->head->shstrtable_section_align);
+    align_one_byte(Back, 8);
+    set_one_byte(Back, Back->head->shstrtable_section_extra_sizes);
+    align_one_byte(Back, 8);
 
     //=======================================================================
     //entry
 
-    EntryVA = Back->cur_addr + FileVirtualAddress;
-    memcpy ((size_t*) &(Back->Array[addrEntryVA]),
-    &EntryVA, sizeof (size_t));
+    UnionBuffer.long_data = Back->cur_addr + Back->head->file_virtual_address;
+    paste_patch(Back, FileVirtualAddress, UnionBuffer);
 
-    memcpy ((size_t*) &(Back->Array[addrAnotherEntryVA]),
-    &EntryVA, sizeof (size_t));
+    // EntryVA = Back->cur_addr + FileVirtualAddress;
+    // memcpy ((size_t*) &(Back->ByteCodeArray[addrEntryVA]),
+    // &EntryVA, sizeof (size_t));
+
+    paste_patch(Back, EntryVirtualAddress, UnionBuffer);
+
 
     //=======================================================================
     //.code
 
-    PASTE_8(TextOffset, addrTextOffset);
+    UnionBuffer.long_data = Back->cur_addr;
+    paste_patch(Back, TextOffset, UnionBuffer);
+    // PASTE_8(TextOffset, addrTextOffset);
+    size_t TextOffset_saved = UnionBuffer.long_data;
 
     //----------------------------------------------------------------------
 
@@ -339,25 +375,26 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     //----------------------------------------------------------------------
 
-    TextSize = Back->cur_addr - TextOffset;
-    memcpy ((size_t*) &(Back->Array[addrTextSize]),
-    &TextSize, sizeof (size_t));
+    UnionBuffer.long_data = Back->cur_addr - TextOffset_saved;
+    paste_patch(Back, TextSize, UnionBuffer);
+    // TextSize = Back->cur_addr - TextOffset;
+    // memcpy ((size_t*) &(Back->ByteCodeArray[addrTextSize]),
+    // &TextSize, sizeof (size_t));
 
     //=======================================================================
     //shstrtable
 
-    elf_head_shstrtable (Back, SegmentSize, addrSegmentSize,
-                        SegmentFileSize, addrSegmentFileSize,
-                        TableAddress, addrTableAddress,
-                        TableLoadAddress, addrTableLoadAddress,
-                        TextNameOffset, addrTextNameOffset,
-                        TableNameOffset, addrTableNameOffset, FileVirtualAddress);
+    UnionBuffer.long_data = Back->cur_addr;
+    paste_patch(Back, SegmentSize, UnionBuffer);
+    // PASTE_8(SegmentSize, addrSegmentSize);
+    size_t SegmentSizeSaved = UnionBuffer.long_data;
+
+    elf_head_shstrtable (Back, SegmentSizeSaved);
 
     //=======================================================================
 
-    TableSize = Back->cur_addr - SegmentSize;
-    memcpy ((size_t*) &(Back->Array[addrTableSize]),
-    &TableSize, sizeof (size_t));
+    UnionBuffer.long_data = Back->cur_addr - SegmentSizeSaved;
+    paste_patch(Back, TableSize, UnionBuffer);
 
     return;
 }
@@ -371,8 +408,6 @@ void elf_generate_code (ElfBack* Back, AstNode* Root)
     x86_call_label(Back, MAIN_LBL);
 
     x86_extra_exit(Back);
-
-    Back->buffer = Back->cur_addr;
 
     x86_extra_make_input_func (Back);
 
@@ -403,11 +438,11 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
     if (wcscoll (CurNode->left->data.var, MAIN_LBL) == 0)
     {
-        Back->func_cond = main_f;
+        Back->func_condition = main_f;
     }
     else
     {
-        Back->func_cond = any_f;
+        Back->func_condition = any_f;
     }
 
     x86_extra_paste_call_label(Back, CurNode->left->data.var);
@@ -418,7 +453,7 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
 
-    Back->table_cond = none;
+    Back->table_condition = none;
     elf_create_param_var_table (Back, CurNode->left->right);
 
     size_t AmountVars = 0;
@@ -573,7 +608,7 @@ void elf_generate_if (ElfBack* Back, AstNode* CurNode)
 
     CurNode = CurNode->right;
 
-    Back->table_cond = none;
+    Back->table_condition = none;
     elf_generate_statement (Back, CurNode->left);
     ELF_CLEAN_TABLE ();
 
@@ -594,7 +629,7 @@ void elf_generate_if (ElfBack* Back, AstNode* CurNode)
         }
         else
         {
-            Back->table_cond = none;
+            Back->table_condition = none;
             elf_generate_statement (Back, CurNode);
             ELF_CLEAN_TABLE ();
         }
@@ -636,7 +671,7 @@ void elf_generate_while (ElfBack* Back, AstNode* CurNode)
     // label_cnt++;
 
     // x86_nop();
-    Back->table_cond = none;
+    Back->table_condition = none;
     elf_generate_statement (Back, CurNode->right);
     ELF_CLEAN_TABLE ();
     // x86_nop();
@@ -910,7 +945,7 @@ void elf_write_command (ElfBack* Back, ECommandNums eCommand, FILE* File)
 
 void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
 {
-    if (Back->table_cond == EVarTableConditions::none)
+    if (Back->table_condition == VarTableConditions::none)
     {
         elf_create_new_var_table (Back, ParamMarker);
     }
@@ -964,30 +999,24 @@ void elf_create_new_var_table (ElfBack* Back, bool ParamMarker)
 
     NewTable->param_marker = ParamMarker;
 
-//     if (ParamMarker == true)
-//     {
-//         // SNode* Node = elf_find_parent_statement (CurNode);
-//
-//         // MY_LOUD_ASSERT (Node != NULL);
-//
-//         // NewTable->amount = elf_find_new_vars (Node);
-//         MY_LOUD_ASSERT (CurNode->type != TypeLinkerParameter);
-//         printf("amount %d\n", NewTable->amount);
-//     }
-//     else
-//     {
-//         NewTable->amount = elf_find_new_vars (CurNode);
-//         printf("amount %d\n", NewTable->amount);
-//     }
-
+    #ifdef DEBUG_VARS
     if (ParamMarker == true)
     {
-        // printf("func params\n");
+        printf("func params\n");
+        NewTable->amount = elf_find_new_vars (Node);
+        MY_LOUD_ASSERT (CurNode->type != TypeLinkerParameter);
+        printf("amount %d\n", NewTable->amount);
     }
+    else
+    {
+        NewTable->amount = elf_find_new_vars (CurNode);
+        printf("amount %d\n", NewTable->amount);
+    }
+    #endif
 
     push_in_stack (Back->VarStack, NewTable);
 
-    Back->table_cond = exist;
+    Back->table_condition = exist;
 
     return;
 }

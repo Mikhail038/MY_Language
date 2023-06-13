@@ -618,7 +618,7 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
 
     MY_LOUD_ASSERT (Name != NULL);
 
-    // if (Back->table_cond == none)
+    // if (Back->table_condition == none)
     // {
     //     create_new_var_table (Back);
     // }

@@ -3,6 +3,7 @@
 //29.04.2023
 //==================================================================================================================================================================
 
+#include "ARRAY/arrayV.h"
 #include "FuncLabel.h"
 #include "back.h"
 
@@ -77,21 +78,25 @@ const int ELF_FUNC_RET_REG  = r11;
 
 //==================================================================================================================================================================
 
+struct ElfHead;
+struct Patch;
+
 struct ElfBack
 {
-    EFuncConditions     func_cond       = any_f;
-    EVarTableConditions table_cond      = none;
+    FuncConditions      func_condition       = any_f;
+    VarTableConditions  table_condition      = none;
     int                 delta_rbp       = 0;
     int                 label_cnt       = 0;
     FILE*               file            = NULL;
     SBackFuncTable*     Funcs           = NULL;
     SStack<SVarTable*>* VarStack        = NULL;
 
-    char*               Array           = NULL;
+    const ElfHead*      head            = NULL;
+    MyArray*            patches         = NULL;
+
+    char*               ByteCodeArray   = NULL;
     size_t              cur_addr        = 0;
     size_t              start_cnt       = 0;
-
-    size_t              buffer          = 0;
 
     std::unordered_map<const wchar_t*, JumpLabel> Labels;
 };
@@ -211,7 +216,8 @@ void x86_write_new_line (ElfBack* Back);
 
 void elf_head_start (ElfBack* Back);
 void elf_head_start_params (ElfBack* Back);
-void elf_head_program_header_params (ElfBack* Back, const size_t FileVirtualAddress);
+void elf_head_program_header_params (ElfBack* Back);
+
 // void elf_head_shstrtable (ElfBack* Back,
 //                             size_t& SegmentSize, size_t& addrSegmentSize,
 //                                                     size_t& addrSegmentFileSize,
@@ -220,12 +226,7 @@ void elf_head_program_header_params (ElfBack* Back, const size_t FileVirtualAddr
 //                             unsigned int& TextNameOffset, size_t& addrTextNameOffset,
 //                             unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
 
-void elf_head_shstrtable (ElfBack* Back, size_t& SegmentSize, size_t& addrSegmentSize,
-                                    size_t& SegmentFileSize, size_t& addrSegmentFileSize,
-                                    size_t& TableAddress, size_t& addrTableAddress,
-                                    size_t& TableLoadAddress, size_t& addrTableLoadAddress,
-                                    unsigned int& TextNameOffset, size_t& addrTextNameOffset,
-                                    unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
+void elf_head_shstrtable (ElfBack* Back, size_t SegmentSizeSaved);
 
 void generate_elf_array (ElfBack* Back, AstNode* Root);
 
@@ -288,7 +289,7 @@ const wchar_t* my_wchar_find (ElfBack* Back, const wchar_t* Name);
 
 #define ELF_BACK_FUNC_HEAD_PARAMETERS SNode* CurNode, SElfBack* Back
 
-#define ELF_CLEAN_TABLE() if (Back->table_cond != none) { elf_delete_var_table (Back); Back->table_cond = exist; }
+#define ELF_CLEAN_TABLE() if (Back->table_condition != none) { elf_delete_var_table (Back); Back->table_condition = exist; }
 
 //==================================================================================================================================================================
 

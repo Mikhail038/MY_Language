@@ -43,20 +43,20 @@ const int NORM_JUMP_SIZE = 6;
 
 //=============================================================================================================================================================================
 /*
-#define SET_BYTE(x) Back->Array[Back->cur_addr] = (x); Back->cur_addr++;
+#define SET_BYTE(x) Back->ByteCodeArray[Back->cur_addr] = (x); Back->cur_addr++;
 
 #define SET_BYTE_2_BYTES(x)     \
-    memcpy ((unsigned short int*) &(Back->Array[Back->cur_addr]),    \
+    memcpy ((unsigned short int*) &(Back->ByteCodeArray[Back->cur_addr]),    \
                         &(x), sizeof (unsigned short int));  \
     Back->cur_addr += 2;
 
 #define SET_BYTE_4_BYTES(x)     \
-    memcpy ((unsigned int*) &(Back->Array[Back->cur_addr]),    \
+    memcpy ((unsigned int*) &(Back->ByteCodeArray[Back->cur_addr]),    \
                         &(x), sizeof (unsigned int));  \
     Back->cur_addr += 4;
 
 #define SET_BYTE_8_BYTES(x)     \
-    memcpy ((size_t*) &(Back->Array[Back->cur_addr]),    \
+    memcpy ((size_t*) &(Back->ByteCodeArray[Back->cur_addr]),    \
                         &(x), sizeof (size_t));  \
     Back->cur_addr += 8;
 // */
@@ -64,12 +64,12 @@ const int NORM_JUMP_SIZE = 6;
 
 void set_hex_int (ElfBack* Back, int Number)
 {
-    set_bytes(Back, Number);
+    set_bytes(Back, &Number, sizeof (Number));
 }
 
 void set_hex_long (ElfBack* Back, long Address)
 {
-    set_bytes(Back, Address);
+    set_bytes(Back, &Address, sizeof (Address));
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -736,7 +736,7 @@ void x86_extra_make_input_func (ElfBack* Back)
 {
     x86_extra_paste_call_label(Back, INP_LBL);
 
-    memcpy (&(Back->Array[Back->cur_addr]), InputFunctionCodeArr, InputFunctionSize);
+    memcpy (&(Back->ByteCodeArray[Back->cur_addr]), InputFunctionCodeArr, InputFunctionSize);
 
     Back->cur_addr += InputFunctionSize;
 
@@ -894,7 +894,7 @@ void x86_extra_make_output_func (ElfBack* Back)
 {
     x86_extra_paste_call_label(Back, OUT_LBL);
 
-    memcpy (&(Back->Array[Back->cur_addr]), OutputFunctionCodeArr, OutputFunctionSize);
+    memcpy (&(Back->ByteCodeArray[Back->cur_addr]), OutputFunctionCodeArr, OutputFunctionSize);
 
     Back->cur_addr += OutputFunctionSize;
     /*
