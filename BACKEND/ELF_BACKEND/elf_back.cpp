@@ -107,6 +107,9 @@ void make_elf_file (AstNode* Root, FILE* ExFile)
 //Make ELF//
 //=============================================================================================================================================================================
 
+#define ALIGN_4 align_one_byte(Back, 4)
+#define ALIGN_8 align_one_byte(Back, 8)
+
 void elf_head_start (ElfBack* Back)
 {
     set_one_byte(Back, Back->head->magic_signature);
@@ -174,51 +177,26 @@ void elf_head_shstrtable (ElfBack* Back, size_t SegmentSizeSaved)
 
     UnionBuffer.long_data = Back->cur_addr;
     paste_patch(Back, SegmentFileSize, UnionBuffer);
-    // PASTE_8(SegmentFileSize, addrSegmentFileSize);
 
     UnionBuffer.long_data = Back->cur_addr;
     paste_patch(Back, TableAddress, UnionBuffer);
-    // PASTE_8(TableAddress, addrTableAddress);
     size_t TableAddressSaved = UnionBuffer.long_data;
 
     UnionBuffer.long_data = TableAddressSaved + Back->head->file_virtual_address;
     paste_patch(Back, TableLoadAddress, UnionBuffer);
-    // memcpy ((size_t*) &(Back->ByteCodeArray[addrTableLoadAddress]),
-    // &TableLoadAddress, sizeof (size_t));
 
     set_one_byte(Back, 0x00); //begin section header string table
 
     UnionBuffer.int_data = Back->cur_addr - SegmentSizeSaved;
     paste_patch(Back, TextNameOffset, UnionBuffer);
-    // memcpy ((unsigned int*) &(Back->ByteCodeArray[addrTextNameOffset]),
-    // &TextNameOffset, sizeof (unsigned int));
 
 
     set_bytes(Back, (void*) &(Back->head->shstrtable_text_name), sizeof (Back->head->shstrtable_text_name));
-    // set_one_byte(Back, '.');
-    // set_one_byte(Back, 't');
-    // set_one_byte(Back, 'e');
-    // set_one_byte(Back, 'x');
-    // set_one_byte(Back, 't');
-    // set_one_byte(Back, 0x00); //end
 
     UnionBuffer.int_data = Back->cur_addr - SegmentSizeSaved;
     paste_patch(Back, TableNameOffset, UnionBuffer);
-    // TableNameOffset = Back->cur_addr - SegmentSize;
-    // memcpy ((unsigned int*) &(Back->ByteCodeArray[addrTableNameOffset]),
-    // &TableNameOffset, sizeof (unsigned int));
 
     set_bytes(Back, (void*) &(Back->head->shstrtable_table_name), sizeof (Back->head->shstrtable_table_name));
-    // set_one_byte(Back, '.');
-    // set_one_byte(Back, 's');
-    // set_one_byte(Back, 'h');
-    // set_one_byte(Back, 's');
-    // set_one_byte(Back, 't');
-    // set_one_byte(Back, 'r');
-    // set_one_byte(Back, 't');
-    // set_one_byte(Back, 'a');
-    // set_one_byte(Back, 'b');
-    // set_one_byte(Back, 0x00); //end
 }
 
 void generate_elf_array (ElfBack* Back, AstNode* Root)
@@ -231,16 +209,6 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::ProgramHeadersStart, sizeof (long int));
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::SectionHeadersStart, sizeof (long int));
 
-    // create_and_skip_patch(Back->patches, Back->cur_addr, SupportedPatches Name)
-//     Back->head->entry_virtual_address_place = Back->cur_addr;
-//     Back->cur_addr += sizeof (Back->head->entry_virtual_address);
-//
-//     Back->head->program_headers_start_place = Back->cur_addr;
-//     Back->cur_addr += sizeof (Back->head->program_headers_start);
-//
-//     Back->head->section_headers_start_place = Back->cur_addr;
-//     Back->cur_addr += sizeof (Back->head->section_headers_start);
-
     elf_head_start_params (Back);
 
     //=======================================================================
@@ -248,38 +216,19 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
     UnionBuffer.long_data = Back->cur_addr;
 
     paste_patch(Back, SupportedPatches::ProgramHeadersStart, UnionBuffer);
-    // Back->head->program_headers_start = Back->cur_addr;
-    // set_bytes(Back,(void*) &(Back->head->program_headers_start_place),
-    //                 sizeof (Back->head->program_headers_start));
 
     elf_head_program_header_params (Back);
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::SegmentSize, sizeof (long int));
-    // Back->head->segment_size_place = Back->cur_addr;
-    // Back->cur_addr += sizeof (Back->head->segment_size);
-    // // SKIP_8(SegmentSize, addrSegmentSize);
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::SegmentFileSize, sizeof (long int));
-    // Back->head->segment_file_size_place = Back->cur_addr;
-    // Back->cur_addr += sizeof (Back->head->segment_file_size);
-    // // SKIP_8(SegmentFileSize, addrSegmentFileSize);
 
-    set_one_byte(Back, 0x00);
-    set_one_byte(Back, 0x00);
-    set_one_byte(Back, 0x20); //Alignment
-    set_one_byte(Back, 0x00);
-    set_one_byte(Back, 0x00);
-    set_one_byte(Back, 0x00);
-    set_one_byte(Back, 0x00);
-    set_one_byte(Back, 0x00);
+    set_bytes(Back, (void*) &Back->head->alignment, sizeof (Back->head->alignment));
 
     //=======================================================================
 
     UnionBuffer.long_data = Back->cur_addr;
     paste_patch(Back, SupportedPatches::SectionHeadersStart, UnionBuffer);
-    // PASTE_8(SectionHeadersStart, addrSectionHeadersStart);
-
-    // printf("====%lu====\n", UnionBuffer.long_data);
 
     //=======================================================================
     //null
@@ -293,60 +242,51 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
     //text
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TextNameOffset, sizeof (int));
-    // SKIP_4(TextNameOffset, addrTextNameOffset);
 
     set_one_byte(Back, Back->head->text_section_type);
-    align_one_byte(Back, 4);
+    ALIGN_4;
     set_one_byte(Back, Back->head->text_section_flags);
-    align_one_byte(Back, 8);
+    ALIGN_8;
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::EntryVirtualAddress, sizeof (size_t));
-    // size_t addrAnotherEntryVA = Back->cur_addr;
-    // Back->cur_addr += 8; //skip
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TextOffset, sizeof (size_t));
-    // SKIP_8(TextOffset, addrTextOffset);
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TextSize, sizeof (size_t));
-    // SKIP_8(TextSize, addrTextSize);
 
     set_one_byte(Back, Back->head->text_section_index);
-    align_one_byte(Back, 4);
+    ALIGN_4;
     set_one_byte(Back, Back->head->text_section_extra_info);
-    align_one_byte(Back, 4);
+    ALIGN_4;
     set_one_byte(Back, Back->head->text_section_align);
-    align_one_byte(Back, 4);
+    ALIGN_4;
     set_one_byte(Back, Back->head->text_section_extra_sizes);
-    align_one_byte(Back, 4);
+    ALIGN_4;
 
     //=======================================================================
     //strtable
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableNameOffset, sizeof (int));
-    // SKIP_4(TableNameOffset, addrTableNameOffset);
 
     set_one_byte(Back, Back->head->shstrtable_section_type);
-    align_one_byte(Back, 4);
+    ALIGN_4;
     set_one_byte(Back, Back->head->shstrtable_section_flags);
-    align_one_byte(Back, 8);
+    ALIGN_8;
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableLoadAddress, sizeof (size_t));
-    // SKIP_8(TableLoadAddress, addrTableLoadAddress);
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableAddress, sizeof (size_t));
-    // SKIP_8(TableAddress, addrTableAddress);
 
     create_and_skip_patch(Back, Back->cur_addr, SupportedPatches::TableSize, sizeof (size_t));
-    // SKIP_8(TableSize, addrTableSize);
 
     set_one_byte(Back, Back->head->shstrtable_section_index);
-    align_one_byte(Back, 4);
+    ALIGN_4;
     set_one_byte(Back, Back->head->shstrtable_section_extra_info);
-    align_one_byte(Back, 4);
+    ALIGN_4;
     set_one_byte(Back, Back->head->shstrtable_section_align);
-    align_one_byte(Back, 8);
+    ALIGN_8;
     set_one_byte(Back, Back->head->shstrtable_section_extra_sizes);
-    align_one_byte(Back, 8);
+    ALIGN_8;
 
     //=======================================================================
     //entry
@@ -354,19 +294,13 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
     UnionBuffer.long_data = Back->cur_addr + Back->head->file_virtual_address;
     paste_patch(Back, FileVirtualAddress, UnionBuffer);
 
-    // EntryVA = Back->cur_addr + FileVirtualAddress;
-    // memcpy ((size_t*) &(Back->ByteCodeArray[addrEntryVA]),
-    // &EntryVA, sizeof (size_t));
-
     paste_patch(Back, EntryVirtualAddress, UnionBuffer);
-
 
     //=======================================================================
     //.code
 
     UnionBuffer.long_data = Back->cur_addr;
     paste_patch(Back, TextOffset, UnionBuffer);
-    // PASTE_8(TextOffset, addrTextOffset);
     size_t TextOffset_saved = UnionBuffer.long_data;
 
     //----------------------------------------------------------------------
@@ -377,16 +311,12 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     UnionBuffer.long_data = Back->cur_addr - TextOffset_saved;
     paste_patch(Back, TextSize, UnionBuffer);
-    // TextSize = Back->cur_addr - TextOffset;
-    // memcpy ((size_t*) &(Back->ByteCodeArray[addrTextSize]),
-    // &TextSize, sizeof (size_t));
 
     //=======================================================================
     //shstrtable
 
     UnionBuffer.long_data = Back->cur_addr;
     paste_patch(Back, SegmentSize, UnionBuffer);
-    // PASTE_8(SegmentSize, addrSegmentSize);
     size_t SegmentSizeSaved = UnionBuffer.long_data;
 
     elf_head_shstrtable (Back, SegmentSizeSaved);
@@ -398,6 +328,9 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     return;
 }
+
+#undef ALIGN_4
+#undef ALIGN_8
 
 //=============================================================================================================================================================================
 

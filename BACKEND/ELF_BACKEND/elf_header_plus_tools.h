@@ -52,6 +52,8 @@ struct ElfHead
     const char segment_offset = 0x00; //Segment offset (0)
     //7
 
+    const char alignment[8] = {0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,};
+
     const char text_section_type = 0x01; //Section type (bits = 1)
     const char text_section_flags = 0x06; //Section flags (r w x )
     const char text_section_index = 0x00; //Section index
@@ -144,31 +146,3 @@ void set_bytes (ElfBack* Back, void* Data, size_t Size);
 void align_one_byte (ElfBack* Back, size_t Alignment);
 
 //==================================================================================================================================================================
-
-#define PASTE_8(x,y)  \
-    x = Back->cur_addr;    \
-    memcpy ((size_t*) &(Back->ByteCodeArray[(y)]), \
-    &(x), sizeof (size_t));
-
-#define PASTE_KNOWN_4(x)  \
-    memcpy ((unsigned int*) &(Back->ByteCodeArray[(x)]), \
-    &(x), sizeof (unsigned int));
-
-#define PASTE_KNOWN_8(x)  \
-    memcpy ((size_t*) &(Back->ByteCodeArray[(x)]), \
-    &(x), sizeof (size_t));
-
-#define PASTE_4(x,y)  \
-    x = Back->cur_addr;    \
-    memcpy ((unsigned int*) &(Back->ByteCodeArray[(y)]), \
-    &(x), sizeof (unsigned int));
-
-#define SKIP_8(x,y)   \
-    size_t x = 0; \
-    size_t y = Back->cur_addr;    \
-    Back->cur_addr += 8; //we ll skip it now
-
-#define SKIP_4(x,y)   \
-    unsigned int x = 0; \
-    size_t y = Back->cur_addr;    \
-    Back->cur_addr += 4; //we ll skip it now
