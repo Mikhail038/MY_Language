@@ -678,7 +678,7 @@ void generate_announce (BACK_FUNC_HEAD_PARAMETERS)
     return;
 }
 
-void generate_equation (BACK_FUNC_HEAD_PARAMETERS)
+void generate_assignment (BACK_FUNC_HEAD_PARAMETERS)
 {
     generate_expression (BACK_RIGHT_SON_FUNC_PARAMETERS);
 

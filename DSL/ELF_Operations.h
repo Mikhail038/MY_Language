@@ -259,7 +259,7 @@ LEXEM_IS (L"var"),
 {
     TKN_IS_OP;
 },
-L"stdType",
+L"VAR_TYPE",
 {
 })
 
@@ -268,7 +268,7 @@ LEXEM_IS (L"void"),
 {
     TKN_IS_OP;
 },
-L"noType",
+L"VOID_TYPE",
 {
 })
 
@@ -307,7 +307,7 @@ DEF_OP (TypeLinkerStatement,
 {
     TKN_IS_OP;
 },
-L"_STATEMENT",
+L"STATEMENT",
 {
 })
 
@@ -316,7 +316,7 @@ DEF_OP (TypeLinkerFunction,
 {
     TKN_IS_OP;
 },
-L"_FUNC",
+L"FUNCTION",
 {
     elf_generate_function (Back, CurNode);
 })
@@ -326,7 +326,7 @@ DEF_OP (TypeLinkerCall,
 {
     TKN_IS_OP;
 },
-L"_CALL",
+L"CALL",
 {
     elf_generate_call (Back, CurNode, RetValueMarker);
 })
@@ -336,7 +336,7 @@ L"_CALL",
 // {
 //     TKN_IS_OP;
 // },
-// L"_PARAMETERS",
+// L"PARAMETERS",
 // {
 // })
 
@@ -345,7 +345,7 @@ DEF_OP (TypeLinkerParameter,
 {
     TKN_IS_OP;
 },
-L"_PARAM",
+L"PARAMETER",
 {
 })
 
@@ -354,7 +354,7 @@ L"_PARAM",
 // {
 //     TKN_IS_OP;
 // },
-// L"_TYPE" ERR,
+// L"TYPE" ERR,
 // {
 // })
 
@@ -363,7 +363,7 @@ DEF_OP (TypeLinkerAnnounce,
 {
     TKN_IS_OP;
 },
-L"_ANNOUNCE",
+L"ANNOUNCEMENT",
 {
     elf_generate_announce (Back, CurNode);
 })
@@ -373,9 +373,9 @@ DEF_OP (TypeLinkerEquation,
 {
     TKN_IS_OP;
 },
-L"_EQUATION",
+L"ASSIGNMENT",
 {
-    elf_generate_equation (Back, CurNode);
+    elf_generate_assignment (Back, CurNode);
 })
 
 DEF_OP (TypeLinkerFuncAnnounce,
@@ -383,7 +383,7 @@ DEF_OP (TypeLinkerFuncAnnounce,
 {
     TKN_IS_OP;
 },
-L"_FUNC_ANNOUNCE",
+L"FUNCTION_ANNOUNCEMENT",
 {
 })
 
@@ -392,7 +392,7 @@ DEF_OP (TypeLinkerCrossroads,
 {
     TKN_IS_OP;
 },
-L"_CROSSROADS",
+L"BRANCH",
 {
 })
 
@@ -401,7 +401,7 @@ DEF_OP (TypeLinkerExpression,
 {
     TKN_IS_OP;
 },
-L"_EXPRESSION",
+L"EXPRESSION",
 {
 })
 
@@ -420,7 +420,7 @@ DEF_OP (TypeVariable,
     TOKEN.category = CategoryLine;
     TOKEN.data.var = wcsdup (Lexem);
 },
-L"TypeVariable",
+L"TYPE",
 {
 })
 

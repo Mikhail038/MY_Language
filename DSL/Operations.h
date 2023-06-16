@@ -278,7 +278,7 @@ LEXEM_IS (L"var"),
 {
     TKN_IS_OP;
 },
-L"stdType",
+L"VAR_TYPE",
 {
 })
 
@@ -287,7 +287,7 @@ LEXEM_IS (L"void"),
 {
     TKN_IS_OP;
 },
-L"noType",
+L"VOID_TYPE",
 {
 })
 
@@ -326,7 +326,7 @@ DEF_OP (TypeLinkerStatement,
 {
     TKN_IS_OP;
 },
-L"_STATEMENT",
+L"STATEMENT",
 {
 })
 
@@ -335,7 +335,7 @@ DEF_OP (TypeLinkerFunction,
 {
     TKN_IS_OP;
 },
-L"_FUNC",
+L"FUNCTION",
 {
     generate_function (BACK_FUNC_PARAMETERS);
 })
@@ -345,7 +345,7 @@ DEF_OP (TypeLinkerCall,
 {
     TKN_IS_OP;
 },
-L"_CALL",
+L"CALL",
 {
     generate_call (BACK_FUNC_PARAMETERS);
 })
@@ -355,7 +355,7 @@ DEF_OP (TypeLinkerFuncParameters,
 {
     TKN_IS_OP;
 },
-L"_PARAMETERS",
+L"PARAMETERS",
 {
 })
 
@@ -364,7 +364,7 @@ DEF_OP (TypeLinkerParameter,
 {
     TKN_IS_OP;
 },
-L"_PARAM",
+L"PARAM",
 {
 })
 
@@ -373,7 +373,7 @@ DEF_OP (TypeVaraiableType,
 {
     TKN_IS_OP;
 },
-L"_TYPE" ERR,
+L"TYPE" ERR,
 {
 })
 
@@ -382,7 +382,7 @@ DEF_OP (TypeLinkerAnnounce,
 {
     TKN_IS_OP;
 },
-L"_ANNOUNCE",
+L"ANNOUNCEMENT",
 {
     generate_announce (BACK_FUNC_PARAMETERS);
 })
@@ -392,9 +392,9 @@ DEF_OP (TypeLinkerEquation,
 {
     TKN_IS_OP;
 },
-L"_EQUATION",
+L"EXPRESSION",
 {
-    generate_equation (BACK_FUNC_PARAMETERS);
+    generate_assignment (BACK_FUNC_PARAMETERS);
 })
 
 DEF_OP (TypeLinkerFuncAnnounce,
@@ -402,7 +402,7 @@ DEF_OP (TypeLinkerFuncAnnounce,
 {
     TKN_IS_OP;
 },
-L"_FUNC_ANNOUNCE",
+L"FUNCTION_ANNOUNCEMENT",
 {
 })
 
@@ -411,7 +411,7 @@ DEF_OP (TypeLinkerCrossroads,
 {
     TKN_IS_OP;
 },
-L"_CROSSROADS",
+L"BRANCH",
 {
 })
 
@@ -420,7 +420,7 @@ DEF_OP (TypeLinkerExpression,
 {
     TKN_IS_OP;
 },
-L"_EXPRESSION",
+L"EXPRESSION",
 {
 })
 

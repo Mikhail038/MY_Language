@@ -245,7 +245,7 @@ void elf_generate_while     (ElfBack* Back, AstNode* CurNode);
 void elf_generate_call      (ElfBack* Back, AstNode* CurNode, bool RetValueMarker);
 void elf_generate_return    (ElfBack* Back, AstNode* CurNode);
 void elf_generate_announce  (ElfBack* Back, AstNode* CurNode);
-void elf_generate_equation  (ElfBack* Back, AstNode* CurNode);
+void elf_generate_assignment  (ElfBack* Back, AstNode* CurNode);
 void elf_generate_expression    (ElfBack* Back, AstNode* CurNode);
 void elf_generate_postorder     (ElfBack* Back, AstNode* CurNode, bool RetValueMarker);
 

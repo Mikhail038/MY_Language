@@ -485,7 +485,7 @@ void elf_generate_announce (ElfBack* Back, AstNode* CurNode)
     return;
 }
 
-void elf_generate_equation (ElfBack* Back, AstNode* CurNode)
+void elf_generate_assignment (ElfBack* Back, AstNode* CurNode)
 {
     elf_generate_expression (Back, CurNode->right);
 

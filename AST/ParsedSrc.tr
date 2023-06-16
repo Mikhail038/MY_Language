@@ -1,19 +1,19 @@
-CategoryOperation _STATEMENT
+CategoryOperation STATEMENT
 {
-    CategoryOperation _FUNC
+    CategoryOperation _FUNCTION
     {
         CategoryLine TypeVariable fac
         {
-            CategoryOperation stdType
+            CategoryOperation VAR_TYPE
             {
             }
             {
             }
         }
         {
-            CategoryOperation _PARAM
+            CategoryOperation PARAM
             {
-                CategoryOperation _FUNC_ANNOUNCE
+                CategoryOperation FUNCTION_ANNOUNCEMENT
                 {
                     CategoryLine TypeVariable a
                     {
@@ -29,13 +29,13 @@ CategoryOperation _STATEMENT
         }
     }
     {
-        CategoryOperation _STATEMENT
+        CategoryOperation STATEMENT
         {
         }
         {
-            CategoryOperation _STATEMENT
+            CategoryOperation STATEMENT
             {
-                CategoryOperation _ANNOUNCE
+                CategoryOperation ANNOUNCEMENT
                 {
                     CategoryLine TypeVariable b
                     {
@@ -62,7 +62,7 @@ CategoryOperation _STATEMENT
                 }
             }
             {
-                CategoryOperation _STATEMENT
+                CategoryOperation STATEMENT
                 {
                     CategoryOperation IF
                     {
@@ -83,13 +83,13 @@ CategoryOperation _STATEMENT
                         }
                     }
                     {
-                        CategoryOperation _CROSSROADS
+                        CategoryOperation BRANCH
                         {
-                            CategoryOperation _STATEMENT
+                            CategoryOperation STATEMENT
                             {
                             }
                             {
-                                CategoryOperation _STATEMENT
+                                CategoryOperation STATEMENT
                                 {
                                     CategoryOperation RETURN
                                     {
@@ -111,7 +111,7 @@ CategoryOperation _STATEMENT
                     }
                 }
                 {
-                    CategoryOperation _STATEMENT
+                    CategoryOperation STATEMENT
                     {
                         CategoryOperation RETURN
                         {
@@ -134,7 +134,7 @@ CategoryOperation _STATEMENT
                                 }
                             }
                             {
-                                CategoryOperation _CALL
+                                CategoryOperation CALL
                                 {
                                     CategoryLine TypeVariable fac
                                     {
@@ -143,7 +143,7 @@ CategoryOperation _STATEMENT
                                     }
                                 }
                                 {
-                                    CategoryOperation _PARAM
+                                    CategoryOperation PARAM
                                     {
                                         CategoryLine TypeVariable b
                                         {
@@ -167,20 +167,20 @@ CategoryOperation _STATEMENT
     }
 }
 {
-    CategoryOperation _STATEMENT
+    CategoryOperation STATEMENT
     {
-        CategoryOperation _FUNC
+        CategoryOperation _FUNCTION
         {
             CategoryLine TypeVariable main
             {
-                CategoryOperation stdType
+                CategoryOperation VAR_TYPE
                 {
                 }
                 {
                 }
             }
             {
-                CategoryOperation _PARAM
+                CategoryOperation PARAM
                 {
                 }
                 {
@@ -188,13 +188,13 @@ CategoryOperation _STATEMENT
             }
         }
         {
-            CategoryOperation _STATEMENT
+            CategoryOperation STATEMENT
             {
             }
             {
-                CategoryOperation _STATEMENT
+                CategoryOperation STATEMENT
                 {
-                    CategoryOperation _ANNOUNCE
+                    CategoryOperation ANNOUNCEMENT
                     {
                         CategoryLine TypeVariable x
                         {
@@ -211,11 +211,11 @@ CategoryOperation _STATEMENT
                     }
                 }
                 {
-                    CategoryOperation _STATEMENT
+                    CategoryOperation STATEMENT
                     {
                         CategoryOperation INPUT
                         {
-                            CategoryOperation _PARAM
+                            CategoryOperation PARAM
                             {
                                 CategoryLine TypeVariable x
                                 {
@@ -230,9 +230,9 @@ CategoryOperation _STATEMENT
                         }
                     }
                     {
-                        CategoryOperation _STATEMENT
+                        CategoryOperation STATEMENT
                         {
-                            CategoryOperation _EQUATION
+                            CategoryOperation EXPRESSION
                             {
                                 CategoryLine TypeVariable x
                                 {
@@ -241,7 +241,7 @@ CategoryOperation _STATEMENT
                                 }
                             }
                             {
-                                CategoryOperation _CALL
+                                CategoryOperation CALL
                                 {
                                     CategoryLine TypeVariable fac
                                     {
@@ -250,7 +250,7 @@ CategoryOperation _STATEMENT
                                     }
                                 }
                                 {
-                                    CategoryOperation _PARAM
+                                    CategoryOperation PARAM
                                     {
                                         CategoryLine TypeVariable x
                                         {
@@ -264,11 +264,11 @@ CategoryOperation _STATEMENT
                             }
                         }
                         {
-                            CategoryOperation _STATEMENT
+                            CategoryOperation STATEMENT
                             {
                                 CategoryOperation OUTPUT
                                 {
-                                    CategoryOperation _PARAM
+                                    CategoryOperation PARAM
                                     {
                                         CategoryLine TypeVariable x
                                         {
@@ -283,7 +283,7 @@ CategoryOperation _STATEMENT
                                 }
                             }
                             {
-                                CategoryOperation _STATEMENT
+                                CategoryOperation STATEMENT
                                 {
                                     CategoryOperation RETURN
                                     {

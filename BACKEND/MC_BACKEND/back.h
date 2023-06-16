@@ -170,7 +170,7 @@ void generate_return (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_announce (BACK_FUNC_HEAD_PARAMETERS);
 
-void generate_equation (BACK_FUNC_HEAD_PARAMETERS);
+void generate_assignment (BACK_FUNC_HEAD_PARAMETERS);
 
 void generate_expression (BACK_FUNC_HEAD_PARAMETERS);
 

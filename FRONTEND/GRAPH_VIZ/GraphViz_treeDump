@@ -9,7 +9,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -23,7 +23,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNCTION </td>
                             </tr>
                         </table>
                         >
@@ -51,7 +51,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> stdType </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> VAR_TYPE </td>
                             </tr>
                         </table>
                         >
@@ -63,7 +63,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> PARAM </td>
                             </tr>
                         </table>
                         >
@@ -76,7 +76,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC_ANNOUNCE </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> FUNCTION_ANNOUNCEMENT </td>
                             </tr>
                         </table>
                         >
@@ -101,7 +101,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -114,7 +114,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -128,7 +128,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _ANNOUNCE </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> ANNOUNCEMENT </td>
                             </tr>
                         </table>
                         >
@@ -192,7 +192,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -258,7 +258,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _CROSSROADS </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> BRANCH </td>
                             </tr>
                         </table>
                         >
@@ -271,7 +271,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -284,7 +284,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -322,7 +322,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -400,7 +400,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _CALL </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> CALL </td>
                             </tr>
                         </table>
                         >
@@ -426,7 +426,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> PARAM </td>
                             </tr>
                         </table>
                         >
@@ -451,7 +451,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -464,7 +464,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNC </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNCTION </td>
                             </tr>
                         </table>
                         >
@@ -492,7 +492,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> stdType </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> VAR_TYPE </td>
                             </tr>
                         </table>
                         >
@@ -504,7 +504,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> PARAM </td>
                             </tr>
                         </table>
                         >
@@ -516,7 +516,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -529,7 +529,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -543,7 +543,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _ANNOUNCE </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> ANNOUNCEMENT </td>
                             </tr>
                         </table>
                         >
@@ -581,7 +581,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -608,7 +608,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> PARAM </td>
                             </tr>
                         </table>
                         >
@@ -633,7 +633,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -647,7 +647,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _EQUATION </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> EXPRESSION </td>
                             </tr>
                         </table>
                         >
@@ -673,7 +673,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _CALL </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> CALL </td>
                             </tr>
                         </table>
                         >
@@ -699,7 +699,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> PARAM </td>
                             </tr>
                         </table>
                         >
@@ -724,7 +724,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
@@ -751,7 +751,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _PARAM </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> PARAM </td>
                             </tr>
                         </table>
                         >
@@ -776,7 +776,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _STATEMENT </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> STATEMENT </td>
                             </tr>
                         </table>
                         >
