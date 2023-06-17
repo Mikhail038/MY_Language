@@ -25,7 +25,7 @@ VR_COMPILER = g++
 
 #=============================================================================================================================================================================
 
-DO: FOLDERS BUILD_FRONTEND BUILD_BACKEND_MC BUILD_BACKEND_ELF DO_ASM DO_DISASM DO_PROC  #DO_COMPILE
+DO: FOLDERS DO_ASM DO_DISASM DO_PROC BUILD_FRONTEND BUILD_BACKEND_MC BUILD_BACKEND_ELF #DO_COMPILE
 
 #=============================================================================================================================================================================
 
