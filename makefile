@@ -116,7 +116,7 @@ $(VR_OBJ_ELF_B)/main_elf_back.o: $(VR_SRC_ELF_B)/main_elf_back.cpp
 #=============================================================================================================================================================================
 
 DO_ASM: $(VR_OBJ_B)/m_asm.o $(VR_OBJ_B)/asm.o
-	$(VR_COMPILER) BACKEND/OBJECTS/m_asm.o BACKEND/OBJECTS/asm.o -o BACKEND/BUILD/asm $(VR_FLAGS)
+	$(VR_COMPILER) $(VR_OBJ_B)/m_asm.o $(VR_OBJ_B)/asm.o -o BACKEND/BUILD/asm $(VR_FLAGS)
 
 $(VR_OBJ_B)/m_asm.o: $(VR_SRC_B)/ASM/m_asm.cpp
 	$(VR_COMPILER) -c -o $(VR_OBJ_B)/m_asm.o $(VR_SRC_B)/ASM/m_asm.cpp $(VR_FLAGS)
@@ -155,8 +155,9 @@ FOLDERS:
 	@mkdir -p LOGS
 	@mkdir -p LOGS/GRAPH_VIZ
 	@mkdir -p $(VR_SRC_F)/GRAPH_VIZ
-	@mkdir -p $(VR_SRC_MC_B)/OBJECTS
+	@mkdir -p $(VR_SRC_MC_B)/OBJECTSc
 	@mkdir -p $(VR_SRC_ELF_B)/OBJECTS
+	@mkdir -p BACKEND/BUILD
 
 #=============================================================================================================================================================================
 
