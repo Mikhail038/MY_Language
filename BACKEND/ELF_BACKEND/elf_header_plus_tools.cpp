@@ -3,7 +3,7 @@
 //==================================================================================================================================================================
 
 #include "elf_header_plus_tools.h"
-#include "ARRAY/arrayV.h"
+#include "ARRAY/array.h"
 #include "MYassert.h"
 #include "elf_back.h"
 #include "stackT.h"

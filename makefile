@@ -11,7 +11,7 @@ DOP += -Wno-switch-enum -Wno-cast-qual -Wno-conversion -Wno-sign-compare -Wno-si
 
 # -Wlarger-than=8192
 
-DIRECTORIES = -IFRONTEND -IBACKEND -IBACKEND/MC_BACKEND -IBACKEND/ELF_BACKEND -IEXTRA_LIBS -IEXTRA_LIBS/STACK -IEXAMPLES -IDSL -IBACKEND/MC_LIBS/ASM -IBACKEND/MC_LIBS/CPU -IBACKEND/MC_LIBS/DISASM -I/usr/include/c++/11
+DIRECTORIES = -IFRONTEND -IBACKEND -IEXTRA_LIBS/MC_BACKEND -IBACKEND/ELF_BACKEND -IEXTRA_LIBS -IEXTRA_LIBS/STACK -IEXAMPLES -IDSL -IEXTRA_LIBS/MC_LIBS/ASM -IEXTRA_LIBS/MC_LIBS/CPU -IEXTRA_LIBS/MC_LIBS/DISASM -I/usr/include/c++/11
 
 VR_FLAGS += $(ASSAN)
 
@@ -33,16 +33,16 @@ VR_SRC_F = FRONTEND
 
 VR_OBJ_F = $(VR_SRC_F)/OBJECTS
 
-VR_SRC_B = BACKEND
+VR_SRC_B = EXTRA_LIBS/MC_LIBS
 
 VR_OBJ_B = $(VR_SRC_B)/OBJECTS
 
 
-VR_SRC_MC_B = $(VR_SRC_B)/MC_BACKEND
+VR_SRC_MC_B = BACKEND/MC_BACKEND
 
 VR_OBJ_MC_B = $(VR_SRC_MC_B)/OBJECTS
 
-VR_SRC_ELF_B = $(VR_SRC_B)/ELF_BACKEND
+VR_SRC_ELF_B = BACKEND/ELF_BACKEND
 
 VR_OBJ_ELF_B = $(VR_SRC_ELF_B)/OBJECTS
 
@@ -55,8 +55,8 @@ BUILD_FRONTEND:  $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_
 BUILD_BACKEND_MC:  	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o
 	$(VR_COMPILER) 	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o -o back_mc $(VR_FLAGS)
 
-BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
-	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
+BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/array.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
+	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/array.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
 
 
 # EXTRA_LIBS/STACK/OBJECTS/stack.o: EXTRA_LIBS/STACK/stack.cpp
@@ -97,8 +97,8 @@ $(VR_OBJ_MC_B)/main_back.o: $(VR_SRC_MC_B)/main_back.cpp
 	$(VR_COMPILER) -c -o $(VR_OBJ_MC_B)/main_back.o $(VR_SRC_MC_B)/main_back.cpp $(VR_FLAGS)
 
 
-EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o: EXTRA_LIBS/ARRAY/arrayV.cpp
-	$(VR_COMPILER) -c -o EXTRA_LIBS/ARRAY/OBJECTS/arrayV.o EXTRA_LIBS/ARRAY/arrayV.cpp $(VR_FLAGS)
+EXTRA_LIBS/ARRAY/OBJECTS/array.o: EXTRA_LIBS/ARRAY/array.cpp
+	$(VR_COMPILER) -c -o EXTRA_LIBS/ARRAY/OBJECTS/array.o EXTRA_LIBS/ARRAY/array.cpp $(VR_FLAGS)
 
 $(VR_OBJ_ELF_B)/elf_header_plus_tools.o: $(VR_SRC_ELF_B)/elf_header_plus_tools.cpp
 	$(VR_COMPILER) -c -o  $(VR_OBJ_ELF_B)/elf_header_plus_tools.o $(VR_SRC_ELF_B)/elf_header_plus_tools.cpp $(VR_FLAGS)
@@ -115,36 +115,36 @@ $(VR_OBJ_ELF_B)/main_elf_back.o: $(VR_SRC_ELF_B)/main_elf_back.cpp
 
 #=============================================================================================================================================================================
 
-DO_ASM: BACKEND/OBJECTS/m_asm.o BACKEND/OBJECTS/asm.o
+DO_ASM: $(VR_OBJ_B)/m_asm.o $(VR_OBJ_B)/asm.o
 	$(VR_COMPILER) BACKEND/OBJECTS/m_asm.o BACKEND/OBJECTS/asm.o -o BACKEND/BUILD/asm $(VR_FLAGS)
 
-BACKEND/OBJECTS/m_asm.o: BACKEND/MC_LIBS/ASM/m_asm.cpp
-	$(VR_COMPILER) -c -o BACKEND/OBJECTS/m_asm.o BACKEND/MC_LIBS/ASM/m_asm.cpp $(VR_FLAGS)
+$(VR_OBJ_B)/m_asm.o: $(VR_SRC_B)/ASM/m_asm.cpp
+	$(VR_COMPILER) -c -o $(VR_OBJ_B)/m_asm.o $(VR_SRC_B)/ASM/m_asm.cpp $(VR_FLAGS)
 
-BACKEND/OBJECTS/asm.o: BACKEND/MC_LIBS/ASM/asm.cpp
-	$(VR_COMPILER) -c -o BACKEND/OBJECTS/asm.o BACKEND/MC_LIBS/ASM/asm.cpp $(VR_FLAGS)
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-DO_DISASM: BACKEND/OBJECTS/m_disasm.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o
-	$(VR_COMPILER) BACKEND/OBJECTS/m_disasm.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o -o BACKEND/BUILD/disasm $(VR_FLAGS)
-
-BACKEND/OBJECTS/m_disasm.o: BACKEND/MC_LIBS/DISASM/m_disasm.cpp
-	$(VR_COMPILER) -c -o BACKEND/OBJECTS/m_disasm.o BACKEND/MC_LIBS/DISASM/m_disasm.cpp $(VR_FLAGS)
-
-BACKEND/OBJECTS/disasm.o: BACKEND/MC_LIBS/DISASM/disasm.cpp
-	$(VR_COMPILER) -c -o BACKEND/OBJECTS/disasm.o BACKEND/MC_LIBS/DISASM/disasm.cpp $(VR_FLAGS)
+$(VR_OBJ_B)/asm.o: $(VR_SRC_B)/ASM/asm.cpp
+	$(VR_COMPILER) -c -o $(VR_OBJ_B)/asm.o $(VR_SRC_B)/ASM/asm.cpp $(VR_FLAGS)
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-DO_PROC: BACKEND/OBJECTS/m_proc.o BACKEND/OBJECTS/proc.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o
-	$(VR_COMPILER) BACKEND/OBJECTS/m_proc.o BACKEND/OBJECTS/proc.o BACKEND/OBJECTS/disasm.o BACKEND/OBJECTS/asm.o  -o BACKEND/BUILD/proc $(VR_FLAGS)
+DO_DISASM: $(VR_OBJ_B)/m_disasm.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o
+	$(VR_COMPILER) $(VR_OBJ_B)/m_disasm.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o -o BACKEND/BUILD/disasm $(VR_FLAGS)
 
-BACKEND/OBJECTS/m_proc.o: BACKEND/MC_LIBS/CPU/m_proc.cpp
-	$(VR_COMPILER) -c -o BACKEND/OBJECTS/m_proc.o BACKEND/MC_LIBS/CPU/m_proc.cpp $(VR_FLAGS)
+$(VR_OBJ_B)/m_disasm.o: $(VR_SRC_B)/DISASM/m_disasm.cpp
+	$(VR_COMPILER) -c -o $(VR_OBJ_B)/m_disasm.o $(VR_SRC_B)/DISASM/m_disasm.cpp $(VR_FLAGS)
 
-BACKEND/OBJECTS/proc.o: BACKEND/MC_LIBS/CPU/proc.cpp
-	$(VR_COMPILER) -c -o BACKEND/OBJECTS/proc.o BACKEND/MC_LIBS/CPU/proc.cpp $(VR_FLAGS)
+$(VR_OBJ_B)/disasm.o: $(VR_SRC_B)/DISASM/disasm.cpp
+	$(VR_COMPILER) -c -o $(VR_OBJ_B)/disasm.o $(VR_SRC_B)/DISASM/disasm.cpp $(VR_FLAGS)
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+DO_PROC: $(VR_OBJ_B)/m_proc.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o
+	$(VR_COMPILER) $(VR_OBJ_B)/m_proc.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o  -o BACKEND/BUILD/proc $(VR_FLAGS)
+
+$(VR_OBJ_B)/m_proc.o: $(VR_SRC_B)/CPU/m_proc.cpp
+	$(VR_COMPILER) -c -o $(VR_OBJ_B)/m_proc.o $(VR_SRC_B)/CPU/m_proc.cpp $(VR_FLAGS)
+
+$(VR_OBJ_B)/proc.o: $(VR_SRC_B)/CPU/proc.cpp
+	$(VR_COMPILER) -c -o $(VR_OBJ_B)/proc.o $(VR_SRC_B)/CPU/proc.cpp $(VR_FLAGS)
 
 #=============================================================================================================================================================================
 
@@ -152,7 +152,8 @@ FOLDERS:
 	@mkdir -p EXTRA_LIBS/ARRAY/OBJECTS
 	@mkdir -p $(VR_SRC_F)/OBJECTS
 	@mkdir -p $(VR_SRC_B)/OBJECTS
-	@mkdir -p $(VR_SRC_B)/GRAPH_VIZ
+	@mkdir -p LOGS
+	@mkdir -p LOGS/GRAPH_VIZ
 	@mkdir -p $(VR_SRC_F)/GRAPH_VIZ
 	@mkdir -p $(VR_SRC_MC_B)/OBJECTS
 	@mkdir -p $(VR_SRC_ELF_B)/OBJECTS

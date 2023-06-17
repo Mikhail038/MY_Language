@@ -32,7 +32,7 @@ int make_array_bigger (MyArray* Array);
 
 int make_array_smaller (MyArray* Array);
 
-int array_variator (MyArray* Array);
+int array_validator (MyArray* Array);
 
 int array_constructor (MyArray* Array, size_t Size, size_t Capacity = 20); //TODO
 

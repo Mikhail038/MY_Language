@@ -1,5 +1,5 @@
 
-#include "arrayV.h"
+#include "array.h"
 #include "MYassert.h"
 #include "colors.h"
 #include <cstddef>
@@ -16,12 +16,7 @@ bool array_is_full (MyArray* Array)
 
 bool array_is_empty (MyArray* Array)
 {
-    if (Array->size < 1)
-    {
-        return true;
-    }
-
-    return false;
+    return (Array->size < 1);
 }
 
 int make_array_bigger (MyArray* Array)
@@ -30,21 +25,16 @@ int make_array_bigger (MyArray* Array)
     printf (KGRN "|MyArray|" KNRM "[big^] " KBLU "realloc made" KNRM "\n");
     #endif
 
-    if (array_variator (Array) != 0)
+    if (array_validator (Array) != 0)
     {
         return 1;
     }
-
-    //printf ("-------'%p' '%d' '%d' '%d'\n", stack->data, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
 
     Array->capacity = (Array->capacity > 0) ?
                         Array->capacity * CapacityMulDivCoefficient :
                         (Array->capacity + 1) * CapacityMulDivCoefficient;
 
     Array->data = realloc (Array->data, Array->capacity * Array->data_size);
-
-    //printf ("-------'%p' '%d' '%d' '%d'\n", stack->data, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
-
 
     if (Array == NULL)
     {
@@ -56,7 +46,7 @@ int make_array_bigger (MyArray* Array)
 
 int make_array_smaller (MyArray* Array)
 {
-    if (array_variator (Array) != 0)
+    if (array_validator (Array) != 0)
     {
         return 1;
     }
@@ -76,7 +66,7 @@ int make_array_smaller (MyArray* Array)
     return 0;
 }
 
-int array_variator (MyArray* Array)
+int array_validator (MyArray* Array)
 {
     MY_LOUD_ASSERT (Array != NULL);
     MY_LOUD_ASSERT (Array->data != NULL);
@@ -84,7 +74,7 @@ int array_variator (MyArray* Array)
     return 0;
 }
 
-int array_constructor (MyArray* Array, size_t DataSize, size_t Capacity)
+int array_constructor (MyArray* Array, const size_t DataSize, const size_t Capacity)
 {
     MY_LOUD_ASSERT (Array != NULL);
 
@@ -95,7 +85,7 @@ int array_constructor (MyArray* Array, size_t DataSize, size_t Capacity)
 
     Array->data = calloc (1, Array->capacity * Array->data_size);
 
-    if (array_variator (Array) != 0)
+    if (array_validator (Array) != 0)
     {
         return 1;
     }
@@ -105,7 +95,7 @@ int array_constructor (MyArray* Array, size_t DataSize, size_t Capacity)
 
 int put_in_array (MyArray* Array, void* Data)
 {
-    if (array_variator (Array) != 0)
+    if (array_validator (Array) != 0)
     {
         return 1;
     }
@@ -127,10 +117,6 @@ int put_in_array (MyArray* Array, void* Data)
     }
     else
     {
-        // if (make_array_bigger (Array) != 0)
-        // {
-        //     return 1;
-        // }
         MY_LOUD_ASSERT(false);
     }
 
@@ -147,7 +133,7 @@ int put_in_array (MyArray* Array, void* Data)
 
 int take_from_array (MyArray* Array, void* Data, size_t Index)
 {
-    if (array_variator (Array) != 0)
+    if (array_validator (Array) != 0)
     {
         return 1;
     }
@@ -228,24 +214,21 @@ bool find_free_place_in_array (MyArray* Array, size_t* Index)
     return RetValue;
 }
 
-void free_array (MyArray* Array) //can cause bad things
+void free_array (MyArray* Array) //if elements of array are pointers
 {
     for (size_t cnt = 0; cnt != Array->capacity; ++cnt)
     {
-        if (check_not_null ((char*) Array->data + cnt * Array->data_size, Array->data_size) == true)
-        {
-            void** DataPtr = (void**) ((char*) Array->data + cnt * Array->data_size);
+        void** DataPtr = (void**) ((char*) Array->data + cnt * Array->data_size);
 
-            free (*DataPtr);
+        free (*DataPtr);
 
-            #ifdef DEBUG
-            printf (KGRN "|MyArray|" KNRM "freed %p %lu/%lu\n", DataPtr, cnt, Array->size);
-            #endif
-        }
+        #ifdef DEBUG
+        printf (KGRN "|MyArray|" KNRM "freed %p %lu/%lu\n", DataPtr, cnt, Array->size);
+        #endif
     }
 }
 
-bool check_not_null (void* Data, size_t DataSize)
+bool check_not_null (const void* Data, const size_t DataSize)
 {
     for (size_t cnt = 0; cnt != DataSize; ++cnt)
     {

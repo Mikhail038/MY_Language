@@ -17,7 +17,7 @@
 #include <wchar.h>
 #include <string.h>
 
-#include "ARRAY/arrayV.h"
+#include "ARRAY/array.h"
 #include "MYassert.h"
 #include "colors.h"
 

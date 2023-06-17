@@ -1,6 +1,6 @@
 CategoryOperation STATEMENT
 {
-    CategoryOperation _FUNCTION
+    CategoryOperation FUNCTION
     {
         CategoryLine TypeVariable fac
         {
@@ -169,7 +169,7 @@ CategoryOperation STATEMENT
 {
     CategoryOperation STATEMENT
     {
-        CategoryOperation _FUNCTION
+        CategoryOperation FUNCTION
         {
             CategoryLine TypeVariable main
             {

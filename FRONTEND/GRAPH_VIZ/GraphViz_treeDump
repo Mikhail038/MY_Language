@@ -23,7 +23,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNCTION </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> FUNCTION </td>
                             </tr>
                         </table>
                         >
@@ -464,7 +464,7 @@ digraph {
                         label=
                         <
                         <table border="0" cellborder="1" cellspacing="0">
-                            <tr><td colspan="2" bgcolor = "#39c3ed"> _FUNCTION </td>
+                            <tr><td colspan="2" bgcolor = "#39c3ed"> FUNCTION </td>
                             </tr>
                         </table>
                         >
