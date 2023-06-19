@@ -148,27 +148,16 @@ void elf_head_start_params (ElfBack* Back)
 void elf_head_program_header_params (ElfBack* Back)
 {
     set_one_byte(Back, Back->head->segment_type);
-    align_one_byte(Back, 4);
+    ALIGN_4;
 
     set_one_byte(Back, Back->head->segment_flag);
-    align_one_byte(Back, 4);
+    ALIGN_4;
 
     set_one_byte(Back, Back->head->segment_offset);
-    align_one_byte(Back, 8);
-
-
-    // create_and_skip_patch (Back->patches, Back->cur_addr, FileVirtualAddress, sizeof (long int));
-    // create_and_skip_patch (Back->patches, Back->cur_addr, FileVirtualAddress, sizeof (long int));
+    ALIGN_8;
 
     set_bytes(Back, (void*) &(Back->head->file_virtual_address), sizeof (Back->head->file_virtual_address));
-    // memcpy ((size_t*) &(Back->ByteCodeArray[Back->cur_addr]),
-    //         &FileVirtualAddress, sizeof (size_t));  //Virtual address
-    // Back->cur_addr += 8;
-
     set_bytes(Back, (void*) &(Back->head->file_virtual_address), sizeof (Back->head->file_virtual_address));
-    // memcpy ((size_t*) &(Back->ByteCodeArray[Back->cur_addr]),
-    //         &FileVirtualAddress, sizeof (size_t));  //Physical address (same as virtual)
-    // Back->cur_addr += 8;
 }
 
 void elf_head_shstrtable (ElfBack* Back, size_t SegmentSizeSaved)
@@ -380,8 +369,8 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
     x86_extra_paste_call_label(Back, CurNode->left->data.var);
 
-    #ifdef DEBUG_LABELS
-    // fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
+    #ifdef DEBUG
+    fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
     #endif
 
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
@@ -403,8 +392,8 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
         push_in_stack(Back->VarStack, Table);
 
-        #ifdef DEBUG_VARS
-        // printf ("Vars Amount: [%d]\n", AmountVars);
+        #ifdef DEBUG
+        printf ("Vars Amount: [%d]\n", AmountVars);
         #endif
     }
 
@@ -582,13 +571,8 @@ void elf_generate_while (ElfBack* Back, AstNode* CurNode)
     prepare_name_label_to_jump (Label_body_name, Back->cur_addr);
 
     x86_extra_paste_jump_label(Back, Label_body_name);
-    // int Label_1 = label_cnt;
-    // fprintf (file,  LABEL "%d:\n", Label_1);
-    // label_cnt++;
 
-    // x86_nop();
     elf_generate_expression (Back, CurNode->left);
-    // x86_nop();
 
     x86_push_imm(Back, MY_FALSE);
 
@@ -598,16 +582,10 @@ void elf_generate_while (ElfBack* Back, AstNode* CurNode)
     x86_cmp_stack(Back);
     x86_jump_label(Back, Label_end_name, x86_je);
 
-    // PUT (je);
-    // int Label_2 = label_cnt;
-    // fprintf (file, " " LABEL "%d\n", Label_2);
-    // label_cnt++;
 
-    // x86_nop();
     Back->table_condition = none;
     elf_generate_statement (Back, CurNode->right);
     ELF_CLEAN_TABLE ();
-    // x86_nop();
 
     x86_jump_label(Back, Label_body_name, x86_jmp);
 
@@ -621,31 +599,16 @@ void elf_generate_while (ElfBack* Back, AstNode* CurNode)
 
 void elf_generate_call (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
 {
-    // x86_push_r(eTOP_REG);
 
     elf_push_parameters (Back, CurNode->right);
-
-    // x86_push_r(eTOP_REG);
-
-    // x86_pop_r(ELF_SHIFT_REG);
 
     x86_call_label(Back, CurNode->left->data.var);
 
     elf_delete_function_parameters (Back, CurNode->right);
 
-    // PUT (call);
-    // fprintf (file, " " LABEL "%ls\n", CurNode->left->data.var);
-
-    // x86_pop_r(eTOP_REG);
-
     if (RetValueMarker == true)
     {
-        // printf (KRED "WAAGH!\n" KNRM);
         x86_push_reg(Back, ELF_FUNC_RET_REG);
-    }
-    else
-    {
-        // printf (KGRN "no\n" KNRM);
     }
 
     return;
@@ -694,7 +657,6 @@ void elf_generate_postorder (ElfBack* Back, AstNode* CurNode, bool RetValueMarke
     if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->right != NULL)
     {
         elf_generate_postorder (Back, CurNode->right, RetValueMarker);
-        // x86_push_r(ELF_FUNC_RET_REG);
     }
 
     elf_generate_node (Back, CurNode);
@@ -708,16 +670,21 @@ void elf_set_rax_var_value (ElfBack* Back, AstNode* CurNode)
 {
     int Index = elf_find_var (Back, CurNode);
 
-    // printf("value param = ");
     if (Index < 0)
     {
-        // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
+        #ifdef DEBUG
+        printf("Index: %d Delta_rbp: %d Final: %d\n", Index, Back->delta_rbp, Back->delta_rbp - Index * VAR_SIZE_BYTES);
+        #endif
+
         x86_mov_to_reg_from_addr_in_reg_with_imm(Back, rax, rbp, Back->delta_rbp - Index * VAR_SIZE_BYTES);
 
         return;
     }
 
-    // printf("Index: %d\n", Index);
+    #ifdef DEBUG
+    printf("Index: %d\n", Index);
+    #endif
+
     x86_mov_to_reg_from_addr_in_reg_with_imm(Back, rax, rbp, Index);
 
     return;
@@ -726,19 +693,24 @@ void elf_set_rax_var_value (ElfBack* Back, AstNode* CurNode)
 void elf_set_rax_var_address (ElfBack* Back, AstNode* CurNode)
 {
     int Index = elf_find_var (Back, CurNode);
-    // printf("addr  param = ");
 
     x86_mov_reg_reg(Back, rax, rbp);
 
     if (Index < 0)
     {
-        // printf("Index: %d Delta_rbp: %d Final: %d\n", Index, delta_rbp, delta_rbp - Index * VAR_SIZE);
+        #ifdef DEBUG
+        printf("Index: %d Delta_rbp: %d Final: %d\n", Index, Back->delta_rbp, Back->delta_rbp - Index * VAR_SIZE_BYTES);
+        #endif
+
         x86_add_reg_imm(Back, rax, Back->delta_rbp - Index * VAR_SIZE_BYTES);
 
         return;
     }
 
-    // printf("Index: %d\n", Index);
+    #ifdef DEBUG
+    printf("Index: %d\n", Index);
+    #endif
+
     x86_add_reg_imm(Back, rax, Index);
 
     return;
@@ -752,17 +724,6 @@ void elf_generate_pop_var (ElfBack* Back, AstNode* CurNode)
 
     x86_mov_to_addr_in_reg_from_reg(Back, rax, FIRST_REG);
 
-//     int Index = elf_find_var (CurNode);
-//
-//     x86_mov_r_r(eCOUNT_REG, ELF_SHIFT_REG);
-//     x86_add_i(eCOUNT_REG, Index);
-//
-//     x86_pop_r(FIRST_REG);
-//     x86_mov_IrI_r(eCOUNT_REG, FIRST_REG);
-
-    // PUT (pop);
-    // fprintf (file, " [" COUNT_REG "]\n\n"); // this was
-
     return;
 }
 
@@ -771,13 +732,6 @@ void elf_generate_push_var (ElfBack* Back, AstNode* CurNode)
     elf_set_rax_var_value(Back, CurNode);
 
     x86_push_reg(Back, rax);
-
-//     int Index = elf_find_var (CurNode);
-//
-//     x86_mov_r_r(eCOUNT_REG, ELF_SHIFT_REG);
-//     x86_add_i(eCOUNT_REG, Index);
-//
-//     x86_push_IrI(eCOUNT_REG);
 
     return;
 }
@@ -816,39 +770,20 @@ void elf_delete_function_parameters (ElfBack* Back, AstNode* CurNode)
 
 void elf_standard_if_jump (ElfBack* Back, int JumpMode)
 {
-    const int STD_JUMP_FIRST_SHIFT  = 6;
-    const int STD_JUMP_SECOND_SHIFT = 4;
+    const int STD_JUMP_TRUE_SHIFT  = 6;
+    const int STD_JUMP_FALSE_SHIFT = 4;
 
     if (JumpMode != x86_jmp)
     {
         x86_cmp_stack (Back);
     }
 
-    x86_jump_any(Back, STD_JUMP_FIRST_SHIFT, JumpMode);
-
-    // fprintf (file, " " LABEL "%d\n", label_cnt);
-    // label_cnt++;
+    x86_jump_any(Back, STD_JUMP_TRUE_SHIFT, JumpMode); 
 
     x86_push_imm(Back, MY_FALSE);
+    x86_jump_any(Back, STD_JUMP_FALSE_SHIFT, x86_jmp);
 
-    // PUT (push);
-    // fprintf (file, " %d\n", MY_FALSE);
-
-    x86_jump_any(Back, STD_JUMP_SECOND_SHIFT, x86_jmp);
-
-    // PUT (jump);
-    // fprintf (file, " " LABEL "%d\n", label_cnt);
-
-    // fprintf (file, LABEL "%d:\n", label_cnt - 1);
-
-    x86_push_imm(Back, MY_TRUE);
-
-    // PUT (push);
-    // fprintf (file, " %d\n", MY_TRUE);
-
-//     fprintf (file, LABEL "%d:\n", label_cnt);
-//
-//     label_cnt++;
+    x86_push_imm(Back, MY_TRUE);    
 
     return;
 }
@@ -892,23 +827,22 @@ void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
 
     if (ParamMarker == false)
     {
-        #ifdef VAR_OVERSEER
+        #ifdef DEBUG
         printf (KYLW "Amount: %d CurSize: %d Param: %d Final: %d => " KNRM, Table->amount, Table->cur_size, Table->amount_param, Table->amount - (Table->cur_size - Table->amount_param) - 1);
         #endif
 
         Table->Arr[Table->cur_size].index = (Table->amount - (Table->cur_size - Table->amount_param) - 1) * VAR_SIZE_BYTES;
 
-        #ifdef VAR_OVERSEER
+        #ifdef DEBUG
         printf (KYLW "index <%d>\n" KNRM, Table->Arr[Table->cur_size].index);
         #endif
 
-        // Table->param_marker = false;
     }
     else
     {
         Table->Arr[Table->cur_size].index = - (Table->cur_size + 2); // another way to mark params of function
 
-        #ifdef VAR_OVERSEER
+        #ifdef DEBUG
         printf (KYLW "index |%d|\n" KNRM, Table->Arr[Table->cur_size].index);
         #endif
 

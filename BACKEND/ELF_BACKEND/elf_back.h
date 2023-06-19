@@ -96,7 +96,6 @@ struct ElfBack
 
     char*               ByteCodeArray   = NULL;
     size_t              cur_addr        = 0;
-    size_t              start_cnt       = 0;
 
     std::unordered_map<const wchar_t*, JumpLabel> Labels;
 };
