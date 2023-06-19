@@ -31,7 +31,7 @@ typedef wchar_t CharT; //will not work with char
 
 //===================================================================================================================================================================
 
-#define NODE_IS_OP_AND__ Node->category == CategoryOperation && Node->type ==
+#define NODE_IS_OP_AND__ Node->category == OperationNode && Node->type ==
 
 #define BACK_FUNC_HEAD_PARAMETERS AstNode* CurNode, SBack* Back
 

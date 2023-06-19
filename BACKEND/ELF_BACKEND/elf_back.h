@@ -3,6 +3,7 @@
 //29.04.2023
 //==================================================================================================================================================================
 
+#include "elf_header_plus_tools.h"
 #include "ARRAY/array.h"
 #include "FuncLabel.h"
 #include "back.h"
@@ -12,13 +13,6 @@
 #include <list>
 #include <type_traits>
 #include <unordered_map>
-
-#undef PUTLN
-#undef PUT
-
-#define PUTLN(d_command)
-#define PUT(d_command)
-
 
 //=============================================================================================================================================================================
 
@@ -66,8 +60,8 @@ enum Registers
 };
 
 //DO NOT MAKE THEM RAX or RDX
-const int FIRST_REG         = rbx;
-const int SECOND_REG        = rcx;
+const int FIRST_ARIPHMETIC_REG  = rbx; //beeing used in ariphmetic operations with stack
+const int SECOND_ARIPHMETIC_REG = rcx; //beeing used in ariphmetic operations with stack
 const int ELF_FUNC_RET_REG  = r11;
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -102,11 +96,10 @@ struct ElfBack
 
 //==================================================================================================================================================================
 
-#include "elf_header_plus_tools.h"
 
 //==================================================================================================================================================================
 
-void construct_elf_back (ElfBack* Back, FILE* ExFile);
+void construct_elf_back (ElfBack* Back, const ElfHead* ElfHeader, FILE* ExFile);
 void destruct_elf_back (ElfBack* Back);
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,26 +181,26 @@ void set_hex_long   (ElfBack* Back, const long Address);
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void x86_extra_dest_src_config      (ElfBack* Back, int& dstReg, int& srcReg);
-void x86_extra_destination_config   (ElfBack* Back, int& dstReg);
+void x86_dest_src_config      (ElfBack* Back, int& dstReg, int& srcReg);
+void x86_destination_config   (ElfBack* Back, int& dstReg);
 
-void x86_extra_two_registers_config  (ElfBack* Back, const int dstReg, const int srcReg);
-void x86_extra_one_register_config   (ElfBack* Back, const int Reg, const int ZeroPoint);
+void x86_two_registers_config  (ElfBack* Back, const int dstReg, const int srcReg);
+void x86_one_register_config   (ElfBack* Back, const int Reg, const int ZeroPoint);
 
-void x86_extra_exit (ElfBack* Back);
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void x86_extra_paste_call_label (ElfBack* Back, const wchar_t* Name);
-void x86_extra_paste_jump_label (ElfBack* Back, const wchar_t* Name);
+void x86_exit (ElfBack* Back);
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void x86_extra_make_input_func (ElfBack* Back);
-void x86_extra_make_input_func_body (ElfBack* Back);
+void x86_paste_call_label (ElfBack* Back, const wchar_t* Name);
+void x86_paste_jump_label (ElfBack* Back, const wchar_t* Name);
 
-void x86_extra_make_output_func (ElfBack* Back);
-void x86_extra_make_output_func_body (ElfBack* Back);
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void x86_make_input_func (ElfBack* Back);
+void x86_make_input_func_body (ElfBack* Back);
+
+void x86_make_output_func (ElfBack* Back);
+void x86_make_output_func_body (ElfBack* Back);
 
 void x86_write_new_line (ElfBack* Back);
 
@@ -216,14 +209,6 @@ void x86_write_new_line (ElfBack* Back);
 void elf_head_start (ElfBack* Back);
 void elf_head_start_params (ElfBack* Back);
 void elf_head_program_header_params (ElfBack* Back);
-
-// void elf_head_shstrtable (ElfBack* Back,
-//                             size_t& SegmentSize, size_t& addrSegmentSize,
-//                                                     size_t& addrSegmentFileSize,
-//                             size_t& TableAddress, size_t& addrTableAddress,
-//                             size_t& TableLoadAddress, size_t& addrTableLoadAddress,
-//                             unsigned int& TextNameOffset, size_t& addrTextNameOffset,
-//                             unsigned int& TableNameOffset, size_t& addrTableNameOffset, const size_t FileVirtualAddress);
 
 void elf_head_shstrtable (ElfBack* Back, size_t SegmentSizeSaved);
 
@@ -237,8 +222,8 @@ void elf_generate_statement (ElfBack* Back, AstNode* CurNode);
 void elf_generate_function  (ElfBack* Back, AstNode* CurNode);
 void elf_generate_node      (ElfBack* Back, AstNode* CurNode);
 void elf_generate_op_node   (ElfBack* Back, AstNode* CurNode, bool RetValueMarker);
-void elf_generate_input     (ElfBack* Back, AstNode* CurNode);
-void elf_generate_output    (ElfBack* Back, AstNode* CurNode);
+void elf_generate_call_input_function     (ElfBack* Back, AstNode* CurNode);
+void elf_generate_call_output_function    (ElfBack* Back, AstNode* CurNode);
 void elf_generate_if        (ElfBack* Back, AstNode* CurNode);
 void elf_generate_while     (ElfBack* Back, AstNode* CurNode);
 void elf_generate_call      (ElfBack* Back, AstNode* CurNode, bool RetValueMarker);
@@ -256,8 +241,8 @@ void elf_generate_push_var  (ElfBack* Back, AstNode* CurNode);
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void elf_push_parameters (ElfBack* Back, AstNode* CurNode);
-void elf_delete_function_parameters (ElfBack* Back, AstNode* CurNode);
+void elf_push_function_parameters (ElfBack* Back, AstNode* CurNode);
+void elf_pop_function_parameters (ElfBack* Back, AstNode* CurNode);
 
 void elf_pop_parameters (ElfBack* Back);
 
@@ -283,12 +268,6 @@ AstNode* elf_find_parent_statement (ElfBack* Back, AstNode* CurNode);
 bool elf_find_in_table (ElfBack* Back, CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
 
 const wchar_t* my_wchar_find (ElfBack* Back, const wchar_t* Name);
-
-//==================================================================================================================================================================
-
-#define ELF_BACK_FUNC_HEAD_PARAMETERS SNode* CurNode, SElfBack* Back
-
-#define ELF_CLEAN_TABLE() if (Back->table_condition != none) { elf_delete_var_table (Back); Back->table_condition = exist; }
 
 //==================================================================================================================================================================
 

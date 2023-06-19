@@ -4,17 +4,17 @@
 
 //=============================================================================================================================================================================
 #include <cstddef>
-#define TKN_IS_OP       TOKEN.category = CategoryOperation
+#define TKN_IS_OP       TOKEN.category = OperationNode
 
 #include "stackT.h"
 
 //=============================================================================================================================================================================
 
-#define TKN_IS_OP       TOKEN.category = CategoryOperation
+#define TKN_IS_OP       TOKEN.category = OperationNode
 
-#define TKN_IS_WORD (TOKEN.category == CategoryLine && TOKEN.type == TypeVariable)
+#define TKN_IS_WORD (TOKEN.category == NameNode && TOKEN.type == TypeVariable)
 
-#define TKN_OP_AND_IS__ TOKEN.category == CategoryOperation && TOKEN.type ==
+#define TKN_OP_AND_IS__ TOKEN.category == OperationNode && TOKEN.type ==
 
 #define CHECK_SYNTAX(tkn_type)  \
     MTokAss (TKN_OP_AND_IS__ tkn_type); \
@@ -112,14 +112,14 @@ enum TokenType
 
 enum Category
 {
-    CategoryValue     = 0,
-    CategoryLine      = 1,
-    CategoryOperation = 2
+    ValueNode     = 0,
+    NameNode      = 1,
+    OperationNode = 2
 };
 
 typedef struct
 {
-    Category  category = CategoryValue;
+    Category  category = ValueNode;
     TokenType type     = TValue;
     UData      data     = {};
 }
@@ -167,7 +167,7 @@ typedef struct AstNode
 {
     AstNode*    left     = NULL;
     AstNode*    right    = NULL;
-    Category    category = CategoryValue;
+    Category    category = ValueNode;
     TokenType   type     = TValue;
     UData       data     = {};
     AstNode*    parent   = NULL;

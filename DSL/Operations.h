@@ -8,7 +8,7 @@ DEF_OP (TValue,
 {
     double Value = parse_double (Lexem);
 
-    TOKEN.category = CategoryValue;
+    TOKEN.category = ValueNode;
     TOKEN.data.val = Value;
 },
 L"TValue",
@@ -436,7 +436,7 @@ L"TComment",
 DEF_OP (TypeVariable,
 (*Lexem >= L'A' && *Lexem <= L'я'),
 {
-    TOKEN.category = CategoryLine;
+    TOKEN.category = NameNode;
     TOKEN.data.var = wcsdup (Lexem);
 },
 L"TypeVariable",

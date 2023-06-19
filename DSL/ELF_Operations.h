@@ -6,7 +6,7 @@ DEF_OP (TValue,
 {
     double Value = parse_double (Lexem);
 
-    TOKEN.category = CategoryValue;
+    TOKEN.category = ValueNode;
     TOKEN.data.val = Value;
 },
 L"TValue",
@@ -279,7 +279,7 @@ LEXEM_IS (L"in"),
 },
 L"INPUT",
 {
-    elf_generate_input (Back, CurNode);
+    elf_generate_call_input_function (Back, CurNode);
 })
 
 DEF_OP (TypeOutput,
@@ -289,7 +289,7 @@ LEXEM_IS (L"out"),
 },
 L"OUTPUT",
 {
-    elf_generate_output (Back, CurNode);
+    elf_generate_call_output_function (Back, CurNode);
 })
 
 DEF_OP (TypeReturn,
@@ -417,7 +417,7 @@ L"EXPRESSION",
 DEF_OP (TypeVariable,
 (*Lexem >= L'A' && *Lexem <= L'я'),
 {
-    TOKEN.category = CategoryLine;
+    TOKEN.category = NameNode;
     TOKEN.data.var = wcsdup (Lexem);
 },
 L"TYPE",

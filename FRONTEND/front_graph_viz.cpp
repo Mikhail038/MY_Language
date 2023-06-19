@@ -126,7 +126,7 @@ void print_gv_node (FILE* File, AstNode* Node)
 
     switch (Node->category)
     {
-        case CategoryOperation:
+        case OperationNode:
             switch (Node->type)
             {
                 #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
@@ -143,11 +143,11 @@ void print_gv_node (FILE* File, AstNode* Node)
             }
             break;
 
-        case CategoryLine:
+        case NameNode:
             fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAR_COLOUR "\"> " VAR_SPEC " ", Node->data.var);
             break;
 
-        case CategoryValue:
+        case ValueNode:
             fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAL_COLOUR "\"> " VAL_SPEC " ", Node->data.val);
             break;
 

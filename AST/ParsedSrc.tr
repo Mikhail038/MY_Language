@@ -1,21 +1,21 @@
-CategoryOperation STATEMENT
+OperationNode STATEMENT
 {
-    CategoryOperation FUNCTION
+    OperationNode FUNCTION
     {
-        CategoryLine TypeVariable fac
+        NameNode TypeVariable fac
         {
-            CategoryOperation VAR_TYPE
+            OperationNode VAR_TYPE
             {
             }
             {
             }
         }
         {
-            CategoryOperation PARAM
+            OperationNode PARAM
             {
-                CategoryOperation FUNCTION_ANNOUNCEMENT
+                OperationNode FUNCTION_ANNOUNCEMENT
                 {
-                    CategoryLine TypeVariable a
+                    NameNode TypeVariable a
                     {
                     }
                     {
@@ -29,31 +29,31 @@ CategoryOperation STATEMENT
         }
     }
     {
-        CategoryOperation STATEMENT
+        OperationNode STATEMENT
         {
         }
         {
-            CategoryOperation STATEMENT
+            OperationNode STATEMENT
             {
-                CategoryOperation ANNOUNCEMENT
+                OperationNode ANNOUNCEMENT
                 {
-                    CategoryLine TypeVariable b
+                    NameNode TypeVariable b
                     {
                     }
                     {
                     }
                 }
                 {
-                    CategoryOperation SUB
+                    OperationNode SUB
                     {
-                        CategoryLine TypeVariable a
+                        NameNode TypeVariable a
                         {
                         }
                         {
                         }
                     }
                     {
-                        CategoryValue TValue 1
+                        ValueNode TValue 1
                         {
                         }
                         {
@@ -62,20 +62,20 @@ CategoryOperation STATEMENT
                 }
             }
             {
-                CategoryOperation STATEMENT
+                OperationNode STATEMENT
                 {
-                    CategoryOperation IF
+                    OperationNode IF
                     {
-                        CategoryOperation EQUAL
+                        OperationNode EQUAL
                         {
-                            CategoryLine TypeVariable a
+                            NameNode TypeVariable a
                             {
                             }
                             {
                             }
                         }
                         {
-                            CategoryValue TValue 1
+                            ValueNode TValue 1
                             {
                             }
                             {
@@ -83,17 +83,17 @@ CategoryOperation STATEMENT
                         }
                     }
                     {
-                        CategoryOperation BRANCH
+                        OperationNode BRANCH
                         {
-                            CategoryOperation STATEMENT
+                            OperationNode STATEMENT
                             {
                             }
                             {
-                                CategoryOperation STATEMENT
+                                OperationNode STATEMENT
                                 {
-                                    CategoryOperation RETURN
+                                    OperationNode RETURN
                                     {
-                                        CategoryValue TValue 1
+                                        ValueNode TValue 1
                                         {
                                         }
                                         {
@@ -111,22 +111,22 @@ CategoryOperation STATEMENT
                     }
                 }
                 {
-                    CategoryOperation STATEMENT
+                    OperationNode STATEMENT
                     {
-                        CategoryOperation RETURN
+                        OperationNode RETURN
                         {
-                            CategoryOperation MUL
+                            OperationNode MUL
                             {
-                                CategoryOperation ADD
+                                OperationNode ADD
                                 {
-                                    CategoryLine TypeVariable b
+                                    NameNode TypeVariable b
                                     {
                                     }
                                     {
                                     }
                                 }
                                 {
-                                    CategoryValue TValue 1
+                                    ValueNode TValue 1
                                     {
                                     }
                                     {
@@ -134,18 +134,18 @@ CategoryOperation STATEMENT
                                 }
                             }
                             {
-                                CategoryOperation CALL
+                                OperationNode CALL
                                 {
-                                    CategoryLine TypeVariable fac
+                                    NameNode TypeVariable fac
                                     {
                                     }
                                     {
                                     }
                                 }
                                 {
-                                    CategoryOperation PARAM
+                                    OperationNode PARAM
                                     {
-                                        CategoryLine TypeVariable b
+                                        NameNode TypeVariable b
                                         {
                                         }
                                         {
@@ -167,20 +167,20 @@ CategoryOperation STATEMENT
     }
 }
 {
-    CategoryOperation STATEMENT
+    OperationNode STATEMENT
     {
-        CategoryOperation FUNCTION
+        OperationNode FUNCTION
         {
-            CategoryLine TypeVariable main
+            NameNode TypeVariable main
             {
-                CategoryOperation VAR_TYPE
+                OperationNode VAR_TYPE
                 {
                 }
                 {
                 }
             }
             {
-                CategoryOperation PARAM
+                OperationNode PARAM
                 {
                 }
                 {
@@ -188,22 +188,22 @@ CategoryOperation STATEMENT
             }
         }
         {
-            CategoryOperation STATEMENT
+            OperationNode STATEMENT
             {
             }
             {
-                CategoryOperation STATEMENT
+                OperationNode STATEMENT
                 {
-                    CategoryOperation ANNOUNCEMENT
+                    OperationNode ANNOUNCEMENT
                     {
-                        CategoryLine TypeVariable x
+                        NameNode TypeVariable x
                         {
                         }
                         {
                         }
                     }
                     {
-                        CategoryValue TValue 0
+                        ValueNode TValue 0
                         {
                         }
                         {
@@ -211,13 +211,13 @@ CategoryOperation STATEMENT
                     }
                 }
                 {
-                    CategoryOperation STATEMENT
+                    OperationNode STATEMENT
                     {
-                        CategoryOperation INPUT
+                        OperationNode INPUT
                         {
-                            CategoryOperation PARAM
+                            OperationNode PARAM
                             {
-                                CategoryLine TypeVariable x
+                                NameNode TypeVariable x
                                 {
                                 }
                                 {
@@ -230,29 +230,29 @@ CategoryOperation STATEMENT
                         }
                     }
                     {
-                        CategoryOperation STATEMENT
+                        OperationNode STATEMENT
                         {
-                            CategoryOperation EXPRESSION
+                            OperationNode EXPRESSION
                             {
-                                CategoryLine TypeVariable x
+                                NameNode TypeVariable x
                                 {
                                 }
                                 {
                                 }
                             }
                             {
-                                CategoryOperation CALL
+                                OperationNode CALL
                                 {
-                                    CategoryLine TypeVariable fac
+                                    NameNode TypeVariable fac
                                     {
                                     }
                                     {
                                     }
                                 }
                                 {
-                                    CategoryOperation PARAM
+                                    OperationNode PARAM
                                     {
-                                        CategoryLine TypeVariable x
+                                        NameNode TypeVariable x
                                         {
                                         }
                                         {
@@ -264,13 +264,13 @@ CategoryOperation STATEMENT
                             }
                         }
                         {
-                            CategoryOperation STATEMENT
+                            OperationNode STATEMENT
                             {
-                                CategoryOperation OUTPUT
+                                OperationNode OUTPUT
                                 {
-                                    CategoryOperation PARAM
+                                    OperationNode PARAM
                                     {
-                                        CategoryLine TypeVariable x
+                                        NameNode TypeVariable x
                                         {
                                         }
                                         {
@@ -283,11 +283,11 @@ CategoryOperation STATEMENT
                                 }
                             }
                             {
-                                CategoryOperation STATEMENT
+                                OperationNode STATEMENT
                                 {
-                                    CategoryOperation RETURN
+                                    OperationNode RETURN
                                     {
-                                        CategoryValue TValue 0
+                                        ValueNode TValue 0
                                         {
                                         }
                                         {

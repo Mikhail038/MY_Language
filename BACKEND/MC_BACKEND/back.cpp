@@ -91,38 +91,38 @@ AstNode* read_node (CodeSource* Tree)
     seek (Tree);
     swscanf (&(Tree->Arr[Tree->ip]), L"%mls", &Category);
 
-    if (wcscmp (Category, L"CategoryOperation") == 0)
+    if (wcscmp (Category, L"OperationNode") == 0)
     {
-        Node->category = CategoryOperation;
+        Node->category = OperationNode;
         seek_out (Tree);
     }
-    else if (wcscmp (Category, L"CategoryValue") == 0)
+    else if (wcscmp (Category, L"ValueNode") == 0)
     {
-        Node->category = CategoryValue;
+        Node->category = ValueNode;
         seek_out (Tree);
     }
-    else if (wcscmp (Category, L"CategoryLine") == 0)
+    else if (wcscmp (Category, L"NameNode") == 0)
     {
-        Node->category = CategoryLine;
+        Node->category = NameNode;
         seek_out (Tree);
     }
     else
     {
-        //wprintf (L"%ls\n", CategoryLine);
+        //wprintf (L"%ls\n", NameNode);
         free (Category);
         free (Node);
 
         return NULL;
     }
 
-    //wprintf (L"++%ls++\n", CategoryLine);
+    //wprintf (L"++%ls++\n", NameNode);
     free (Category);
 
     CharT* Line = NULL;
 
     switch (Node->category)
     {
-        case CategoryOperation:
+        case OperationNode:
             swscanf (&(Tree->Arr[Tree->ip]), L"%ml[^\n]", &Line);
             MY_LOUD_ASSERT (Line != NULL);
             //wprintf (L"--%ls--\n", Line);
@@ -149,7 +149,7 @@ AstNode* read_node (CodeSource* Tree)
 
             break;
 
-        case CategoryValue:
+        case ValueNode:
             swscanf (&(Tree->Arr[Tree->ip]), L"%mls", &Line);
             MY_LOUD_ASSERT (Line != NULL);
 
@@ -164,7 +164,7 @@ AstNode* read_node (CodeSource* Tree)
 
             break;
 
-        case CategoryLine:
+        case NameNode:
             swscanf (&(Tree->Arr[Tree->ip]), L"%mls", &Line);
             MY_LOUD_ASSERT (Line != NULL);
 
@@ -257,7 +257,7 @@ AstNode* construct_op_node (TokenType Type)
 {
     AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CategoryOperation;
+    Node->category = OperationNode;
 
     Node->type = Type;
 
@@ -268,11 +268,11 @@ AstNode* construct_var_node (Token* CurToken)
 {
     AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CategoryLine;
+    Node->category = NameNode;
 
     Node->type = TypeVariable;
 
-    MY_LOUD_ASSERT (CurToken->category == CategoryLine && CurToken->type == TypeVariable);
+    MY_LOUD_ASSERT (CurToken->category == NameNode && CurToken->type == TypeVariable);
 
     Node->data.var = wcsdup (CurToken->data.var);
 
@@ -283,7 +283,7 @@ AstNode* construct_val_node (ValT Value)
 {
     AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CategoryValue;
+    Node->category = ValueNode;
 
     Node->type = TValue;
 
@@ -313,7 +313,7 @@ void delete_tree (AstNode** Node)
 
     //printf ("\n%p freed\n", *Node);
 
-    if ((*Node)->category == CategoryLine)
+    if ((*Node)->category == NameNode)
     {
         free ((*Node)->data.var);
         (*Node)->data.var = NULL;
@@ -431,7 +431,7 @@ void print_gv_node (FILE* File, AstNode* Node)
 
     switch (Node->category)
     {
-        case CategoryOperation:
+        case OperationNode:
             switch (Node->type)
             {
                 #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
@@ -448,11 +448,11 @@ void print_gv_node (FILE* File, AstNode* Node)
             }
             break;
 
-        case CategoryLine:
+        case NameNode:
             fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAR_COLOUR "\"> " VAR_SPEC " ", Node->data.var);
             break;
 
-        case CategoryValue:
+        case ValueNode:
             fprintf (File, "<td colspan=\"2\" bgcolor = \"" GV_VAL_COLOUR "\"> " VAL_SPEC " ", Node->data.val);
             break;
 
@@ -617,19 +617,19 @@ void generate_function (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_node (BACK_FUNC_HEAD_PARAMETERS)
 {
-    if (CurNode->category == CategoryOperation)
+    if (CurNode->category == OperationNode)
     {
         generate_op_node (BACK_FUNC_PARAMETERS);
     }
 
-    if (CurNode->category == CategoryValue)
+    if (CurNode->category == ValueNode)
     {
         write_command (push, Back->file);
 
         fprintf (Back->file, " %lg\n", CurNode->data.val);
     }
 
-    if (CurNode->category == CategoryLine && CurNode->type == TypeVariable)
+    if (CurNode->category == NameNode && CurNode->type == TypeVariable)
     {
         generate_push_var (BACK_FUNC_PARAMETERS);
 //         write_command (push, Back->file);
@@ -748,7 +748,7 @@ void generate_if (BACK_FUNC_HEAD_PARAMETERS)
 
     if (CurNode != NULL)
     {
-        if (CurNode->category == CategoryOperation && CurNode->type == TypeIf)
+        if (CurNode->category == OperationNode && CurNode->type == TypeIf)
         {
             generate_if (BACK_FUNC_PARAMETERS);
         }
@@ -850,12 +850,12 @@ void generate_expression (BACK_FUNC_HEAD_PARAMETERS)
 
 void generate_postorder (BACK_FUNC_HEAD_PARAMETERS)
 {
-    if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->left != NULL)
+    if (!(CurNode->category == OperationNode && CurNode->type == TypeLinkerCall) && CurNode->left != NULL)
     {
         generate_postorder (BACK_LEFT_SON_FUNC_PARAMETERS);
     }
 
-    if (!(CurNode->category == CategoryOperation && CurNode->type == TypeLinkerCall) && CurNode->right != NULL)
+    if (!(CurNode->category == OperationNode && CurNode->type == TypeLinkerCall) && CurNode->right != NULL)
     {
         generate_postorder (BACK_RIGHT_SON_FUNC_PARAMETERS);
     }
@@ -1009,7 +1009,7 @@ void standard_if_jump (SBack* Back)
 //     if (NODE_IS_OP_AND__ TypeLinkerFunction)
 //     {
 //         if (Node->left != NULL &&
-//         Node->left->category == CategoryLine && (wcscmp (MAIN_WORD, Node->left->data.var) == 0))
+//         Node->left->category == NameNode && (wcscmp (MAIN_WORD, Node->left->data.var) == 0))
 //         {
 //             return Node->right->right;
 //         }
@@ -1071,7 +1071,7 @@ void add_to_var_table (BACK_FUNC_HEAD_PARAMETERS)
         create_new_var_table (Back);
     }
 
-    MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
+    MY_LOUD_ASSERT (CurNode->category == NameNode && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
     peek_from_stack (Back->VarStack, &Table);
@@ -1140,7 +1140,7 @@ int find_var (BACK_FUNC_HEAD_PARAMETERS)
     int RetIndex = WrongValue;
 
     MY_LOUD_ASSERT (Back->VarStack->size != 0);
-    MY_LOUD_ASSERT (CurNode->category == CategoryLine && CurNode->type == TypeVariable);
+    MY_LOUD_ASSERT (CurNode->category == NameNode && CurNode->type == TypeVariable);
 
     SVarTable* Table = NULL;
 

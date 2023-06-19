@@ -87,20 +87,20 @@ void print_node (AstNode* Node, FILE* OutputFile)
 {
     switch (Node->category)
     {
-        case CategoryValue:
-            fwprintf (OutputFile, L"CategoryValue TValue %lg", Node->data.val);
+        case ValueNode:
+            fwprintf (OutputFile, L"ValueNode TValue %lg", Node->data.val);
             break;
 
-        case CategoryLine:
-            fwprintf (OutputFile, L"CategoryLine TypeVariable %ls", Node->data.var);
+        case NameNode:
+            fwprintf (OutputFile, L"NameNode TypeVariable %ls", Node->data.var);
             break;
 
-        case CategoryOperation:
+        case OperationNode:
             switch (Node->type)
             {
                 #define DEF_OP(d_type, d_condition, d_tokenize, d_print, ...) \
                 case d_type: \
-                    fwprintf (OutputFile, L"CategoryOperation %ls", d_print); \
+                    fwprintf (OutputFile, L"OperationNode %ls", d_print); \
                     break;
 
                 #include "Operations.h"

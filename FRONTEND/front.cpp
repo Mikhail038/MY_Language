@@ -403,7 +403,7 @@ void destruct_tokens (AllTokens* Tokens)
     //wprintf (L"|%d|\n", Tokens->number);
     for (int counter = 0; counter < Tokens->size; ++counter)
     {
-        if (Tokens->array[counter].category == CategoryLine)
+        if (Tokens->array[counter].category == NameNode)
         {
             free (Tokens->array[counter].data.var);
         }
@@ -760,7 +760,7 @@ AstNode* construct_op_node (TokenType Type)
 {
     AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CategoryOperation;
+    Node->category = OperationNode;
 
     Node->type = Type;
 
@@ -771,11 +771,11 @@ AstNode* construct_var_node (Token* CurToken)
 {
     AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CategoryLine;
+    Node->category = NameNode;
 
     Node->type = TypeVariable;
 
-    MY_LOUD_ASSERT (CurToken->category == CategoryLine && CurToken->type == TypeVariable);
+    MY_LOUD_ASSERT (CurToken->category == NameNode && CurToken->type == TypeVariable);
 
     Node->data.var = wcsdup (CurToken->data.var);
 
@@ -786,7 +786,7 @@ AstNode* construct_val_node (ValT Value)
 {
     AstNode* Node = (AstNode*) calloc (1, sizeof (*Node));
 
-    Node->category = CategoryValue;
+    Node->category = ValueNode;
 
     Node->type = TValue;
 
@@ -812,7 +812,7 @@ void delete_tree (AstNode** Node)
         delete_tree (&((*Node)->right));
     }
 
-    if ((*Node)->category == CategoryLine)
+    if ((*Node)->category == NameNode)
     {
         free ((*Node)->data.var);
         (*Node)->data.var = NULL;
@@ -844,7 +844,7 @@ AstNode* get_Statement (FUNC_HEAD_ARGUMENTS)
     TOKEN_FUNC_DEBUG_INFO;
 
     // if (TKN_OP_AND_IS__ TypeOpenBracket
-    // && (Tokens->array[Tokens->number + 1].category == CategoryOperation
+    // && (Tokens->array[Tokens->number + 1].category == OperationNode
     // &&  Tokens->array[Tokens->number + 1].type == TypeCloseBracket))
     // {
     //     NEXT_TKN;
@@ -901,7 +901,7 @@ AstNode* get_Function (FUNC_HEAD_ARGUMENTS)
     TOKEN_FUNC_DEBUG_INFO;
 
     if (((TKN_OP_AND_IS__ TypeVoidVarType) || (TKN_OP_AND_IS__ TypeStdVarType)) &&
-    (Tokens->array[Tokens->number + 1].category == CategoryLine) &&
+    (Tokens->array[Tokens->number + 1].category == NameNode) &&
     (Tokens->array[Tokens->number + 2].type == TypeOpenRoundBracket))
     {
         AstNode* Node = construct_op_node (TypeLinkerFunction);
@@ -1194,7 +1194,7 @@ AstNode* get_Announce (FUNC_HEAD_ARGUMENTS)
         }
 
         //TODO do this in middle end later
-        // if (Node->right != NULL && Node->right->category == CategoryValue && Node->right->type == TValue)
+        // if (Node->right != NULL && Node->right->category == ValueNode && Node->right->type == TValue)
         // {
         //     if (add_to_vars_table (Node->left->data.var, Node->right->data.val, Vars) == false)
         //     {
@@ -1264,7 +1264,7 @@ AstNode* get_Equation (FUNC_HEAD_ARGUMENTS)
     TOKEN_FUNC_DEBUG_INFO;
 
     if (TKN_IS_WORD &&
-    (Tokens->array[Tokens->number + 1].category == CategoryOperation &&
+    (Tokens->array[Tokens->number + 1].category == OperationNode &&
     Tokens->array[Tokens->number + 1].type == TypeAssign))
     {
         if (f_check_vars_table (TOKEN.data.var, Vars, PrintFlag) == true)
@@ -1296,7 +1296,7 @@ AstNode* get_Call (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    if (TOKEN.category == CategoryLine && TOKEN.type == TypeVariable && check_funcs_table (TOKEN.data.var, Funcs) == true)
+    if (TOKEN.category == NameNode && TOKEN.type == TypeVariable && check_funcs_table (TOKEN.data.var, Funcs) == true)
     {
         AstNode* Node = construct_op_node (TypeLinkerCall);
 
@@ -1486,7 +1486,7 @@ AstNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 
     if (TKN_IS_WORD)
     {
-        if (Tokens->array[Tokens->number + 1].category == CategoryOperation &&
+        if (Tokens->array[Tokens->number + 1].category == OperationNode &&
             Tokens->array[Tokens->number + 1].type     == TypeOpenRoundBracket)
         {
             #define DEF_UN(def_name, def_type) \
@@ -1522,7 +1522,7 @@ AstNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
         wprintf (L"==ERROR==\n""No such word '%ls' found!\n", TOKEN.data.var);
     }
 
-    if (TOKEN.category == CategoryValue && TOKEN.type == TValue)
+    if (TOKEN.category == ValueNode && TOKEN.type == TValue)
     {
         Node = construct_val_node (TOKEN.data.val);
         NEXT_TKN;
