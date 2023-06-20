@@ -120,7 +120,7 @@ void my_front_main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        make_graf_viz_tree (Root, "FRONTEND/GRAPH_VIZ/GraphViz_treeDump", false);
+        make_graf_viz_tree (Root, "LOGS/FRONTEND/GraphVizASTTree", false);
 
         write_tree (Root, "AST/ParsedSrc.tr");
 

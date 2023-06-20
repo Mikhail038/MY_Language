@@ -5,7 +5,7 @@
 
 #include "elf_header_plus_tools.h"
 #include "ARRAY/array.h"
-#include "FuncLabel.h"
+#include "function_label.h"
 #include "back.h"
 
 #include <cstddef>

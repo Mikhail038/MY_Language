@@ -45,8 +45,8 @@ int main (int argc, char** argv)
     {
         const char* FileName = (argc > 1)  ? argv[1] : "a.elf";
 
-        #ifdef DEBUG_AST_VIZ
-        make_graf_viz_tree (Root, "BACKEND/GRAPH_VIZ/GraphViz_treeDump", false);
+        #ifdef DEBUG
+        make_graf_viz_tree (Root, "LOGS/BACKEND/GraphVizASTTree", false);
         #endif
 
         FILE* ExFile = fopen (FileName, "w");

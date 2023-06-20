@@ -15,3 +15,5 @@ build.cpp
 ger
 *.elf
 BACKEND/BUILD/*
+LOGS/BACKEND/*
+LOGS/BACKEND/*

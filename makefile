@@ -159,6 +159,8 @@ FOLDERS:
 	@mkdir -p $(VR_SRC_ELF_B)/OBJECTS
 	@mkdir -p BACKEND/BUILD
 	@mkdir -p $(VR_OBJ_MC_B)
+	@mkdir -p LOGS/BACKEND
+	@mkdir -p LOGS/FRONTEND
 
 #=============================================================================================================================================================================
 
