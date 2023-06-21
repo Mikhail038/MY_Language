@@ -3,17 +3,25 @@
 #include <cstring>
 #include <cstdio>
 
-#define LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
+#define _LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
 
-#define START_  printf ("==%s %s:%d\n", LOCATION)
-
-#undef START_
+#ifdef DEBUGG
+#define START_ \
+do \
+{ \
+    printf ("==%s %s:%d\n", _LOCATION);\
+} \
+while (0)
+#else
 #define START_
+#endif
+
+
 
 const int MAX_CALLS_OF_ONE_LABEL = 50;
 const int NULL_FINISH = 0;
 
-struct JumpLabel
+struct JumpLabel final
 {
     size_t  amount = 0;
     size_t* start;
@@ -110,3 +118,6 @@ struct JumpLabel
         free (start);
     }
 };
+
+#undef _START
+#undef _LOCATION

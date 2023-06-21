@@ -436,9 +436,12 @@ void x86_call_label (ElfBack* Back, const wchar_t* Name)
     fprintf (stdout, "call <%ls>:\n", Name);
     #endif
 
-    if (my_wchar_find(Back, Name) != NULL)
+    // if (my_wchar_find(Back, Name) != NULL)
+    // {
+
+    if (Back->Labels.find(Name) != Back->Labels.end())
     {
-        JumpLabel Label = Back->Labels[my_wchar_find(Back, Name)];
+        JumpLabel Label = Back->Labels[Name];
 
         if (Label.finish != NULL_FINISH)
         {
@@ -473,7 +476,6 @@ void x86_jump_label (ElfBack* Back, const wchar_t* Name, const int JumpMode)
     {
         if (Back->Labels[Name].finish != NULL_FINISH)
         {
-
             int JumpAddr = Back->Labels[Name].finish - Back->cur_addr;
 
             if (JumpMode == x86_jmp && JumpAddr < 0)

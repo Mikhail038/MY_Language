@@ -2,7 +2,9 @@
 
 DEB_FLAGS = -DVAR_OVERSEER
 
-VR_FLAGS =  -D_DEBUG -DDEBUG -g -ggdb3 -std=c++17 -O3
+VR_FLAGS =  -D_DEBUG  -g -ggdb3 -std=c++17 -O3 -DDEBUG
+
+#-DDEBUGG
 
 ASSAN = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
@@ -11,9 +13,9 @@ DOP += -Wno-switch-enum -Wno-cast-qual -Wno-conversion -Wno-sign-compare -Wno-si
 
 # -Wlarger-than=8192
 
-DIRECTORIES = -IFRONTEND -IBACKEND/MC_BACKEND -IEXTRA_LIBS/MC_BACKEND -IBACKEND/ELF_BACKEND -IEXTRA_LIBS -IEXTRA_LIBS/STACK -IEXAMPLES -IDSL -IEXTRA_LIBS/MC_LIBS/ASM -IEXTRA_LIBS/MC_LIBS/CPU -IEXTRA_LIBS/MC_LIBS/DISASM -I/usr/include/c++/11
+DIRECTORIES = -IFRONTEND -IBACKEND/MC_BACKEND -IEXTRA_LIBS/FLAG_DETECTOR -IEXTRA_LIBS/MC_BACKEND -IBACKEND/ELF_BACKEND -IEXTRA_LIBS -IEXTRA_LIBS/STACK -IEXAMPLES -IDSL -IEXTRA_LIBS/MC_LIBS/ASM -IEXTRA_LIBS/MC_LIBS/CPU -IEXTRA_LIBS/MC_LIBS/DISASM -I/usr/include/c++/11
 
-VR_FLAGS += $(ASSAN)
+# VR_FLAGS += $(ASSAN)
 
 VR_FLAGS += $(DIRECTORIES)
 
@@ -49,14 +51,14 @@ VR_OBJ_ELF_B = $(VR_SRC_ELF_B)/OBJECTS
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-BUILD_FRONTEND:  $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_file_print.o $(VR_OBJ_F)/front_graph_viz.o
-	$(VR_COMPILER) $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_file_print.o $(VR_OBJ_F)/front_graph_viz.o -o front $(VR_FLAGS)
+BUILD_FRONTEND:  $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_file_print.o $(VR_OBJ_F)/front_graph_viz.o EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o
+	$(VR_COMPILER) $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_file_print.o $(VR_OBJ_F)/front_graph_viz.o EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o -o front $(VR_FLAGS)
 
 BUILD_BACKEND_MC:  	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o
 	$(VR_COMPILER) 	$(VR_OBJ_MC_B)/back.o $(VR_OBJ_MC_B)/main_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o -o back_mc $(VR_FLAGS)
 
-BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/array.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
-	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/ARRAY/OBJECTS/array.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
+BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o EXTRA_LIBS/ARRAY/OBJECTS/array.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o
+	$(VR_COMPILER) 	$(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(VR_OBJ_ELF_B)/elf_header_plus_tools.o EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o EXTRA_LIBS/ARRAY/OBJECTS/array.o $(VR_OBJ_ELF_B)/main_elf_back.o $(VR_OBJ_B)/proc.o $(VR_OBJ_B)/disasm.o $(VR_OBJ_B)/asm.o $(VR_OBJ_MC_B)/back.o -o back_elf $(VR_FLAGS)
 
 
 # EXTRA_LIBS/STACK/OBJECTS/stack.o: EXTRA_LIBS/STACK/stack.cpp
@@ -96,6 +98,8 @@ $(VR_OBJ_MC_B)/back.o: $(VR_SRC_MC_B)/back.cpp
 $(VR_OBJ_MC_B)/main_back.o: $(VR_SRC_MC_B)/main_back.cpp
 	$(VR_COMPILER) -c -o $(VR_OBJ_MC_B)/main_back.o $(VR_SRC_MC_B)/main_back.cpp $(VR_FLAGS)
 
+EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o: EXTRA_LIBS/FLAG_DETECTOR/flag_detector.cpp
+	$(VR_COMPILER) -c -o EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o EXTRA_LIBS/FLAG_DETECTOR/flag_detector.cpp $(VR_FLAGS)
 
 EXTRA_LIBS/ARRAY/OBJECTS/array.o: EXTRA_LIBS/ARRAY/array.cpp
 	$(VR_COMPILER) -c -o EXTRA_LIBS/ARRAY/OBJECTS/array.o EXTRA_LIBS/ARRAY/array.cpp $(VR_FLAGS)
@@ -150,10 +154,10 @@ $(VR_OBJ_B)/proc.o: $(VR_SRC_B)/CPU/proc.cpp
 
 FOLDERS:
 	@mkdir -p EXTRA_LIBS/ARRAY/OBJECTS
+	@mkdir -p EXTRA_LIBS/FLAG_DETECTOR/OBJECTS
 	@mkdir -p $(VR_SRC_F)/OBJECTS
 	@mkdir -p $(VR_SRC_B)/OBJECTS
 	@mkdir -p LOGS
-	@mkdir -p LOGS/GRAPH_VIZ
 	@mkdir -p $(VR_SRC_F)/GRAPH_VIZ
 	@mkdir -p $(VR_SRC_MC_B)/OBJECTSc
 	@mkdir -p $(VR_SRC_ELF_B)/OBJECTS

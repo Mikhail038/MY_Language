@@ -25,6 +25,8 @@
 
 #include "elf_back.h"
 
+#include "flag_detector.h"
+
 #include "back.h"
 #include "elf_header_plus_tools.h"
 #include "front.h"
@@ -44,18 +46,67 @@
 
 //=============================================================================================================================================================================
 
-void construct_elf_back (ElfBack* Back, const ElfHead* ElfHeader, FILE* ExFile)
+void users_tree (LinePlusElfBack Argument)
 {
+    Argument.back->ast_file_name = (char*) Argument.Line;
+
+    #ifdef DEBUG
+    printf("|ast choosed| [%s]\n", Argument.Line);
+    #endif
+}
+
+void users_executable (LinePlusElfBack Argument)
+{
+    Argument.back->ex_file_name = (char*) Argument.Line;
+
+    #ifdef DEBUG
+    printf("|exec choosed| [%s]\n", Argument.Line);
+    #endif
+}
+
+void users_graph_viz (LinePlusElfBack Argument)
+{
+    Argument.back->gv_file_name = (char*) Argument.Line;
+
+    #ifdef DEBUG
+    printf("|graph viz choosed| [%s]\n", Argument.Line);
+    #endif
+}
+
+void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* ElfHeader)
+{
+    const FlagFunction FlagsArray[] =
+    {
+        {'t', users_tree},
+        {'e', users_executable},
+        {'g', users_graph_viz}
+    };
+    size_t FlagsAmount = sizeof (FlagsArray);
+    parse_flags(Back, argc, argv, (FlagFunction*) &FlagsArray, FlagsAmount);
+
+    if (Back->ast_file_name == NULL)
+    {
+        Back->ast_file_name = "AST/ParsedSrc.tr";
+    }
+    if (Back->ex_file_name == NULL)
+    {
+        Back->ex_file_name = "a.elf";
+    }
+    if (Back->gv_file_name == NULL)
+    {
+        Back->gv_file_name = "LOGS/BACKEND/GraphVizASTTree";
+    }
+
     Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
     Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
     Back->Funcs->top_index = 0;
 
+
+
     Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
     Back->head = ElfHeader;
-
-
-    Back->file = ExFile;
+    printf("%c%c%c\n", Back->head->elf_name[0], Back->head->elf_name[1], Back->head->elf_name[2]);
 
     Back->table_condition = none;
 
@@ -83,21 +134,26 @@ void destruct_elf_back (ElfBack* Back)
 
 //=============================================================================================================================================================================
 
-void make_elf_file (AstNode* Root, FILE* ExFile)
+void make_elf_file (ElfBack* Back)
 {
+    AstNode* Root = read_tree (Back->ast_file_name);
+    #ifdef DEBUG
+    make_graf_viz_tree (Root, Back->gv_file_name, false);
+    #endif
+
+    MY_LOUD_ASSERT(Root != NULL);
+
+    // construct_elf_back (Back, &StandardElfHead, ExFile);
+    // printf ("%p %lu\n", Back->ByteCodeArray, Back->cur_addr);
+
+    generate_elf_array (Back, Root);
+
+    FILE* ExFile = fopen (Back->ex_file_name, "w");
     MY_LOUD_ASSERT (ExFile != NULL);
+    fwrite (Back->ByteCodeArray, sizeof (char), Back->cur_addr, ExFile);
+    fclose (ExFile);
 
-    ElfBack Back;
-
-    const ElfHead StandardElfHead = {};
-
-    construct_elf_back (&Back, &StandardElfHead, ExFile);
-
-    generate_elf_array (&Back, Root);
-
-    fwrite (Back.ByteCodeArray, sizeof (char), Back.cur_addr, Back.file);
-
-    destruct_elf_back (&Back);
+    delete_tree (&Root);
 
     return;
 }
@@ -777,12 +833,12 @@ void elf_standard_if_jump (ElfBack* Back, int JumpMode)
         x86_cmp_stack (Back);
     }
 
-    x86_jump_any(Back, STD_JUMP_TRUE_SHIFT, JumpMode); 
+    x86_jump_any(Back, STD_JUMP_TRUE_SHIFT, JumpMode);
 
     x86_push_imm(Back, MY_FALSE);
     x86_jump_any(Back, STD_JUMP_FALSE_SHIFT, x86_jmp);
 
-    x86_push_imm(Back, MY_TRUE);    
+    x86_push_imm(Back, MY_TRUE);
 
     return;
 }

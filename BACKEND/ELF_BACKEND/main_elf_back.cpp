@@ -17,8 +17,9 @@
 //=============================================================================================================================================================================
 
 
+#include "FLAG_DETECTOR/flag_detector.h"
 #include "MYassert.h"
-#include "colors.h"
+#include "flag_detector.h"
 
 //=============================================================================================================================================================================
 
@@ -39,39 +40,21 @@ int main (int argc, char** argv)
 {
     setlocale(LC_CTYPE, "");
 
-    AstNode* Root = read_tree ("AST/ParsedSrc.tr");
+    ElfBack Back;
 
-    if (Root != NULL)
-    {
-        const char* FileName = (argc > 1)  ? argv[1] : "a.elf";
+    const ElfHead StandardElfHead = {};
+    construct_elf_back(argc, argv, &Back, &StandardElfHead);
+    make_elf_file (&Back);
+    destruct_elf_back (&Back);
 
-        #ifdef DEBUG
-        make_graf_viz_tree (Root, "LOGS/BACKEND/GraphVizASTTree", false);
-        #endif
+    size_t length = strlen (Back.ex_file_name) + sizeof ("chmod +rwx ");
 
-        FILE* ExFile = fopen (FileName, "w");
+    char* Command = (char*) calloc (sizeof (char), length);
 
-        MY_LOUD_ASSERT (ExFile != NULL);
+    sprintf (Command, "chmod +rwx %s", Back.ex_file_name);
+    system (Command);
 
-        make_elf_file (Root, ExFile);
-
-        fclose (ExFile);
-
-        delete_tree (&Root);
-
-        size_t length = strlen (FileName) + 100;
-
-        char* Command = (char*) calloc (sizeof (*FileName), length);
-
-        sprintf (Command, "chmod +rwx %s", FileName);
-        system (Command);
-
-        free (Command);
-    }
-    else
-    {
-        printf("No AST found!\n");
-    }
+    free (Command);
 
     return 0;
 }

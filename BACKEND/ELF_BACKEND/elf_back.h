@@ -8,8 +8,11 @@
 #include "function_label.h"
 #include "back.h"
 
+#include <bits/types/FILE.h>
 #include <cstddef>
 #include <cstdlib>
+#include <cwchar>
+#include <functional>
 #include <list>
 #include <type_traits>
 #include <unordered_map>
@@ -75,6 +78,24 @@ const int ELF_FUNC_RET_REG  = r11;
 struct ElfHead;
 struct Patch;
 
+// size_t hash_for_wchar_lines (const wchar_t* Line)
+
+struct hash_w
+{
+    size_t operator()(const wchar_t* const& Line)
+    {
+        size_t RetValue = 0;
+
+        size_t length = wcslen(Line);
+
+        for (size_t cnt = 0; cnt != length; ++cnt)
+        {
+            RetValue = ((RetValue >> 1) | (RetValue << 31)) ^ (unsigned int) Line[cnt];
+        }
+    }
+};
+
+
 struct ElfBack
 {
     FuncConditions      func_condition       = any_f;
@@ -82,6 +103,10 @@ struct ElfBack
     int                 delta_rbp       = 0;
     int                 label_cnt       = 0;
     FILE*               file            = NULL;
+    char*               ex_file_name    = NULL;
+    char*               ast_file_name   = NULL;
+    char*               gv_file_name    = NULL;
+    // char* a = NULL;
     SBackFuncTable*     Funcs           = NULL;
     SStack<SVarTable*>* VarStack        = NULL;
 
@@ -91,7 +116,7 @@ struct ElfBack
     char*               ByteCodeArray   = NULL;
     size_t              cur_addr        = 0;
 
-    std::unordered_map<const wchar_t*, JumpLabel> Labels;
+    std::unordered_map<const wchar_t*, JumpLabel, hash_w> Labels;
 };
 
 //==================================================================================================================================================================
@@ -99,7 +124,7 @@ struct ElfBack
 
 //==================================================================================================================================================================
 
-void construct_elf_back (ElfBack* Back, const ElfHead* ElfHeader, FILE* ExFile);
+void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* ElfHeader);
 void destruct_elf_back (ElfBack* Back);
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -271,7 +296,7 @@ const wchar_t* my_wchar_find (ElfBack* Back, const wchar_t* Name);
 
 //==================================================================================================================================================================
 
-void make_elf_file (AstNode* Root, FILE* ExFile);
+void make_elf_file (ElfBack* Back);
 
 //==================================================================================================================================================================
 
