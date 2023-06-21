@@ -120,7 +120,7 @@ int put_in_array (MyArray* Array, void* Data)
         MY_LOUD_ASSERT(false);
     }
 
-    #ifdef DEBUG
+    #ifdef DEBUG_2
     printf (KGRN "|MyArray|" KNRM "[put]  index %lu, InsertPlace %p, Data %p\n", Index, InsertPlace, Data);
     #endif
 
@@ -145,7 +145,7 @@ int take_from_array (MyArray* Array, void* Data, size_t Index)
         return 0;
     }
 
-    #ifdef DEBUG
+    #ifdef DEBUG_2
     printf (KGRN "|MyArray|" KNRM "[take] index %lu, Data %p\n", Index, Data);
     #endif
 
@@ -188,7 +188,7 @@ bool find_in_array (MyArray* Array, void* Data, size_t* Index)
 {
     for (size_t cnt = 0; cnt != Array->capacity; ++cnt)
     {
-        #ifdef DEBUG
+        #ifdef DEBUG_2
         printf (KGRN "|MyArray|" KNRM "[find] %lu/%lu\n", cnt, Array->capacity);
         #endif
 
@@ -222,7 +222,7 @@ void free_array (MyArray* Array) //if elements of array are pointers
 
         free (*DataPtr);
 
-        #ifdef DEBUG
+        #ifdef DEBUG_2
         printf (KGRN "|MyArray|" KNRM "freed %p %lu/%lu\n", DataPtr, cnt, Array->size);
         #endif
     }

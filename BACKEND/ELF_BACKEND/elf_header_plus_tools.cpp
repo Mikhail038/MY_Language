@@ -56,9 +56,6 @@ void paste_patch (ElfBack* Back, SupportedPatches Name, UniversalNumber Data)
 
 void set_one_byte (ElfBack* Back, char Byte)
 {
-    // printf ("%p %lu\n", Back->ByteCodeArray, Back->cur_addr);
-    // printf ("%p %d\n", Back->ByteCodeArray, Back->cur_addr);
-
     Back->ByteCodeArray[Back->cur_addr] = Byte;
     Back->cur_addr++;
 }

@@ -82,7 +82,7 @@ struct Patch;
 
 struct hash_w
 {
-    size_t operator()(const wchar_t* const& Line)
+    size_t operator()(const wchar_t* const& Line) const
     {
         size_t RetValue = 0;
 
@@ -92,6 +92,8 @@ struct hash_w
         {
             RetValue = ((RetValue >> 1) | (RetValue << 31)) ^ (unsigned int) Line[cnt];
         }
+        printf (KRED  Kreverse "%lu\n" KNRM , RetValue);
+        return RetValue;
     }
 };
 

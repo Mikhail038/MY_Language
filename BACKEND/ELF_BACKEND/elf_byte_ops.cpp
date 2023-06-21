@@ -436,12 +436,14 @@ void x86_call_label (ElfBack* Back, const wchar_t* Name)
     fprintf (stdout, "call <%ls>:\n", Name);
     #endif
 
-    // if (my_wchar_find(Back, Name) != NULL)
-    // {
-
     if (Back->Labels.find(Name) != Back->Labels.end())
     {
         JumpLabel Label = Back->Labels[Name];
+        // JumpLabel Label = Back->Labels.find(Name)->second;
+
+        #ifdef DEBUG
+        fprintf (stdout, KYLW Kreverse LABEL "|%ls|:\n" KNRM, Name);
+        #endif
 
         if (Label.finish != NULL_FINISH)
         {
@@ -458,10 +460,14 @@ void x86_call_label (ElfBack* Back, const wchar_t* Name)
     else
     {
         #ifdef DEBUG
-        fprintf (stdout, "<not found>:\n", Name);
+        fprintf (stdout, "<not found>\n", Name);
         #endif
 
         Back->Labels.insert({Name, {Back->cur_addr, 0}});
+
+        #ifdef DEBUG
+        fprintf (stdout, "<inserted>\n\n", Name);
+        #endif
     }
 
     for (size_t i = 0; i < CALL_SIZE; ++i)
@@ -474,6 +480,10 @@ void x86_jump_label (ElfBack* Back, const wchar_t* Name, const int JumpMode)
 {
     if (Back->Labels.find(Name) != Back->Labels.end())
     {
+        #ifdef DEBUG
+        fprintf (stdout, "/found/\n", Name);
+        #endif
+
         if (Back->Labels[Name].finish != NULL_FINISH)
         {
             int JumpAddr = Back->Labels[Name].finish - Back->cur_addr;
@@ -496,6 +506,10 @@ void x86_jump_label (ElfBack* Back, const wchar_t* Name, const int JumpMode)
     else
     {
         Back->Labels.insert({Name, {Back->cur_addr, 0}});
+
+        #ifdef DEBUG
+        fprintf (stdout, "/inserted/\n\n", Name);
+        #endif
     }
 
     if (JumpMode == x86_jmp)
@@ -961,9 +975,10 @@ void x86_paste_call_label (ElfBack* Back, const wchar_t* Name)
     fprintf (stdout, "paste |%ls|:\n", Name);
     #endif
 
-    if (my_wchar_find (Back, Name) != NULL)
+    if (Back->Labels.find(Name) != Back->Labels.end())
     {
-        JumpLabel Label = Back->Labels[my_wchar_find(Back, Name)];
+        JumpLabel Label = Back->Labels[Name];
+        // JumpLabel Label = Back->Labels.find(Name)->second;
 
         Label.finish = Back->cur_addr;
 
@@ -972,7 +987,7 @@ void x86_paste_call_label (ElfBack* Back, const wchar_t* Name)
             Back->cur_addr = Label.start[i];   // go there
 
             #ifdef DEBUG
-            fprintf (stdout, LABEL "|%ls|:\n", Name);
+            fprintf (stdout, KYLW Kreverse LABEL "|%ls|:\n" KNRM, Name);
             #endif
 
             x86_call (Back, Label.finish - Label.start[i]); //paste code
@@ -983,10 +998,14 @@ void x86_paste_call_label (ElfBack* Back, const wchar_t* Name)
     else
     {
         #ifdef DEBUG
-        fprintf (stdout, "|not called|:\n", Name);
+        fprintf (stdout, "|not called|\n");
         #endif
 
         Back->Labels.insert({Name, {Back->cur_addr}});
+
+        #ifdef DEBUG
+        fprintf (stdout, "|inserted|\n\n", Name);
+        #endif
     }
 }
 
@@ -994,6 +1013,10 @@ void x86_paste_jump_label (ElfBack* Back, const wchar_t* Name)
 {
     if (Back->Labels.find(Name) != Back->Labels.end())
     {
+        #ifdef DEBUG
+        printf("{pasted} %ls\n" KNRM, Name);
+        #endif
+
         Back->Labels[Name].finish = Back->cur_addr;
 
         for (size_t i = 0; i < Back->Labels[Name].amount; ++i)
@@ -1010,6 +1033,10 @@ void x86_paste_jump_label (ElfBack* Back, const wchar_t* Name)
     else
     {
         Back->Labels.insert({Name, {Back->cur_addr}});
+
+        #ifdef DEBUG
+        fprintf (stdout, "{inserted}\n\n", Name);
+        #endif
     }
 }
 

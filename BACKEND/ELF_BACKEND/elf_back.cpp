@@ -106,7 +106,6 @@ void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* El
     Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 
     Back->head = ElfHeader;
-    printf("%c%c%c\n", Back->head->elf_name[0], Back->head->elf_name[1], Back->head->elf_name[2]);
 
     Back->table_condition = none;
 
@@ -654,7 +653,6 @@ void elf_generate_while (ElfBack* Back, AstNode* CurNode)
 
 void elf_generate_call (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
 {
-
     elf_push_function_parameters (Back, CurNode->right);
 
     x86_call_label(Back, CurNode->left->data.var);
