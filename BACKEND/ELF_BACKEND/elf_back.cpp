@@ -51,7 +51,7 @@ void users_tree (LinePlusElfBack Argument)
     Argument.back->ast_file_name = (char*) Argument.Line;
 
     #ifdef DEBUG
-    printf("|ast choosed| [%s]\n", Argument.Line);
+    printf(KMGN "|ast choosed| [%s]\n" KNRM, Argument.Line);
     #endif
 }
 
@@ -60,7 +60,7 @@ void users_executable (LinePlusElfBack Argument)
     Argument.back->ex_file_name = (char*) Argument.Line;
 
     #ifdef DEBUG
-    printf("|exec choosed| [%s]\n", Argument.Line);
+    printf(KMGN "|exec choosed| [%s]\n" KNRM, Argument.Line);
     #endif
 }
 
@@ -69,39 +69,46 @@ void users_graph_viz (LinePlusElfBack Argument)
     Argument.back->gv_file_name = (char*) Argument.Line;
 
     #ifdef DEBUG
-    printf("|graph viz choosed| [%s]\n", Argument.Line);
+    printf(KMGN "|graph viz choosed| [%s]\n" KNRM, Argument.Line);
+    #endif
+}
+
+void users_help (LinePlusElfBack Argument)
+{
+    printf (KGRN Kbright "-t" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "choose custom AST tree\n" KNRM);
+    printf (KGRN Kbright "-e" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "create custom execuatable file\n" KNRM);
+    printf (KGRN Kbright "-g" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "put graph_viz dump in custom file\n" KNRM);
+    printf (KGRN Kbright "-h" KNRM "   "      "              " KNRM Kunderscore "show to user this information\n" KNRM);
+
+    Argument.back->exit_marker = true;
+
+    #ifdef DEBUG
+    printf(KMGN "|helped|\n" KNRM);
     #endif
 }
 
 void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* ElfHeader)
 {
+    //default values
+    Back->exit_marker   = false;
+    Back->ast_file_name = "AST/ParsedSrc.tr";
+    Back->ex_file_name = "a.elf";
+    Back->gv_file_name = "LOGS/BACKEND/GraphVizASTTree";
+    //they may choose after flags parsing
+
     const FlagFunction FlagsArray[] =
     {
         {'t', users_tree},
         {'e', users_executable},
-        {'g', users_graph_viz}
+        {'g', users_graph_viz},
+        {'h', users_help},
     };
     size_t FlagsAmount = sizeof (FlagsArray);
     parse_flags(Back, argc, argv, (FlagFunction*) &FlagsArray, FlagsAmount);
 
-    if (Back->ast_file_name == NULL)
-    {
-        Back->ast_file_name = "AST/ParsedSrc.tr";
-    }
-    if (Back->ex_file_name == NULL)
-    {
-        Back->ex_file_name = "a.elf";
-    }
-    if (Back->gv_file_name == NULL)
-    {
-        Back->gv_file_name = "LOGS/BACKEND/GraphVizASTTree";
-    }
-
     Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
     Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
     Back->Funcs->top_index = 0;
-
-
 
     Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
 

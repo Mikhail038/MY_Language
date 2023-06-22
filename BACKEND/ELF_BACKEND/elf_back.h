@@ -80,26 +80,42 @@ struct Patch;
 
 // size_t hash_for_wchar_lines (const wchar_t* Line)
 
-struct hash_w
+namespace
 {
-    size_t operator()(const wchar_t* const& Line) const
+    struct hash_wchar
     {
-        size_t RetValue = 0;
-
-        size_t length = wcslen(Line);
-
-        for (size_t cnt = 0; cnt != length; ++cnt)
+        size_t operator()(const wchar_t* const& Line) const
         {
-            RetValue = ((RetValue >> 1) | (RetValue << 31)) ^ (unsigned int) Line[cnt];
-        }
-        printf (KRED  Kreverse "%lu\n" KNRM , RetValue);
-        return RetValue;
-    }
-};
+            size_t RetValue = 0;
 
+            size_t length = wcslen(Line);
+
+            for (size_t cnt = 0; cnt != length; ++cnt)
+            {
+                RetValue = ((RetValue >> 1) | (RetValue << 31)) ^ (unsigned int) Line[cnt];
+            }
+
+            #ifdef DEBUG
+            printf (KRED  Kreverse "%lu\n" KNRM , RetValue);
+            #endif
+
+            return RetValue;
+        }
+    };
+
+    struct equal_wchar
+    {
+        bool operator()(const wchar_t* const FirstLine, const wchar_t* const SecondLine) const
+        {
+            hash_wchar hash_function;
+            return (hash_function(FirstLine) == hash_function(SecondLine));
+        }
+    };
+}
 
 struct ElfBack
 {
+    bool                exit_marker = false;
     FuncConditions      func_condition       = any_f;
     VarTableConditions  table_condition      = none;
     int                 delta_rbp       = 0;
@@ -118,7 +134,7 @@ struct ElfBack
     char*               ByteCodeArray   = NULL;
     size_t              cur_addr        = 0;
 
-    std::unordered_map<const wchar_t*, JumpLabel, hash_w> Labels;
+    std::unordered_map<const wchar_t*, JumpLabel, hash_wchar, equal_wchar> Labels;
 };
 
 //==================================================================================================================================================================

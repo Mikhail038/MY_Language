@@ -2,8 +2,7 @@
 
 DEB_FLAGS = -DVAR_OVERSEER
 
-VR_FLAGS =  -D_DEBUG  -g -ggdb3 -std=c++17 -O3 -DDEBUG
-
+VR_FLAGS = -g -ggdb3 -std=c++17 -O3 -DDEBUG
 #-DDEBUGG
 
 ASSAN = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
@@ -159,7 +158,7 @@ FOLDERS:
 	@mkdir -p $(VR_SRC_B)/OBJECTS
 	@mkdir -p LOGS
 	@mkdir -p $(VR_SRC_F)/GRAPH_VIZ
-	@mkdir -p $(VR_SRC_MC_B)/OBJECTSc
+	@mkdir -p $(VR_SRC_MC_B)/OBJECTS
 	@mkdir -p $(VR_SRC_ELF_B)/OBJECTS
 	@mkdir -p BACKEND/BUILD
 	@mkdir -p $(VR_OBJ_MC_B)
@@ -170,7 +169,12 @@ FOLDERS:
 
 .PHONY: clean
 clean:
-	@rm -rf *.o
+	@rm -rf $(VR_SRC_B)/OBJECTS/*.o
+	@rm -rf $(VR_SRC_F)/OBJECTS/*.o
+	@rm -rf $(VR_SRC_MC_B)/OBJECTS/*.o
+	@rm -rf $(VR_SRC_ELF_B)/OBJECTS/*.o
+	@rm -rf EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/*.o
+	@rm -rf EXTRA_LIBS/ARRAY/OBJECTS/*.o
 
 .PHONY: run
 run:

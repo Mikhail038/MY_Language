@@ -44,6 +44,13 @@ int main (int argc, char** argv)
 
     const ElfHead StandardElfHead = {};
     construct_elf_back(argc, argv, &Back, &StandardElfHead);
+
+    if (Back.exit_marker == true)
+    {
+        destruct_elf_back (&Back);
+        return 0;
+    }
+
     make_elf_file (&Back);
     destruct_elf_back (&Back);
 
