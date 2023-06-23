@@ -22,7 +22,7 @@ void create_empty_space_for_patch (ElfBack* Back, SupportedPatches Name, size_t 
     NewPatch->data = NULL_UNIVERSAL_NUMBER;
     NewPatch->size_of_data = SizeOfData;
 
-    put_in_array(Back->patches, &NewPatch);
+    put_in_tail_of_array(Back->patches, &NewPatch);
 
     Back->cur_addr += SizeOfData;
 }

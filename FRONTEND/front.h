@@ -34,7 +34,7 @@
 #define FUNC    Funcs->Arr[counter]
 
 //TODO think about add flag here
-#define FUNC_HEAD_ARGUMENTS AllTokens* Tokens, SStack<SVarTable*>* Vars, FunctionArr* Funcs, int* marker, bool* PrintFlag
+#define FUNC_HEAD_ARGUMENTS AllTokens* Tokens, SStack<VarTable*>* Vars, FunctionArr* Funcs, int* marker, bool* PrintFlag
 #define FUNC_ARGUMENTS      Tokens, Vars, Funcs, marker, PrintFlag
 
 #define TOKEN_FUNC_DEBUG_INFO   \
@@ -193,7 +193,7 @@ typedef struct
 
     SVarAccord* Arr  = NULL;
 }
-SVarTable;
+VarTable;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -225,17 +225,17 @@ FunctionArr;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void f_create_new_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag);
+void f_create_new_var_table (SStack<VarTable*>* Vars, bool* PrintFlag);
 
-void f_delete_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag);
+void f_delete_var_table (SStack<VarTable*>* Vars, bool* PrintFlag);
 
-bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag);
+bool f_check_vars_table (CharT* Name, SStack<VarTable*>* Vars, bool* PrintFlag);
 
-// bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars);
+// bool f_check_vars_table (CharT* Name, SStack<VarTable*>* Vars);
 
-bool f_find_in_table (CharT* Name, SVarTable* Table, bool* PrintFlag);
+bool f_find_in_table (CharT* Name, VarTable* Table, bool* PrintFlag);
 
-void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag);
+void f_add_to_var_table (CharT* Name, SStack<VarTable*>* Vars, bool* PrintFlag);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------

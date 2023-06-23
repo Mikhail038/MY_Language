@@ -24,27 +24,27 @@ struct MyArray
 
 //===================================================================================================================================================================
 
-bool array_is_full (MyArray* Array);
+bool array_is_full (const MyArray* Array);
 
-bool array_is_empty (MyArray* Array);
+bool array_is_empty (const MyArray* Array);
 
-int make_array_bigger (MyArray* Array);
+bool make_array_bigger (MyArray* Array);
 
-int make_array_smaller (MyArray* Array);
+bool make_array_smaller (MyArray* Array);
 
-int array_validator (MyArray* Array);
+bool array_validator (const MyArray* Array);
 
-int array_constructor (MyArray* Array, size_t Size, size_t Capacity = 20); //TODO
+bool array_constructor (MyArray* Array, const size_t Size, const size_t Capacity = 20);
 
-int put_in_array (MyArray* Array, void* Data);
+bool put_in_tail_of_array (MyArray* Array, const void* Data);
 
-int take_from_array (MyArray* Array, void* Data, size_t Index);
+bool take_from_array (MyArray* Array, void* Data, const size_t Index);
 
-int pop_from_array (MyArray* Array, void* Data, size_t Index);
+bool pop_from_array (MyArray* Array, void* Data, const size_t Index);
 
 int array_destructor (MyArray* Array);
 
-bool find_in_array (MyArray* Array, void* Data, size_t* Index);
+bool find_in_array (const MyArray* Array, const void* Data, size_t* Index);
 
 bool find_free_place_in_array (MyArray* Array, size_t* Index);
 

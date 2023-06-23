@@ -37,7 +37,7 @@ static StructLabels ArrLabels[LabelsAmnt] = {};
 
 int count_lines_in_file (FILE* stream)
 {
-    MCA (stream != NULL, -1);
+    MY_COOLER_ASSERT (stream != NULL, -1);
 
     char sym = '\0';
     int AmntLines = 0;
@@ -56,7 +56,7 @@ int count_lines_in_file (FILE* stream)
 
 int count_symbols_in_file (FILE* stream)
 {
-    MCA (stream != NULL,  -1);
+    MY_COOLER_ASSERT (stream != NULL,  -1);
 
     fseek (stream, 0, SEEK_END);
 
@@ -68,9 +68,9 @@ int count_symbols_in_file (FILE* stream)
 
 void separate_buffer_on_lines (char** ArrLinePtrs, const char* Buffer, int AmntSymbols)
 {
-    MCA (ArrLinePtrs != NULL, (void) 0);
-    MCA (Buffer != NULL, (void) 0);
-    MCA (AmntSymbols >= 0, (void) 0);
+    MY_COOLER_ASSERT (ArrLinePtrs != NULL, (void) 0);
+    MY_COOLER_ASSERT (Buffer != NULL, (void) 0);
+    MY_COOLER_ASSERT (AmntSymbols >= 0, (void) 0);
 
     int FirstCharNum = 0, CharNum = 0, LineNumber = 0;
 
@@ -104,7 +104,7 @@ void separate_buffer_on_lines (char** ArrLinePtrs, const char* Buffer, int AmntS
 int open_listing_file (const char* Filename, StructMachineCode* Code)
 {
     Code->listing_file = fopen (Filename, "w");
-    MCA (Code->listing_file != NULL, 1);
+    MY_COOLER_ASSERT (Code->listing_file != NULL, 1);
 
     fprintf (Code->listing_file,
              "===============================================================\n"
@@ -119,7 +119,7 @@ int open_listing_file (const char* Filename, StructMachineCode* Code)
 
 int close_listing_file (StructMachineCode* Code)
 {
-    MCA (Code->listing_file != NULL, 1);
+    MY_COOLER_ASSERT (Code->listing_file != NULL, 1);
 
     int size = Code->vram_size_x * Code->vram_size_y;
 
@@ -720,9 +720,9 @@ void free_labels (StructMachineCode* Code)
 
 int check_passport (FILE* Bin, int* Size, int* VramSize)
 {
-    MCA (Bin  != NULL, StdError);
-    MCA (Size != NULL, StdError);
-    MCA (VramSize != NULL, StdError);
+    MY_COOLER_ASSERT (Bin  != NULL, StdError);
+    MY_COOLER_ASSERT (Size != NULL, StdError);
+    MY_COOLER_ASSERT (VramSize != NULL, StdError);
 
     unsigned char signature = 0;
     unsigned char version = 0;
@@ -732,8 +732,8 @@ int check_passport (FILE* Bin, int* Size, int* VramSize)
     fread (Size,       1, sizeof (*Size),      Bin);
     fread (VramSize,   1, sizeof (*VramSize),  Bin);
 
-    MCA (*Size > 0, StdError);
-    MCA (*VramSize >= 0, StdError);
+    MY_COOLER_ASSERT (*Size > 0, StdError);
+    MY_COOLER_ASSERT (*VramSize >= 0, StdError);
 
     if (signature != StdSign)
     {

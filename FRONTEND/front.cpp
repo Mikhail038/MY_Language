@@ -20,6 +20,7 @@
 
 //=============================================================================================================================================================================
 
+#include "flag_detector.h"
 #include "front.h"
 
 //=============================================================================================================================================================================
@@ -44,15 +45,77 @@ const int NoErr  = 0;
 
 //=============================================================================================================================================================================
 
+void users_front_tree (LinePlusFrontParams Argument)
+{
+    Argument.parametrs->ast_file_name = (char*) Argument.Line;
+
+    #ifdef DEBUG
+    printf(KMGN "|ast choosed| [%s]\n" KNRM, Argument.Line);
+    #endif
+}
+
+void users_front_source (LinePlusFrontParams Argument)
+{
+    Argument.parametrs->src_file_name = (char*) Argument.Line;
+
+    #ifdef DEBUG
+    printf(KMGN "|src choosed| [%s]\n" KNRM, Argument.Line);
+    #endif
+}
+
+void users_front_graph_viz (LinePlusFrontParams Argument)
+{
+    Argument.parametrs->gv_file_name = (char*) Argument.Line;
+
+    #ifdef DEBUG
+    printf(KMGN "|graph viz choosed| [%s]\n" KNRM, Argument.Line);
+    #endif
+}
+
+void users_front_help (LinePlusFrontParams Argument)
+{
+    printf (KGRN Kbright "-t" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "choose custom AST tree\n" KNRM);
+    printf (KGRN Kbright "-s" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "choose custom source file\n" KNRM);
+    printf (KGRN Kbright "-g" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "put graph_viz dump in custom file\n" KNRM);
+    printf (KGRN Kbright "-h" KNRM "   "      "              " KNRM Kunderscore "show to user this information\n" KNRM);
+
+    Argument.parametrs->exit_marker = true;
+
+    #ifdef DEBUG
+    printf(KMGN "|helped|\n" KNRM);
+    #endif
+}
+
+//=============================================================================================================================================================================
+
 void my_front_main (int argc, char** argv)
 {
     setlocale(LC_CTYPE, "");
 
-    FILE* SourceText = ((argc > 1) && (strlen (argv[1]) > 3)) ? fopen (argv[1], "r") : fopen ("EXAMPLES/EXAMPLES_GER/elf_fact.ger", "r") ;
-    if (argc > 2)
+    FrontParameters Parameters
     {
-        fopen (argv[2], "r");
+        .ast_file_name = "AST/ParcedSrc.tr",
+        .gv_file_name = "LOGS/FRONTEND/GraphVizASTTree",
+        .src_file_name = "EXAMPLES/EXAMPLES_GER/elf_fact.ger",
+        .exit_marker = false
+    };
+
+    const FrontFlagFunction FlagsArray[] =
+    {
+        {'t', users_front_tree},
+        {'s', users_front_source},
+        {'g', users_front_graph_viz},
+        {'h', users_front_help}
+    };
+    size_t FlagsAmount = sizeof (FlagsArray) / sizeof (FrontFlagFunction);
+    parse_front_flags(&Parameters, argc, argv, (FrontFlagFunction*) &FlagsArray, FlagsAmount);
+
+    if (Parameters.exit_marker == true)
+    {
+        return;
     }
+
+    FILE* SourceText = fopen(Parameters.src_file_name, "r");
 
     bool PrintFlag = false;
     if ((argc > 1) && (strcmp (argv[1],"-v") == 0))
@@ -68,7 +131,9 @@ void my_front_main (int argc, char** argv)
 
     AllTokens* Tokens = lex_src (&Source, &PrintFlag);
 
-    //print_tokens (Tokens);
+    #ifdef DEBUG_2
+    print_tokens (Tokens);
+    #endif
 
     if (Tokens == NULL)
     {
@@ -83,7 +148,7 @@ void my_front_main (int argc, char** argv)
     Tokens->size   = Tokens->number;
     Tokens->number = 0;
 
-    SStack<SVarTable*>* Vars = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
+    SStack<VarTable*>* Vars = (SStack<VarTable*>*) calloc (1, sizeof (SStack<VarTable*>));
     stack_constructor (Vars, BASE_SCOPES_NUM);
 
     FunctionArr* Funcs   = construct_funcs_table (MAX_FUNCS_ARRAY);
@@ -102,15 +167,12 @@ void my_front_main (int argc, char** argv)
 
     if (Tokens != NULL)
     {
-        //print_tokens (Tokens);
-
         destruct_tokens (Tokens);
     }
 
     if (Vars != NULL)
     {
         stack_destructor (Vars);
-        //free (Vars);
     }
 
     if (Funcs != NULL)
@@ -120,9 +182,9 @@ void my_front_main (int argc, char** argv)
 
     if (Root != NULL)
     {
-        make_graf_viz_tree (Root, "LOGS/FRONTEND/GraphVizASTTree", false);
+        make_graf_viz_tree (Root, Parameters.gv_file_name, false);
 
-        write_tree (Root, "AST/ParsedSrc.tr");
+        write_tree (Root, Parameters.ast_file_name);
 
         delete_tree (&Root);
     }
@@ -525,14 +587,14 @@ double parse_int (CharT* Lexem, int* Counter)
 //front stuff//
 //=============================================================================================================================================================================
 
-void f_create_new_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag)
+void f_create_new_var_table (SStack<VarTable*>* Vars, bool* PrintFlag)
 {
     if (*PrintFlag)
     {
         wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
     }
 
-    SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
+    VarTable* NewTable = (VarTable*)  calloc (1,                  sizeof (VarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
     NewTable->cur_size = 0;
 
@@ -541,14 +603,14 @@ void f_create_new_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag)
     return;
 }
 
-void f_delete_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag)
+void f_delete_var_table (SStack<VarTable*>* Vars, bool* PrintFlag)
 {
     if (*PrintFlag)
     {
         wprintf (L"==%p== %s %s:%d\n", Vars, LOCATION);
     }
 
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
 
     pop_from_stack (Vars, &Table);
 
@@ -559,9 +621,9 @@ void f_delete_var_table (SStack<SVarTable*>* Vars, bool* PrintFlag)
     return;
 }
 
-bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
+bool f_check_vars_table (CharT* Name, SStack<VarTable*>* Vars, bool* PrintFlag)
 {
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
 
     int depth = 1;
     do
@@ -589,7 +651,7 @@ bool f_check_vars_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
     return false;
 }
 
-bool f_find_in_table (CharT* Name, SVarTable* Table, bool* PrintFlag)
+bool f_find_in_table (CharT* Name, VarTable* Table, bool* PrintFlag)
 {
     MY_LOUD_ASSERT (Table != NULL);
 
@@ -609,7 +671,7 @@ bool f_find_in_table (CharT* Name, SVarTable* Table, bool* PrintFlag)
     return false;
 }
 
-void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
+void f_add_to_var_table (CharT* Name, SStack<VarTable*>* Vars, bool* PrintFlag)
 {
     if (*PrintFlag)
     {
@@ -623,7 +685,7 @@ void f_add_to_var_table (CharT* Name, SStack<SVarTable*>* Vars, bool* PrintFlag)
     //     create_new_var_table (Back);
     // }
 
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
     peek_from_stack (Vars, &Table);
 
     Table->Arr[Table->cur_size].name = Name; //copy address from node
@@ -867,7 +929,7 @@ AstNode* get_Statement (FUNC_HEAD_ARGUMENTS)
         return NULL;
     }
 
-    AstNode* Node = construct_op_node (TypeLinkerStatement);
+    AstNode* Node = construct_op_node (TypeStatement);
 
 
     Node->left  = get_Function (FUNC_ARGUMENTS);
@@ -904,7 +966,7 @@ AstNode* get_Function (FUNC_HEAD_ARGUMENTS)
     (Tokens->array[Tokens->number + 1].category == NameNode) &&
     (Tokens->array[Tokens->number + 2].type == TypeOpenRoundBracket))
     {
-        AstNode* Node = construct_op_node (TypeLinkerFunction);
+        AstNode* Node = construct_op_node (TypeFunction);
 
         // if (Vars != NULL && (Vars->size > 0))
         // {
@@ -981,7 +1043,7 @@ AstNode* get_headParam (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    AstNode* Node = construct_op_node (TypeLinkerParameter);
+    AstNode* Node = construct_op_node (TypeParameter);
 
     Node->left = get_func_Announce (FUNC_ARGUMENTS);
 
@@ -1003,7 +1065,7 @@ AstNode* get_Param (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    AstNode* Node = construct_op_node (TypeLinkerParameter);
+    AstNode* Node = construct_op_node (TypeParameter);
 
     //MY_LOUD_ASSERT (f_check_vars_table (TOKEN.data.var, Vars) == true);
 
@@ -1051,7 +1113,7 @@ AstNode* get_IfStatements (FUNC_HEAD_ARGUMENTS)
 {
     TOKEN_FUNC_DEBUG_INFO;
 
-    AstNode* Node = construct_op_node (TypeLinkerCrossroads);
+    AstNode* Node = construct_op_node (TypeBranch);
 
     Node->left = get_Statement (FUNC_ARGUMENTS);
 
@@ -1169,7 +1231,7 @@ AstNode* get_Announce (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN;
 
-        AstNode* Node = construct_op_node (TypeLinkerAnnounce);
+        AstNode* Node = construct_op_node (TypeAnnounce);
 
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
@@ -1227,7 +1289,7 @@ AstNode* get_func_Announce (FUNC_HEAD_ARGUMENTS)
     {
         NEXT_TKN;
 
-        AstNode* Node = construct_op_node (TypeLinkerFuncAnnounce);
+        AstNode* Node = construct_op_node (TypeFuncAnnounce);
 
         Node->left  = get_Variable (FUNC_ARGUMENTS);
 
@@ -1269,7 +1331,7 @@ AstNode* get_Equation (FUNC_HEAD_ARGUMENTS)
     {
         if (f_check_vars_table (TOKEN.data.var, Vars, PrintFlag) == true)
         {
-            AstNode* Node = construct_op_node (TypeLinkerEquation);
+            AstNode* Node = construct_op_node (TypeAssignment);
 
             Node->left  = construct_var_node (&TOKEN);
             NEXT_TKN;
@@ -1298,7 +1360,7 @@ AstNode* get_Call (FUNC_HEAD_ARGUMENTS)
 
     if (TOKEN.category == NameNode && TOKEN.type == TypeVariable && check_funcs_table (TOKEN.data.var, Funcs) == true)
     {
-        AstNode* Node = construct_op_node (TypeLinkerCall);
+        AstNode* Node = construct_op_node (TypeCall);
 
         Node->left = construct_var_node (&TOKEN);
 

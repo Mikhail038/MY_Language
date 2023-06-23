@@ -42,7 +42,7 @@
 
 #define ELF_BACK_FUNC_HEAD_PARAMETERS SNode* CurNode, SElfBack* Back
 
-#define ELF_CLEAN_VAR_TABLE() if (Back->table_condition != none) { elf_delete_var_table (Back); Back->table_condition = exist; }
+#define ELF_CLEAN_VAR_TABLE() if (Back->table_condition != table_none) { elf_delete_var_table (Back); Back->table_condition = table_exist; }
 
 //=============================================================================================================================================================================
 
@@ -96,7 +96,7 @@ void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* El
     Back->gv_file_name = "LOGS/BACKEND/GraphVizASTTree";
     //they may choose after flags parsing
 
-    const FlagFunction FlagsArray[] =
+    const ElfBackFlagFunction FlagsArray[] =
     {
         {'t', users_tree},
         {'e', users_executable},
@@ -104,17 +104,17 @@ void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* El
         {'h', users_help},
     };
     size_t FlagsAmount = sizeof (FlagsArray);
-    parse_flags(Back, argc, argv, (FlagFunction*) &FlagsArray, FlagsAmount);
+    parse_elf_back_flags(Back, argc, argv, (ElfBackFlagFunction*) &FlagsArray, FlagsAmount);
 
-    Back->Funcs         = (SBackFuncTable*)     calloc (1, sizeof (SBackFuncTable));
+    Back->Funcs         = (BackFuncTable*)     calloc (1, sizeof (BackFuncTable));
     Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
     Back->Funcs->top_index = 0;
 
-    Back->VarStack      = (SStack<SVarTable*>*) calloc (1, sizeof (SStack<SVarTable*>));
+    Back->VarStack      = (SStack<VarTable*>*) calloc (1, sizeof (SStack<VarTable*>));
 
     Back->head = ElfHeader;
 
-    Back->table_condition = none;
+    Back->table_condition = table_none;
 
     stack_constructor (Back->VarStack);
 
@@ -436,18 +436,18 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
 
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
 
-    Back->table_condition = none;
+    Back->table_condition = table_none;
     elf_create_param_var_table (Back, CurNode->left->right);
 
     size_t AmountVars = 0;
 
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
     if (Back->VarStack->size != 0)
     {
 
         pop_from_stack (Back->VarStack, &Table);
 
-        AmountVars = elf_find_all_new_vars(Back, CurNode->right);
+        AmountVars = elf_find_new_vars(Back, CurNode->right);
 
         Table->amount = AmountVars;
 
@@ -591,7 +591,7 @@ void elf_generate_if (ElfBack* Back, AstNode* CurNode)
 
     CurNode = CurNode->right;
 
-    Back->table_condition = none;
+    Back->table_condition = table_none;
     elf_generate_statement (Back, CurNode->left);
     ELF_CLEAN_VAR_TABLE ();
 
@@ -612,7 +612,7 @@ void elf_generate_if (ElfBack* Back, AstNode* CurNode)
         }
         else
         {
-            Back->table_condition = none;
+            Back->table_condition = table_none;
             elf_generate_statement (Back, CurNode);
             ELF_CLEAN_VAR_TABLE ();
         }
@@ -628,32 +628,29 @@ void elf_generate_if (ElfBack* Back, AstNode* CurNode)
 
 void elf_generate_while (ElfBack* Back, AstNode* CurNode)
 {
-    wchar_t* Label_body_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    prepare_name_label_to_jump (Label_body_name, Back->cur_addr);
+    wchar_t BodyLabelName[MAX_JUMP_LABEL_SIZE];
+    prepare_name_label_to_jump (BodyLabelName, Back->cur_addr);
 
-    x86_paste_jump_label(Back, Label_body_name);
+    x86_paste_jump_label(Back, BodyLabelName);
 
     elf_generate_expression (Back, CurNode->left);
 
     x86_push_imm(Back, MY_FALSE);
 
-    wchar_t* Label_end_name = (wchar_t*) calloc(MAX_JUMP_LABEL_SIZE, sizeof (wchar_t));
-    prepare_name_label_to_jump (Label_end_name, Back->cur_addr);
+    wchar_t EndLabelName[MAX_JUMP_LABEL_SIZE];
+    prepare_name_label_to_jump (EndLabelName, Back->cur_addr);
 
     x86_cmp_stack(Back);
-    x86_jump_label(Back, Label_end_name, x86_je);
+    x86_jump_label(Back, EndLabelName, x86_je);
 
 
-    Back->table_condition = none;
+    Back->table_condition = table_none;
     elf_generate_statement (Back, CurNode->right);
     ELF_CLEAN_VAR_TABLE ();
 
-    x86_jump_label(Back, Label_body_name, x86_jmp);
+    x86_jump_label(Back, BodyLabelName, x86_jmp);
 
-    x86_paste_jump_label(Back, Label_end_name);
-
-    free (Label_body_name);
-    free (Label_end_name);
+    x86_paste_jump_label(Back, EndLabelName);
 
     return;
 }
@@ -682,7 +679,7 @@ void elf_generate_return (ElfBack* Back, AstNode* CurNode)
 
     size_t AmountVars = 0;
 
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
 
     if (Back->VarStack->size != 0)
     {
@@ -709,12 +706,19 @@ void elf_generate_expression (ElfBack* Back, AstNode* CurNode)
 
 void elf_generate_postorder (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
 {
-    if (!(CurNode->category == OperationNode && CurNode->type == TypeLinkerCall) && CurNode->left != NULL)
+    if (CurNode->category == OperationNode && CurNode->type == TypeCall)
+    {
+        elf_generate_node (Back, CurNode);
+
+        return;
+    }
+
+    if (CurNode->left != NULL)
     {
         elf_generate_postorder (Back, CurNode->left, RetValueMarker);
     }
 
-    if (!(CurNode->category == OperationNode && CurNode->type == TypeLinkerCall) && CurNode->right != NULL)
+    if (CurNode->right != NULL)
     {
         elf_generate_postorder (Back, CurNode->right, RetValueMarker);
     }
@@ -873,14 +877,14 @@ void elf_write_command (ElfBack* Back, ECommandNums eCommand, FILE* File)
 
 void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
 {
-    if (Back->table_condition == VarTableConditions::none)
+    if (Back->table_condition == VarTableConditions::table_none)
     {
         elf_create_new_var_table (Back, ParamMarker);
     }
 
     MY_LOUD_ASSERT (CurNode->category == NameNode && CurNode->type == TypeVariable);
 
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
     peek_from_stack (Back->VarStack, &Table);
 
     Table->Arr[Table->cur_size].name  = CurNode->data.var; //copy address from node
@@ -920,7 +924,7 @@ void elf_create_new_var_table (ElfBack* Back, bool ParamMarker)
 
     Back->delta_rbp = 0;
 
-    SVarTable* NewTable = (SVarTable*)  calloc (1,                  sizeof (SVarTable));
+    VarTable* NewTable = (VarTable*)  calloc (1,                  sizeof (VarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
     NewTable->cur_size = 0;
 
@@ -931,7 +935,7 @@ void elf_create_new_var_table (ElfBack* Back, bool ParamMarker)
     {
         printf("func params\n");
         NewTable->amount = elf_find_new_vars (Node);
-        MY_LOUD_ASSERT (CurNode->type != TypeLinkerParameter);
+        MY_LOUD_ASSERT (CurNode->type != TypeParameter);
         printf("amount %d\n", NewTable->amount);
     }
     else
@@ -943,21 +947,16 @@ void elf_create_new_var_table (ElfBack* Back, bool ParamMarker)
 
     push_in_stack (Back->VarStack, NewTable);
 
-    Back->table_condition = exist;
+    Back->table_condition = table_exist;
 
     return;
 }
 
-size_t elf_find_all_new_vars (ElfBack* Back, AstNode* CurNode)
-{
-    return elf_find_new_var(Back, CurNode);
-}
-
-size_t elf_find_new_var (ElfBack* Back, AstNode* CurNode)
+size_t elf_find_new_vars (ElfBack* Back, AstNode* CurNode)
 {
     size_t OneMoreVar = 0;
 
-    if (CurNode->left != NULL && CurNode->left->type == TypeLinkerAnnounce)
+    if (CurNode->left != NULL && CurNode->left->type == TypeAnnounce)
     {
         OneMoreVar = 1;
     }
@@ -967,7 +966,7 @@ size_t elf_find_new_var (ElfBack* Back, AstNode* CurNode)
         return OneMoreVar;
     }
 
-    return OneMoreVar + elf_find_new_var(Back, CurNode->right);
+    return OneMoreVar + elf_find_new_vars(Back, CurNode->right);
 }
 
 
@@ -991,7 +990,10 @@ void elf_create_param_var_table (ElfBack* Back, AstNode* CurNode)
 
     if (TableCreationMark == false)
     {
-        // printf (KRED "forced\n" KNRM);
+        #ifdef DEBUG_2
+        printf (KRED "forced to create vat_table\n" KNRM);
+        #endif
+
         elf_create_new_var_table(Back, true);
     }
 
@@ -1002,7 +1004,7 @@ void elf_delete_var_table (ElfBack* Back)
 {
     PRINT_DEBUG_INFO;
 
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
 
     pop_from_stack (Back->VarStack, &Table);
 
@@ -1019,7 +1021,7 @@ AstNode* elf_find_parent_statement (AstNode* CurNode)
     while (CurNode->parent != NULL)
     {
         CurNode = CurNode->parent;
-        if (CurNode->right != NULL && CurNode->category == OperationNode && CurNode->type == TypeLinkerStatement)
+        if (CurNode->right != NULL && CurNode->category == OperationNode && CurNode->type == TypeStatement)
         {
             Node = CurNode;
         }
@@ -1036,15 +1038,19 @@ int elf_find_var (ElfBack* Back, AstNode* CurNode)
     MY_LOUD_ASSERT (Back->VarStack->size != 0);
     MY_LOUD_ASSERT (CurNode->category == NameNode && CurNode->type == TypeVariable);
 
-    SVarTable* Table = NULL;
+    VarTable* Table = NULL;
 
-    int depth = 1;
+    int Depth = 1;
     do
     {
-        Table = Back->VarStack->data[Back->VarStack->size - depth];
-        //printf ("=%p=%d/%d=\n", Table, depth, VarStack->size);
-        depth++;
-    } while ((elf_find_in_table (Back, CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (depth <= Back->VarStack->size));
+        Table = Back->VarStack->data[Back->VarStack->size - Depth];
+
+        #ifdef DEBUG_2
+        printf ("=%p=%d/%d=\n", Table, depth, VarStack->size);
+        #endif
+
+        Depth++;
+    } while ((elf_find_in_table (Back, CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (Depth <= Back->VarStack->size));
 
     if (RetIndex == WrongValue)
     {
@@ -1057,7 +1063,7 @@ int elf_find_var (ElfBack* Back, AstNode* CurNode)
 
 //=============================================================================================================================================================================
 
-bool elf_find_in_table (ElfBack* Back, CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker)
+bool elf_find_in_table (ElfBack* Back, CharT* VarName, VarTable* Table, int* RetIndex, bool* ParamMarker)
 {
     MY_LOUD_ASSERT (Table != NULL);
 
@@ -1065,7 +1071,7 @@ bool elf_find_in_table (ElfBack* Back, CharT* varName, SVarTable* Table, int* Re
     {
         *ParamMarker = Table->param_marker;
 
-        if (wcscmp (varName, Table->Arr[counter].name) == 0)
+        if (wcscmp (VarName, Table->Arr[counter].name) == 0)
         {
             *RetIndex = Table->Arr[counter].index;
 
@@ -1078,39 +1084,26 @@ bool elf_find_in_table (ElfBack* Back, CharT* varName, SVarTable* Table, int* Re
 
 //=============================================================================================================================================================================
 
-void prepare_name_label_to_jump (wchar_t* Label_name, size_t Address)
+void prepare_name_label_to_jump (wchar_t* LabelName, size_t Address)
 {
-    // std::cout << Address << std::endl;
-
     Address += 1;
 
     size_t cnt = 0;
     while (Address >= 10)
     {
-        Label_name[cnt] = (wchar_t) (Address % 10);
+        LabelName[cnt] = (wchar_t) (Address % 10);
 
         Address /= 10;
 
         ++cnt;
     }
 
-    Label_name[cnt] = (wchar_t) (Address % 10);
+    LabelName[cnt] = (wchar_t) (Address % 10);
     cnt++;
 
-    Label_name[cnt] = L'\0';
+    LabelName[cnt] = L'\0';
 
 
-    Label_name = wcscat(Label_name, L"_w_1");
-
-//     for (int i = 0; i < cnt + 4; ++i)
-//     {
-//         printf("[%x]", Label_name[i]);
-//     }
-//
-//     std::cout << Address << std::endl;
-//     std::cout << cnt << std::endl;
-//     std::cout << Label_name << std::endl;
-//     printf ("|%ls|\n", Label_name);
+    LabelName = wcscat(LabelName, L"_w_1");
 }
-
 //=============================================================================================================================================================================

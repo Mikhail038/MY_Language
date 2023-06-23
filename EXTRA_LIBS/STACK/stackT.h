@@ -48,9 +48,12 @@ static int make_stack_bigger (SStack<StackDataType>* stack)
     }
 
     //printf ("-------'%p' '%d' '%d' '%d'\n", stack->data, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
-    stack->data = (StackDataType*) realloc (stack->data, (stack->capacity > 0) ? stack->capacity * CapacityMulDivCoefficient * sizeof (*stack->data) : (stack->capacity + 1) * CapacityMulDivCoefficient * sizeof (*stack->data) );
 
-    stack->capacity = (stack->capacity > 0) ? stack->capacity * CapacityMulDivCoefficient : (stack->capacity + 1) * CapacityMulDivCoefficient;
+    stack->capacity = (stack->capacity > 0) ?
+        stack->capacity * CapacityMulDivCoefficient : (stack->capacity + 1) * CapacityMulDivCoefficient;
+
+    stack->data = (StackDataType*) realloc (stack->data, stack->capacity * sizeof (*stack->data));
+
     //printf ("-------'%p' '%d' '%d' '%d'\n", stack->data, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
 
 
@@ -71,8 +74,9 @@ static int make_stack_smaller (SStack<StackDataType>* stack)
     }
 
     //printf ("-------'%p' '%d' of '%d'   '%d' '%d'\n", stack->data, stack->size, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
-    stack->data = (StackDataType*) realloc (stack->data, sizeof (*stack->data) * ( stack->capacity / CapacityMulDivCoefficient));
     stack->capacity /= CapacityMulDivCoefficient;
+
+    stack->data = (StackDataType*) realloc (stack->data, sizeof (*stack->data) * stack->capacity);
 
     //printf ("-------'%p' '%d' of '%d'   '%d' '%d'\n", stack->data, stack->size, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
 
@@ -171,7 +175,8 @@ int pop_from_stack (SStack<StackDataType>* stack, StackDataType* x)
     }
     else
     {
-        // printf ("{%d}\n", stack->size);
+        // printf ("%p [%d]\n", stack->data, stack->size);
+
         *x = stack->data[stack->size - 1];
 
         stack->size--;

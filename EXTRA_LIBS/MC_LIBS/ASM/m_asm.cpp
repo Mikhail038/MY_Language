@@ -7,7 +7,7 @@
 int main (int argc, char** argv)
 {
     FILE* SourceFile = argc > 1 ? fopen (argv[1], "r") : fopen ("EXAMPLES/EXAMPLES_ASM/code.asm", "rb");
-    MCA (SourceFile != NULL, 1);
+    MY_COOLER_ASSERT (SourceFile != NULL, 1);
 
     StructSource Source = {};
 
@@ -15,9 +15,9 @@ int main (int argc, char** argv)
     Source.amnt_symbols = count_symbols_in_file (SourceFile);
     int MaxSize = Amnt_lines + Amnt_lines * 2 * sizeof (double);
 
-    MCA (Amnt_lines >= 0, 1);
+    MY_COOLER_ASSERT (Amnt_lines >= 0, 1);
     Source.Buffer = (char*) calloc (Source.amnt_symbols, sizeof (*Source.Buffer));
-    MCA (Source.Buffer != NULL, 0);
+    MY_COOLER_ASSERT (Source.Buffer != NULL, 0);
 
     fread (Source.Buffer, sizeof (*Source.Buffer), Source.amnt_symbols, SourceFile);
     Source.Buffer[Source.amnt_symbols - 1] = '\0';
@@ -41,7 +41,7 @@ int main (int argc, char** argv)
 
 
     FILE* Bin = argc > 2 ? fopen (argv[2], "wb") : fopen ("EXAMPLES/EXAMPLES_MC/code.mc", "wb");
-    MCA (Bin != NULL, 1);
+    MY_COOLER_ASSERT (Bin != NULL, 1);
 
     make_bin_file (Bin, &Code);
 

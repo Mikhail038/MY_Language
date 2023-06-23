@@ -321,7 +321,7 @@ L"RETURN",
     generate_return (BACK_FUNC_PARAMETERS);
 })
 
-DEF_OP (TypeLinkerStatement,
+DEF_OP (TypeStatement,
 (0),
 {
     TKN_IS_OP;
@@ -330,7 +330,7 @@ L"STATEMENT",
 {
 })
 
-DEF_OP (TypeLinkerFunction,
+DEF_OP (TypeFunction,
 (0),
 {
     TKN_IS_OP;
@@ -340,7 +340,7 @@ L"FUNCTION",
     generate_function (BACK_FUNC_PARAMETERS);
 })
 
-DEF_OP (TypeLinkerCall,
+DEF_OP (TypeCall,
 (0),
 {
     TKN_IS_OP;
@@ -350,7 +350,7 @@ L"CALL",
     generate_call (BACK_FUNC_PARAMETERS);
 })
 
-DEF_OP (TypeLinkerFuncParameters,
+DEF_OP (TypeFuncParameters,
 (0),
 {
     TKN_IS_OP;
@@ -359,7 +359,7 @@ L"PARAMETERS",
 {
 })
 
-DEF_OP (TypeLinkerParameter,
+DEF_OP (TypeParameter,
 (0),
 {
     TKN_IS_OP;
@@ -377,7 +377,7 @@ L"TYPE" ERR,
 {
 })
 
-DEF_OP (TypeLinkerAnnounce,
+DEF_OP (TypeAnnounce,
 (0),
 {
     TKN_IS_OP;
@@ -387,17 +387,17 @@ L"ANNOUNCEMENT",
     generate_announce (BACK_FUNC_PARAMETERS);
 })
 
-DEF_OP (TypeLinkerEquation,
+DEF_OP (TypeAssignment,
 (0),
 {
     TKN_IS_OP;
 },
-L"EXPRESSION",
+L"ASSIGNMENT",
 {
     generate_assignment (BACK_FUNC_PARAMETERS);
 })
 
-DEF_OP (TypeLinkerFuncAnnounce,
+DEF_OP (TypeFuncAnnounce,
 (0),
 {
     TKN_IS_OP;
@@ -406,7 +406,7 @@ L"FUNCTION_ANNOUNCEMENT",
 {
 })
 
-DEF_OP (TypeLinkerCrossroads,
+DEF_OP (TypeBranch,
 (0),
 {
     TKN_IS_OP;
@@ -415,7 +415,7 @@ L"BRANCH",
 {
 })
 
-DEF_OP (TypeLinkerExpression,
+DEF_OP (TypeExpression,
 (0),
 {
     TKN_IS_OP;

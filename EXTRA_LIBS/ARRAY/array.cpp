@@ -9,74 +9,86 @@
 
 //===================================================================================================================================================================
 
-bool array_is_full (MyArray* Array)
+bool array_is_full (const MyArray* Array)
 {
     return !(Array->capacity - Array->size);
 }
 
-bool array_is_empty (MyArray* Array)
+bool array_is_empty (const MyArray* Array)
 {
     return (Array->size < 1);
 }
 
-int make_array_bigger (MyArray* Array)
+bool make_array_bigger (MyArray* Array)
 {
+    if (!array_is_full (Array))
+    {
+        return false;
+    }
+
     #ifdef DEBUG
     printf (KGRN "|MyArray|" KNRM "[big^] " KBLU "realloc made" KNRM "\n");
     #endif
 
     if (array_validator (Array) != 0)
     {
-        return 1;
+        return true;
     }
 
-    Array->capacity = (Array->capacity > 0) ?
+    Array->capacity = (Array->capacity == 0) ?
                         Array->capacity * CapacityMulDivCoefficient :
-                        (Array->capacity + 1) * CapacityMulDivCoefficient;
+                        CapacityMulDivCoefficient;
 
     Array->data = realloc (Array->data, Array->capacity * Array->data_size);
 
     if (Array == NULL)
     {
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
-int make_array_smaller (MyArray* Array)
+bool make_array_smaller (MyArray* Array)
 {
+    if (!((Array->size * CapacityMulDivCoefficient * CapacityMulDivCoefficient <= Array->capacity) && (Array->capacity > 10)))
+    {
+        return false;
+    }
+
     if (array_validator (Array) != 0)
     {
-        return 1;
+        return true;
     }
 
     //printf ("-------'%p' '%d' of '%d'   '%d' '%d'\n", stack->data, stack->size, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
 
     Array->capacity /= CapacityMulDivCoefficient;
+
+    MY_LOUD_ASSERT(Array->capacity != 0);
     Array->data = realloc (Array->data, Array->data_size * Array->capacity);
 
     //printf ("-------'%p' '%d' of '%d'   '%d' '%d'\n", stack->data, stack->size, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
 
     if (Array->data == NULL)
     {
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
-int array_validator (MyArray* Array)
+bool array_validator (const MyArray* Array)
 {
-    MY_LOUD_ASSERT (Array != NULL);
-    MY_LOUD_ASSERT (Array->data != NULL);
+    MY_SILENT_ASSERT (Array != NULL);
+    MY_SILENT_ASSERT (Array->data != NULL);
 
-    return 0;
+    return false;
 }
 
-int array_constructor (MyArray* Array, const size_t DataSize, const size_t Capacity)
+bool array_constructor (MyArray* Array, const size_t DataSize, const size_t Capacity)
 {
-    MY_LOUD_ASSERT (Array != NULL);
+    MY_SILENT_ASSERT (Array != NULL);
 
     Array->data_size = DataSize;
 
@@ -85,40 +97,40 @@ int array_constructor (MyArray* Array, const size_t DataSize, const size_t Capac
 
     Array->data = calloc (1, Array->capacity * Array->data_size);
 
-    if (array_validator (Array) != 0)
+    if (array_validator (Array) == true)
     {
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
-int put_in_array (MyArray* Array, void* Data)
+bool put_in_tail_of_array (MyArray* Array, const void* Data)
 {
-    if (array_validator (Array) != 0)
+    if (array_validator (Array) == true)
     {
-        return 1;
+        return true;
     }
 
-    if (array_is_full (Array))
+
+    if (make_array_bigger (Array) == true)
     {
-        if (make_array_bigger (Array) != 0)
-        {
-            return 1;
-        }
+        return true;
     }
 
-    size_t Index = 0;
+
     void* InsertPlace = NULL;
 
-    if (find_free_place_in_array (Array, &Index) == true)
-    {
-        InsertPlace = (char*) Array->data + Index * Array->data_size;
-    }
-    else
-    {
-        MY_LOUD_ASSERT(false);
-    }
+    InsertPlace = (char*) Array->data + Array->size * Array->data_size;
+
+    // if (find_free_place_in_array (Array, &Index) == true)
+    // {
+    //     InsertPlace = (char*) Array->data + Index * Array->data_size;
+    // }
+    // else
+    // {
+    //     MY_LOUD_ASSERT(false);
+    // }
 
     #ifdef DEBUG_2
     printf (KGRN "|MyArray|" KNRM "[put]  index %lu, InsertPlace %p, Data %p\n", Index, InsertPlace, Data);
@@ -128,21 +140,21 @@ int put_in_array (MyArray* Array, void* Data)
 
     Array->size++;
 
-    return 0;
+    return false;
 }
 
-int take_from_array (MyArray* Array, void* Data, size_t Index)
+bool take_from_array (MyArray* Array, void* Data, const size_t Index)
 {
-    if (array_validator (Array) != 0)
+    if (array_validator (Array) == true)
     {
-        return 1;
+        return true;
     }
 
     if (array_is_empty (Array))
     {
         printf ("Array is empty!\n");
         //exit (0);
-        return 0;
+        return false;
     }
 
     #ifdef DEBUG_2
@@ -151,24 +163,22 @@ int take_from_array (MyArray* Array, void* Data, size_t Index)
 
     memcpy(Data, (char*) Array->data + Array->data_size * Index, Array->data_size);
 
-    return 0;
+    return false;
 }
 
-int pop_from_array (MyArray* Array, void* Data, size_t Index)
+bool pop_from_array (MyArray* Array, void* Data, const size_t Index)
 {
     take_from_array(Array, Data, Index);
 
     Array->size--;
 
-    if ((Array->size * CapacityMulDivCoefficient * CapacityMulDivCoefficient <= Array->capacity) && (Array->capacity > 10))
+    if (make_array_smaller (Array) != 0)
     {
-        if (make_array_smaller (Array) != 0)
-        {
-            fprintf (stderr, "Error %s %s %d !\n", LOCATION);
-        }
+        fprintf (stderr, "Error %s %s %d !\n", LOCATION);
     }
 
-    return 0;
+
+    return false;
 }
 
 int array_destructor (MyArray* Array)
@@ -184,7 +194,7 @@ int array_destructor (MyArray* Array)
     return 0;
 }
 
-bool find_in_array (MyArray* Array, void* Data, size_t* Index)
+bool find_in_array (const MyArray* Array, const void* Data, size_t* Index)
 {
     for (size_t cnt = 0; cnt != Array->capacity; ++cnt)
     {
@@ -205,11 +215,9 @@ bool find_in_array (MyArray* Array, void* Data, size_t* Index)
 
 bool find_free_place_in_array (MyArray* Array, size_t* Index)
 {
-    void* EmptyData = calloc(1, Array->data_size);
+    void* EmptyData[Array->data_size];
 
     bool RetValue = find_in_array(Array, EmptyData, Index);
-
-    free (EmptyData);
 
     return RetValue;
 }
@@ -226,6 +234,8 @@ void free_array (MyArray* Array) //if elements of array are pointers
         printf (KGRN "|MyArray|" KNRM "freed %p %lu/%lu\n", DataPtr, cnt, Array->size);
         #endif
     }
+
+    return;
 }
 
 bool check_not_null (const void* Data, const size_t DataSize)

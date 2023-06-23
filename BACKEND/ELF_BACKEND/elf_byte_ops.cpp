@@ -439,7 +439,6 @@ void x86_call_label (ElfBack* Back, const wchar_t* Name)
     if (Back->Labels.find(Name) != Back->Labels.end())
     {
         JumpLabel Label = Back->Labels[Name];
-        // JumpLabel Label = Back->Labels.find(Name)->second;
 
         #ifdef DEBUG
         fprintf (stdout, KYLW Kreverse LABEL "|%ls|:\n" KNRM, Name);
@@ -978,7 +977,6 @@ void x86_paste_call_label (ElfBack* Back, const wchar_t* Name)
     if (Back->Labels.find(Name) != Back->Labels.end())
     {
         JumpLabel Label = Back->Labels[Name];
-        // JumpLabel Label = Back->Labels.find(Name)->second;
 
         Label.finish = Back->cur_addr;
 

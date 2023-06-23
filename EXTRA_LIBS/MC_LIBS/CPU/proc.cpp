@@ -256,16 +256,16 @@ int cpu_constructor (FILE* Bin, StructCPU* CPU)
 /*
 int check_passport (FILE* Bin, StructCPU* CPU)
 {
-    MCA (Bin != NULL, StdError);
-    MCA (CPU != NULL, StdError);
+    MY_COOLER_ASSERT (Bin != NULL, StdError);
+    MY_COOLER_ASSERT (CPU != NULL, StdError);
 
     fread (&signature, 1, sizeof (signature), Bin);
     fread (&version,   1, sizeof (version),   Bin);
     fread (&CPU->size, 1, sizeof (CPU->size), Bin);
     fread (&vram_size, 1, sizeof (vram_size), Bin);
 
-    MCA (CPU->size > 0, 1);
-    MCA (vram_size >= 0, 2);
+    MY_COOLER_ASSERT (CPU->size > 0, 1);
+    MY_COOLER_ASSERT (vram_size >= 0, 2);
 
     if (signature != StdSign)
     {
@@ -286,8 +286,8 @@ int check_passport (FILE* Bin, StructCPU* CPU)
 */
 int read_array_of_code (FILE* Bin, StructCPU* CPU)
 {
-    MCA (Bin  != NULL, StdError);
-    MCA (CPU  != NULL, StdError);
+    MY_COOLER_ASSERT (Bin  != NULL, StdError);
+    MY_COOLER_ASSERT (CPU  != NULL, StdError);
 
     CPU->Array = (unsigned char*) calloc (CPU->size * TEMPORARY_CONST_1, sizeof (*CPU->Array));
     fread (CPU->Array, CPU->size, sizeof (*CPU->Array), Bin);

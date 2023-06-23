@@ -302,7 +302,7 @@ L"RETURN",
     elf_generate_return (Back, CurNode);
 })
 
-DEF_OP (TypeLinkerStatement,
+DEF_OP (TypeStatement,
 (0),
 {
     TKN_IS_OP;
@@ -311,7 +311,7 @@ L"STATEMENT",
 {
 })
 
-DEF_OP (TypeLinkerFunction,
+DEF_OP (TypeFunction,
 (0),
 {
     TKN_IS_OP;
@@ -321,7 +321,7 @@ L"FUNCTION",
     elf_generate_function (Back, CurNode);
 })
 
-DEF_OP (TypeLinkerCall,
+DEF_OP (TypeCall,
 (0),
 {
     TKN_IS_OP;
@@ -331,7 +331,7 @@ L"CALL",
     elf_generate_call (Back, CurNode, RetValueMarker);
 })
 
-// DEF_OP (TypeLinkerFuncParameters,
+// DEF_OP (TypeFuncParameters,
 // (0),
 // {
 //     TKN_IS_OP;
@@ -340,7 +340,7 @@ L"CALL",
 // {
 // })
 
-DEF_OP (TypeLinkerParameter,
+DEF_OP (TypeParameter,
 (0),
 {
     TKN_IS_OP;
@@ -358,7 +358,7 @@ L"PARAMETER",
 // {
 // })
 
-DEF_OP (TypeLinkerAnnounce,
+DEF_OP (TypeAnnounce,
 (0),
 {
     TKN_IS_OP;
@@ -368,7 +368,7 @@ L"ANNOUNCEMENT",
     elf_generate_announce (Back, CurNode);
 })
 
-DEF_OP (TypeLinkerEquation,
+DEF_OP (TypeAssignment,
 (0),
 {
     TKN_IS_OP;
@@ -378,7 +378,7 @@ L"ASSIGNMENT",
     elf_generate_assignment (Back, CurNode);
 })
 
-DEF_OP (TypeLinkerFuncAnnounce,
+DEF_OP (TypeFuncAnnounce,
 (0),
 {
     TKN_IS_OP;
@@ -387,7 +387,7 @@ L"FUNCTION_ANNOUNCEMENT",
 {
 })
 
-DEF_OP (TypeLinkerCrossroads,
+DEF_OP (TypeBranch,
 (0),
 {
     TKN_IS_OP;
@@ -396,7 +396,7 @@ L"BRANCH",
 {
 })
 
-DEF_OP (TypeLinkerExpression,
+DEF_OP (TypeExpression,
 (0),
 {
     TKN_IS_OP;

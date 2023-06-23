@@ -78,8 +78,6 @@ const int ELF_FUNC_RET_REG  = r11;
 struct ElfHead;
 struct Patch;
 
-// size_t hash_for_wchar_lines (const wchar_t* Line)
-
 namespace
 {
     struct hash_wchar
@@ -95,7 +93,7 @@ namespace
                 RetValue = ((RetValue >> 1) | (RetValue << 31)) ^ (unsigned int) Line[cnt];
             }
 
-            #ifdef DEBUG
+            #ifdef DEBUG_2
             printf (KRED  Kreverse "%lu\n" KNRM , RetValue);
             #endif
 
@@ -117,16 +115,17 @@ struct ElfBack
 {
     bool                exit_marker = false;
     FuncConditions      func_condition       = any_f;
-    VarTableConditions  table_condition      = none;
+    VarTableConditions  table_condition      = table_none;
     int                 delta_rbp       = 0;
     int                 label_cnt       = 0;
     FILE*               file            = NULL;
+
     char*               ex_file_name    = NULL;
     char*               ast_file_name   = NULL;
     char*               gv_file_name    = NULL;
-    // char* a = NULL;
-    SBackFuncTable*     Funcs           = NULL;
-    SStack<SVarTable*>* VarStack        = NULL;
+
+    BackFuncTable*     Funcs           = NULL;
+    SStack<VarTable*>* VarStack        = NULL;
 
     const ElfHead*      head            = NULL;
     MyArray*            patches         = NULL;
@@ -183,7 +182,7 @@ void x86_syscall (ElfBack* Back);
 void x86_cmp_reg_reg (ElfBack* Back, int dstReg, int srcReg);
 void x86_cmp_stack   (ElfBack* Back);
 
-//------------------------  -----------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void x86_jump_any (ElfBack* Back, int Shift, int JmpMode);
 
@@ -300,7 +299,7 @@ void elf_create_new_var_table (ElfBack* Back, bool ParamMarker);
 void elf_create_param_var_table (ElfBack* Back, AstNode* CurNode);
 void elf_delete_var_table (ElfBack* Back);
 
-size_t elf_find_all_new_vars (ElfBack* Back, AstNode* CurNode);
+size_t elf_find_new_vars (ElfBack* Back, AstNode* CurNode);
 size_t elf_find_new_var (ElfBack* Back, AstNode* CurNode);
 
 AstNode* elf_find_parent_statement (AstNode* CurNode);
@@ -308,7 +307,7 @@ AstNode* elf_find_parent_statement (AstNode* CurNode);
 int elf_find_var (ElfBack* Back, AstNode* CurNode);
 
 AstNode* elf_find_parent_statement (ElfBack* Back, AstNode* CurNode);
-bool elf_find_in_table (ElfBack* Back, CharT* varName, SVarTable* Table, int* RetIndex, bool* ParamMarker);
+bool elf_find_in_table (ElfBack* Back, CharT* varName, VarTable* Table, int* RetIndex, bool* ParamMarker);
 
 const wchar_t* my_wchar_find (ElfBack* Back, const wchar_t* Name);
 

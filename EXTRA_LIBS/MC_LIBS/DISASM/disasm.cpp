@@ -11,8 +11,8 @@ static StructLabels ArrLabels[LabelsAmnt] = {};
 
 int read_array_of_code (FILE* Bin, StructMachineCode* Code)
 {
-    MCA (Bin  != NULL, StdError);
-    MCA (Code != NULL, StdError);
+    MY_COOLER_ASSERT (Bin  != NULL, StdError);
+    MY_COOLER_ASSERT (Code != NULL, StdError);
 
     Code->ArrCode = (unsigned char*) calloc (Code->size * TEMPORARY_CONST_1, sizeof (*Code->ArrCode));
     fread (Code->ArrCode, Code->size, sizeof (*Code->ArrCode), Bin);

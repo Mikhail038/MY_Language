@@ -139,7 +139,7 @@ void print_gv_node (FILE* File, AstNode* Node)
                 #undef DEF_OP
 
                 default:
-                MCA (0, (void) 0);
+                MY_COOLER_ASSERT (0, (void) 0);
             }
             break;
 
@@ -152,7 +152,7 @@ void print_gv_node (FILE* File, AstNode* Node)
             break;
 
         default:
-            MCA (0, (void) 0);
+            MY_COOLER_ASSERT (0, (void) 0);
     }
 
     return;

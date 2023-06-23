@@ -16,7 +16,7 @@ typedef wchar_t CharT; //will not work with char
 //     int         size = 0;
 //     SVarAccord* Arr  = NULL;
 // }
-// SVarTable;
+// VarTable;
 
 //===================================================================================================================================================================
 
@@ -51,8 +51,8 @@ enum FuncConditions
 
 enum VarTableConditions
 {
-    none  = 1,
-    exist = 2
+    table_none  = 1,
+    table_exist = 2
 };
 
 typedef struct
@@ -67,17 +67,17 @@ typedef struct
     SBackFunc* Table        = NULL;
     int        top_index    = 0;
 }
-SBackFuncTable;
+BackFuncTable;
 
 typedef struct
 {
     FuncConditions     func_cond       = any_f;
-    VarTableConditions table_condition      = none;
+    VarTableConditions table_condition      = table_none;
     int                 RAM_top_index   = 0;
     int                 label_cnt       = 0;
     FILE*               file            = NULL;
-    SBackFuncTable*     Funcs           = NULL;
-    SStack<SVarTable*>* VarStack        = NULL;
+    BackFuncTable*     Funcs           = NULL;
+    SStack<VarTable*>* VarStack        = NULL;
 }
 SBack;
 
@@ -109,7 +109,7 @@ const int MY_FALSE  = 0;
 #define PUTLN(d_command) writeln_command ( d_command , Back->file)
 #define PUT(d_command) write_command   ( d_command , Back->file)
 
-#define CLEAN_TABLE if (Back->table_condition != none) { delete_var_table (Back); Back->table_condition = exist; }
+#define CLEAN_TABLE if (Back->table_condition != table_none) { delete_var_table (Back); Back->table_condition = table_exist; }
 
 #define SEP_LINE ";----------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
 
@@ -202,9 +202,9 @@ void delete_var_table (SBack* Back);
 
 int find_var (BACK_FUNC_HEAD_PARAMETERS);
 
-bool find_in_table (CharT* varName, SVarTable* Table, int* RetIndex);
+bool find_in_table (CharT* varName, VarTable* Table, int* RetIndex);
 
-void free_tables (SStack<SVarTable*>* VarStack);
+void free_tables (SStack<VarTable*>* VarStack);
 
 //===================================================================================================================================================================
 

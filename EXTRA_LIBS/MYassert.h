@@ -20,7 +20,7 @@
         } while (0)
 
 
-#define MCA(Condition, ReturnNum)                     \
+#define MY_COOLER_ASSERT(Condition, ReturnNum)                     \
         do                                            \
         {                                             \
             if (!(Condition))                         \
@@ -29,6 +29,16 @@
                 return ReturnNum;                     \
             }                                         \
         } while (0)
+
+#define MY_SILENT_ASSERT(Condition)                     \
+        do                                            \
+        {                                             \
+            if (!(Condition))                         \
+            {                                         \
+                MCP (Condition);                      \
+            }                                         \
+        } while (0)
+
 
 #define MY_LOUD_ASSERT(Condition)                                \
         do                                            \

@@ -5,7 +5,7 @@
 
 #define _LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
 
-#ifdef DEBUGG
+#ifdef DEBUG_3
 #define START_ \
 do \
 { \
@@ -23,42 +23,31 @@ const int NULL_FINISH = 0;
 
 struct JumpLabel final
 {
-    size_t  amount = 0;
+    size_t  amount;
     size_t* start;
-    size_t finish = NULL_FINISH;
+    size_t finish;
 
-    JumpLabel()
+    JumpLabel(const size_t Finish = NULL_FINISH) : amount(0), finish(Finish)
     {
         START_;
 
         start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
     }
 
-    JumpLabel(size_t Finish)
+    JumpLabel(const size_t FirstStart, const size_t Finish) : amount(1), finish(Finish)
     {
         START_;
 
-        finish = Finish;
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
-    }
-
-    JumpLabel(size_t FirstStart, size_t Finish)
-    {
-        START_;
-
-        finish = Finish;
         start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
 
         start[0] = FirstStart;
-        amount = 1;
     }
 
-    JumpLabel (const JumpLabel& other)
+    JumpLabel (const JumpLabel& other) :
+        amount(other.amount),
+        finish(other.finish)
     {
         START_;
-
-        finish = other.finish;
-        amount = other.amount;
 
         start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
         memcpy(start, other.start, MAX_CALLS_OF_ONE_LABEL);
@@ -100,13 +89,12 @@ struct JumpLabel final
         return *this;
     }
 
-    JumpLabel (JumpLabel&& other)
+    JumpLabel (JumpLabel&& other) :
+        amount(other.amount),
+        start(other.start),
+        finish(other.finish)
     {
         START_;
-
-        finish = other.finish;
-        amount = other.amount;
-        start = other.start;
 
         other.start = nullptr;
     }

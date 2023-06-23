@@ -56,12 +56,10 @@ int main (int argc, char** argv)
 
     size_t length = strlen (Back.ex_file_name) + sizeof ("chmod +rwx ");
 
-    char* Command = (char*) calloc (sizeof (char), length);
+    char Command[length];
 
     sprintf (Command, "chmod +rwx %s", Back.ex_file_name);
     system (Command);
-
-    free (Command);
 
     return 0;
 }
