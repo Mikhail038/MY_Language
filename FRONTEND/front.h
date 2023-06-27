@@ -7,6 +7,7 @@
 #define TKN_IS_OP       TOKEN.category = OperationNode
 
 #include "stackT.h"
+#include "flag_detector.h"
 
 //=============================================================================================================================================================================
 
@@ -51,15 +52,21 @@
 #define FORBIDDEN_TERMINATING_SYMBOL "@"
 
 const int VAR_TABLE_CAPACITY = 30;
-// #define VAR_TABLE_CAPACITY 30
 
 const int MAX_VARS_ARRAY = 50;
-// #define MAX_VARS_ARRAY  50
 
 const int MAX_FUNCS_ARRAY = 50;
-// #define MAX_FUNCS_ARRAY 50
 
 //===================================================================================================================================================================
+
+void users_front_tree (LinePlusFrontParams Argument);
+
+void users_front_source (LinePlusFrontParams Argument);
+
+void users_front_graph_viz (LinePlusFrontParams Argument);
+
+void users_front_help (LinePlusFrontParams Argument);
+
 
 void my_front_main (int argc, char** argv);
 
@@ -213,25 +220,11 @@ FunctionArr;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-// SVars* construct_vars_table (size_t Capacity);
-//
-// bool add_to_vars_table (CharT* Name, ValT Data, SVars* Vars);
-//
-// bool check_vars_table (CharT* Name, SVars* Vars);
-//
-// void show_vars_table (SVars* Vars);
-//
-// void destruct_vars_table (SVars* Vars);
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 void f_create_new_var_table (SStack<VarTable*>* Vars, bool* PrintFlag);
 
 void f_delete_var_table (SStack<VarTable*>* Vars, bool* PrintFlag);
 
 bool f_check_vars_table (CharT* Name, SStack<VarTable*>* Vars, bool* PrintFlag);
-
-// bool f_check_vars_table (CharT* Name, SStack<VarTable*>* Vars);
 
 bool f_find_in_table (CharT* Name, VarTable* Table, bool* PrintFlag);
 
@@ -241,8 +234,6 @@ void f_add_to_var_table (CharT* Name, SStack<VarTable*>* Vars, bool* PrintFlag);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 FunctionArr* construct_funcs_table (size_t Capacity);
-
-// int add_to_funcs_table (CharT* Name, FunctionArr* Funcs, bool* PrintFlag);
 
 int add_to_funcs_table (CharT* Name, FunctionArr* Funcs);
 

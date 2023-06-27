@@ -50,6 +50,6 @@ bool find_free_place_in_array (MyArray* Array, size_t* Index);
 
 void free_array (MyArray* Array);
 
-bool check_not_null (void* Data, size_t DataSize);
+bool check_not_null (const void* Data, const size_t DataSize);
 
 //===================================================================================================================================================================

@@ -25,8 +25,6 @@
 
 #include "elf_back.h"
 
-#include "flag_detector.h"
-
 #include "back.h"
 #include "elf_header_plus_tools.h"
 #include "front.h"
@@ -106,6 +104,9 @@ void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* El
     size_t FlagsAmount = sizeof (FlagsArray);
     parse_elf_back_flags(Back, argc, argv, (ElfBackFlagFunction*) &FlagsArray, FlagsAmount);
 
+    Back->inp_func_file_name = "BACKEND/ELF_BACKEND/input_function";
+    Back->out_func_file_name = "BACKEND/ELF_BACKEND/output_function";
+
     Back->Funcs         = (BackFuncTable*)     calloc (1, sizeof (BackFuncTable));
     Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
     Back->Funcs->top_index = 0;
@@ -148,9 +149,6 @@ void make_elf_file (ElfBack* Back)
     #endif
 
     MY_LOUD_ASSERT(Root != NULL);
-
-    // construct_elf_back (Back, &StandardElfHead, ExFile);
-    // printf ("%p %lu\n", Back->ByteCodeArray, Back->cur_addr);
 
     generate_elf_array (Back, Root);
 
@@ -392,9 +390,21 @@ void elf_generate_code (ElfBack* Back, AstNode* Root)
 
     x86_exit(Back);
 
-    x86_make_input_func (Back);
+    FILE* InpFile = fopen(Back->inp_func_file_name, "r");
+    MY_LOUD_ASSERT(InpFile != NULL);
 
-    x86_make_output_func (Back);
+    x86_paste_call_label(Back, INP_LBL);
+    Back->cur_addr += paste_functions_bytes_from_file(&(Back->ByteCodeArray[Back->cur_addr]), InpFile);
+
+    fclose(InpFile);
+
+    FILE* OutFile = fopen(Back->out_func_file_name, "r");
+    MY_LOUD_ASSERT(OutFile != NULL);
+
+    x86_paste_call_label(Back, OUT_LBL);
+    Back->cur_addr += paste_functions_bytes_from_file(&(Back->ByteCodeArray[Back->cur_addr]), OutFile);
+
+    fclose(OutFile);
 
     elf_generate_statement(Back, Root);
 
@@ -431,7 +441,7 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
     x86_paste_call_label(Back, CurNode->left->data.var);
 
     #ifdef DEBUG
-    fprintf (stdout, LABEL "|%s|:\n", CurNode->left->data.var);
+    fprintf (stdout, LABEL "|%ls|:\n", CurNode->left->data.var);
     #endif
 
     Back->Funcs->Table[Back->Funcs->top_index].Name = CurNode->left->data.var;
@@ -454,7 +464,7 @@ void elf_generate_function (ElfBack* Back, AstNode* CurNode)
         push_in_stack(Back->VarStack, Table);
 
         #ifdef DEBUG
-        printf ("Vars Amount: [%d]\n", AmountVars);
+        printf ("Vars Amount: [%lu]\n", AmountVars);
         #endif
     }
 
@@ -852,27 +862,6 @@ void elf_standard_if_jump (ElfBack* Back, int JumpMode)
     return;
 }
 
-void elf_write_command (ElfBack* Back, ECommandNums eCommand, FILE* File)
-{
-    #define DEF_CMD(def_line, def_enum, ...) \
-    else if (eCommand == def_enum) \
-    { \
-        fprintf (File, TAB  def_line); \
-        return; \
-    }
-
-    if (false) {}
-
-    #include "commands.h"
-
-    else
-    {
-        MY_LOUD_ASSERT (false);
-    }
-
-    #undef DEF_CMD
-}
-
 //=============================================================================================================================================================================
 
 void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
@@ -891,26 +880,11 @@ void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
 
     if (ParamMarker == false)
     {
-        #ifdef DEBUG
-        printf (KYLW "Amount: %d CurSize: %d Param: %d Final: %d => " KNRM, Table->amount, Table->cur_size, Table->amount_param, Table->amount - (Table->cur_size - Table->amount_param) - 1);
-        #endif
-
-        Table->Arr[Table->cur_size].index = (Table->amount - (Table->cur_size - Table->amount_param) - 1) * VAR_SIZE_BYTES;
-
-        #ifdef DEBUG
-        printf (KYLW "index <%d>\n" KNRM, Table->Arr[Table->cur_size].index);
-        #endif
-
+        elf_param_var_set_index (Table);
     }
     else
     {
-        Table->Arr[Table->cur_size].index = - (Table->cur_size + 2); // another way to mark params of function
-
-        #ifdef DEBUG
-        printf (KYLW "index |%d|\n" KNRM, Table->Arr[Table->cur_size].index);
-        #endif
-
-        Table->amount_param++;
+        elf_var_set_index (Table);
     }
 
     Table->cur_size++;
@@ -918,6 +892,29 @@ void  elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker)
     return;
 }
 
+void elf_param_var_set_index (VarTable* Table)
+{
+    #ifdef DEBUG
+    printf (KYLW "Amount: %lu CurSize: %d Param: %lu Final: %lu => " KNRM, Table->amount, Table->cur_size, Table->amount_param, Table->amount - (Table->cur_size - Table->amount_param) - 1);
+    #endif
+
+    Table->Arr[Table->cur_size].index = (Table->amount - (Table->cur_size - Table->amount_param) - 1) * VAR_SIZE_BYTES;
+
+    #ifdef DEBUG
+    printf (KYLW "index <%d>\n" KNRM, Table->Arr[Table->cur_size].index);
+    #endif
+}
+
+void elf_var_set_index (VarTable* Table)
+{
+    Table->Arr[Table->cur_size].index = - (Table->cur_size + 2); // another way to mark params of function
+
+    #ifdef DEBUG
+    printf (KYLW "index |%d|\n" KNRM, Table->Arr[Table->cur_size].index);
+    #endif
+
+    Table->amount_param++;
+}
 void elf_create_new_var_table (ElfBack* Back, bool ParamMarker)
 {
     PRINT_DEBUG_INFO;
@@ -1050,7 +1047,7 @@ int elf_find_var (ElfBack* Back, AstNode* CurNode)
         #endif
 
         Depth++;
-    } while ((elf_find_in_table (Back, CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (Depth <= Back->VarStack->size));
+    } while ((elf_find_in_table (CurNode->data.var, Table, &RetIndex, &ParamMarker) == false) && (Depth <= Back->VarStack->size));
 
     if (RetIndex == WrongValue)
     {
@@ -1063,7 +1060,7 @@ int elf_find_var (ElfBack* Back, AstNode* CurNode)
 
 //=============================================================================================================================================================================
 
-bool elf_find_in_table (ElfBack* Back, CharT* VarName, VarTable* Table, int* RetIndex, bool* ParamMarker)
+bool elf_find_in_table (CharT* VarName, VarTable* Table, int* RetIndex, bool* ParamMarker)
 {
     MY_LOUD_ASSERT (Table != NULL);
 

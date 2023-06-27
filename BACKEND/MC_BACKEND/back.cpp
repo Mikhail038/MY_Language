@@ -223,7 +223,6 @@ void seek (CodeSource* Source)
 {
     for (; Source->ip < Source->size; Source->ip++)
     {
-        // if ((wcscmp (Buffer->Array[Buffer->ip], L"\n")) && ((wcscmp (Buffer->Array[Buffer->ip], L" "))))
         if ((Source->Arr[Source->ip] != L'\n') && ((Source->Arr[Source->ip] != L' ')))
         {
             return;
@@ -237,7 +236,6 @@ void seek_out (CodeSource* Source)
 {
     for (; Source->ip < Source->size; Source->ip++)
     {
-        // if ((wcscmp (Buffer->Array[Buffer->ip], L"\n")) && ((wcscmp (Buffer->Array[Buffer->ip], L" "))))
         if (((Source->Arr[Source->ip] == L'\n')) || ((Source->Arr[Source->ip] == L' ')))
         {
             Source->ip++;
@@ -318,7 +316,6 @@ void delete_tree (AstNode** Node)
     free (*Node);
 
     *Node = NULL;
-    //printf ("\n%p freed^\n", *Node);
 
     return;
 }
@@ -498,16 +495,9 @@ void make_asm_file (AstNode* Root, FILE* File)
 
     SBack* Back = back_constructor (File);
 
-    //generate_user_functions (Root, Back);
-
     generate_code (Root, Back);
 
     back_destructor (Back);
-
-    // for (int i = 0; i < Back->Funcs->top_index; i++)
-    // {
-    //     printf ("'%ls'[%d]\n", Back->Funcs->Table[i]);
-    // }
 
     return;
 }
@@ -980,7 +970,9 @@ void write_command (ECommandNums eCommand, FILE* File)
 
 void writeln_command (ECommandNums eCommand, FILE* File)
 {
-    //printf ("%d!\n", eCommand);
+    #ifdef DEBUG_2
+    printf ("%d!\n", eCommand);
+    #endif
 
     write_command (eCommand, File);
 
@@ -1071,13 +1063,12 @@ int find_var (BACK_FUNC_HEAD_PARAMETERS)
 
     VarTable* Table = NULL;
 
-    int depth = 1;
+    int Depth = 1;
     do
     {
-        Table = Back->VarStack->data[Back->VarStack->size - depth];
-        //printf ("=%p=%d/%d=\n", Table, depth, Back->VarStack->size);
-        depth++;
-    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (depth <= Back->VarStack->size));
+        Table = Back->VarStack->data[Back->VarStack->size - Depth];
+        Depth++;
+    } while ((find_in_table (CurNode->data.var, Table, &RetIndex) == false) && (Depth <= Back->VarStack->size));
 
     if (RetIndex == WrongValue)
     {

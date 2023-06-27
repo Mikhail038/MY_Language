@@ -43,6 +43,8 @@ struct JumpLabel final
         start[0] = FirstStart;
     }
 
+    //----------------------------------------------------------------------------------------------------------------------------------------------------------
+
     JumpLabel (const JumpLabel& other) :
         amount(other.amount),
         finish(other.finish)
@@ -51,24 +53,6 @@ struct JumpLabel final
 
         start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
         memcpy(start, other.start, MAX_CALLS_OF_ONE_LABEL);
-    }
-
-    JumpLabel& operator= (const JumpLabel& other)
-    {
-        START_;
-
-        if (this == &other)
-        {
-            return *this;
-        }
-
-        finish = other.finish;
-        amount = other.amount;
-
-        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
-        memcpy(start, other.start, MAX_CALLS_OF_ONE_LABEL);
-
-        return *this;
     }
 
     JumpLabel& operator= (JumpLabel&& other)
@@ -89,6 +73,8 @@ struct JumpLabel final
         return *this;
     }
 
+    //----------------------------------------------------------------------------------------------------------------------------------------------------------
+
     JumpLabel (JumpLabel&& other) :
         amount(other.amount),
         start(other.start),
@@ -98,6 +84,26 @@ struct JumpLabel final
 
         other.start = nullptr;
     }
+
+    JumpLabel& operator= (const JumpLabel& other)
+    {
+        START_;
+
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        finish = other.finish;
+        amount = other.amount;
+
+        start = (size_t*) calloc (MAX_CALLS_OF_ONE_LABEL, sizeof (size_t));
+        memcpy(start, other.start, MAX_CALLS_OF_ONE_LABEL);
+
+        return *this;
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     ~JumpLabel()
     {

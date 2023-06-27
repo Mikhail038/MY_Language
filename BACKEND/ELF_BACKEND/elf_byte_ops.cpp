@@ -459,13 +459,13 @@ void x86_call_label (ElfBack* Back, const wchar_t* Name)
     else
     {
         #ifdef DEBUG
-        fprintf (stdout, "<not found>\n", Name);
+        fprintf (stdout, "<not found>\n");
         #endif
 
         Back->Labels.insert({Name, {Back->cur_addr, 0}});
 
         #ifdef DEBUG
-        fprintf (stdout, "<inserted>\n\n", Name);
+        fprintf (stdout, "<inserted>\n\n");
         #endif
     }
 
@@ -480,7 +480,7 @@ void x86_jump_label (ElfBack* Back, const wchar_t* Name, const int JumpMode)
     if (Back->Labels.find(Name) != Back->Labels.end())
     {
         #ifdef DEBUG
-        fprintf (stdout, "/found/\n", Name);
+        fprintf (stdout, "/found/\n");
         #endif
 
         if (Back->Labels[Name].finish != NULL_FINISH)
@@ -507,7 +507,7 @@ void x86_jump_label (ElfBack* Back, const wchar_t* Name, const int JumpMode)
         Back->Labels.insert({Name, {Back->cur_addr, 0}});
 
         #ifdef DEBUG
-        fprintf (stdout, "/inserted/\n\n", Name);
+        fprintf (stdout, "/inserted/\n\n");
         #endif
     }
 
@@ -702,6 +702,18 @@ void x86_jump_near (ElfBack* Back, int Shift, int JumpMode)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+size_t paste_functions_bytes_from_file (char* Address, FILE* FunctionFile)
+{
+    fseek(FunctionFile, 0, SEEK_END);
+    size_t FunctionSize = ftell(FunctionFile);
+    fseek(FunctionFile, 0, SEEK_SET);
+
+    fread(Address, FunctionSize, sizeof (char), FunctionFile);
+
+    return FunctionSize;
+}
+
+//================================OLD WAY TO PASTE FUNCTIONS CODE BELOW==============================================================================
 const int InputFunctionSize = 107;
 
 const char InputFunctionCodeArr[] =
@@ -720,11 +732,6 @@ void x86_make_input_func (ElfBack* Back)
 {
     x86_paste_call_label(Back, INP_LBL);
 
-    memcpy (&(Back->ByteCodeArray[Back->cur_addr]), InputFunctionCodeArr, InputFunctionSize);
-
-    Back->cur_addr += InputFunctionSize;
-
-    /*
     x86_mov_reg_reg(Back, r14, rax);
 
     // mov rdi, 0x0      ; file descriptor = stdin = 0
@@ -763,14 +770,11 @@ void x86_make_input_func (ElfBack* Back)
 
     x86_mov_reg_imm(Back, rbx, 0);
 
-    x86_extra_make_input_func_body (Back);
+    x86_make_input_func_body (Back);
 
     x86_mov_to_addr_in_reg_from_reg(Back, r14, rax);
 
-    // x86_write_new_line();
-
     x86_ret(Back);
-    */
 }
 
 void x86_make_input_func_body (ElfBack* Back)
@@ -878,10 +882,6 @@ void x86_make_output_func (ElfBack* Back)
 {
     x86_paste_call_label(Back, OUT_LBL);
 
-    memcpy (&(Back->ByteCodeArray[Back->cur_addr]), OutputFunctionCodeArr, OutputFunctionSize);
-
-    Back->cur_addr += OutputFunctionSize;
-    /*
     //  xor  rdx, rdx     ; Clear rdx which stores obtains a single digit of the number to convert to ASCII bytes
     x86_mov_reg_imm(Back, rdx, 0);
 
@@ -894,12 +894,11 @@ void x86_make_output_func (ElfBack* Back)
     //  mov  rbx, 0xa     ; We store the divisor which is 10 for decimals (base-10) in rbx. rbx will be the divisor.
     x86_mov_reg_imm(Back, rbx, 0x0a);
 
-    x86_extra_make_output_func_body (Back);
+    x86_make_output_func_body (Back);
 
     x86_write_new_line(Back);
 
     x86_ret(Back);
-    */
 }
 
 void x86_make_output_func_body (ElfBack* Back)
@@ -966,6 +965,8 @@ void x86_make_output_func_body (ElfBack* Back)
     x86_paste_jump_label(Back, L"_out_done");
 }
 
+//================================OLD WAY TO PASTE FUNCTIONS CODE END==============================================================================
+
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void x86_paste_call_label (ElfBack* Back, const wchar_t* Name)
@@ -1002,7 +1003,7 @@ void x86_paste_call_label (ElfBack* Back, const wchar_t* Name)
         Back->Labels.insert({Name, {Back->cur_addr}});
 
         #ifdef DEBUG
-        fprintf (stdout, "|inserted|\n\n", Name);
+        fprintf (stdout, "|inserted|\n\n");
         #endif
     }
 }
@@ -1033,7 +1034,7 @@ void x86_paste_jump_label (ElfBack* Back, const wchar_t* Name)
         Back->Labels.insert({Name, {Back->cur_addr}});
 
         #ifdef DEBUG
-        fprintf (stdout, "{inserted}\n\n", Name);
+        fprintf (stdout, "{inserted}\n\n");
         #endif
     }
 }

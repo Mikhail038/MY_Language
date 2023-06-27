@@ -362,13 +362,13 @@ int parse_push_or_pop (StructSource* Source, StructMachineCode* Code, const char
     {
         parse_str (Source, Code, Command);
     }
-    else if ((Command = "push") && (Name[0] <= '9') && ((Name[0] >= '0')) || (Name[0] == '-') )
+    else if (strcmp(Command, "push") && (Name[0] <= '9') && ((Name[0] >= '0')) || (Name[0] == '-') )
     {
         parse_double (Source, Code, Command);
     }
     else
     {
-        if (Command = "pop")
+        if (strcmp(Command, "push") == 0)
         {
             //Source->pointer++;
             //printf ("!'%s'\n", Name);

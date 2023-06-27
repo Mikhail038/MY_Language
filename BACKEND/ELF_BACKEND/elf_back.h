@@ -4,9 +4,10 @@
 //==================================================================================================================================================================
 
 #include "elf_header_plus_tools.h"
-#include "ARRAY/array.h"
+#include "array.h"
 #include "function_label.h"
 #include "back.h"
+#include "flag_detector.h"
 
 #include <bits/types/FILE.h>
 #include <cstddef>
@@ -124,6 +125,9 @@ struct ElfBack
     char*               ast_file_name   = NULL;
     char*               gv_file_name    = NULL;
 
+    char*               inp_func_file_name    = NULL;
+    char*               out_func_file_name    = NULL;
+
     BackFuncTable*     Funcs           = NULL;
     SStack<VarTable*>* VarStack        = NULL;
 
@@ -137,6 +141,14 @@ struct ElfBack
 };
 
 //==================================================================================================================================================================
+
+void users_tree (LinePlusElfBack Argument);
+
+void users_executable (LinePlusElfBack Argument);
+
+void users_graph_viz (LinePlusElfBack Argument);
+
+void users_help (LinePlusElfBack Argument);
 
 
 //==================================================================================================================================================================
@@ -258,6 +270,8 @@ void generate_elf_array (ElfBack* Back, AstNode* Root);
 
 void elf_generate_code (ElfBack* Back, AstNode* Root);
 
+size_t paste_functions_bytes_from_file (char* Address, FILE* FunctionFile);
+
 void generate_main ();
 
 void elf_generate_statement (ElfBack* Back, AstNode* CurNode);
@@ -294,7 +308,12 @@ void elf_standard_if_jump (ElfBack* Back, int JumpMode);
 
 void elf_write_command (ElfBack* Back, ECommandNums eCommand, FILE* File);
 
+
 void elf_add_to_var_table (ElfBack* Back, AstNode* CurNode, bool ParamMarker);
+
+void elf_param_var_set_index (VarTable* Table);
+void elf_var_set_index (VarTable* Table);
+
 void elf_create_new_var_table (ElfBack* Back, bool ParamMarker);
 void elf_create_param_var_table (ElfBack* Back, AstNode* CurNode);
 void elf_delete_var_table (ElfBack* Back);
@@ -307,7 +326,7 @@ AstNode* elf_find_parent_statement (AstNode* CurNode);
 int elf_find_var (ElfBack* Back, AstNode* CurNode);
 
 AstNode* elf_find_parent_statement (ElfBack* Back, AstNode* CurNode);
-bool elf_find_in_table (ElfBack* Back, CharT* varName, VarTable* Table, int* RetIndex, bool* ParamMarker);
+bool elf_find_in_table (CharT* varName, VarTable* Table, int* RetIndex, bool* ParamMarker);
 
 const wchar_t* my_wchar_find (ElfBack* Back, const wchar_t* Name);
 

@@ -1598,7 +1598,6 @@ AstNode* get_Bracket (FUNC_HEAD_ARGUMENTS, bool ZeroRetPermisiion)
     }
 
     wprintf (KRED L"==ERROR!!=expected variable, function or value=\n" KNRM);
-    //wprintf (L"==ERROR==\n""No such'%ls' found!\n", TOKEN.data.var);
     MTokAss (0);
 
     return NULL;

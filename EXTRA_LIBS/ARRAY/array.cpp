@@ -61,14 +61,12 @@ bool make_array_smaller (MyArray* Array)
         return true;
     }
 
-    //printf ("-------'%p' '%d' of '%d'   '%d' '%d'\n", stack->data, stack->size, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
 
     Array->capacity /= CapacityMulDivCoefficient;
 
     MY_LOUD_ASSERT(Array->capacity != 0);
     Array->data = realloc (Array->data, Array->data_size * Array->capacity);
 
-    //printf ("-------'%p' '%d' of '%d'   '%d' '%d'\n", stack->data, stack->size, stack->capacity, sizeof (*stack->data), CapacityMulDivCoefficient);
 
     if (Array->data == NULL)
     {
@@ -122,15 +120,6 @@ bool put_in_tail_of_array (MyArray* Array, const void* Data)
     void* InsertPlace = NULL;
 
     InsertPlace = (char*) Array->data + Array->size * Array->data_size;
-
-    // if (find_free_place_in_array (Array, &Index) == true)
-    // {
-    //     InsertPlace = (char*) Array->data + Index * Array->data_size;
-    // }
-    // else
-    // {
-    //     MY_LOUD_ASSERT(false);
-    // }
 
     #ifdef DEBUG_2
     printf (KGRN "|MyArray|" KNRM "[put]  index %lu, InsertPlace %p, Data %p\n", Index, InsertPlace, Data);
