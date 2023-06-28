@@ -79,38 +79,34 @@ const int ELF_FUNC_RET_REG  = r11;
 struct ElfHead;
 struct Patch;
 
-namespace
+struct hash_wchar
 {
-    struct hash_wchar
+    size_t operator()(const wchar_t* const& Line) const
     {
-        size_t operator()(const wchar_t* const& Line) const
+        size_t RetValue = 0;
+
+        size_t length = wcslen(Line);
+
+        for (size_t cnt = 0; cnt != length; ++cnt)
         {
-            size_t RetValue = 0;
-
-            size_t length = wcslen(Line);
-
-            for (size_t cnt = 0; cnt != length; ++cnt)
-            {
-                RetValue = ((RetValue >> 1) | (RetValue << 31)) ^ (unsigned int) Line[cnt];
-            }
-
-            #ifdef DEBUG_2
-            printf (KRED  Kreverse "%lu\n" KNRM , RetValue);
-            #endif
-
-            return RetValue;
+            RetValue = ((RetValue >> 1) | (RetValue << 31)) ^ (unsigned int) Line[cnt];
         }
-    };
 
-    struct equal_wchar
+        #ifdef DEBUG_2
+        printf (KRED  Kreverse "%lu\n" KNRM , RetValue);
+        #endif
+
+        return RetValue;
+    }
+};
+struct equal_wchar
+{
+    bool operator()(const wchar_t* const FirstLine, const wchar_t* const SecondLine) const
     {
-        bool operator()(const wchar_t* const FirstLine, const wchar_t* const SecondLine) const
-        {
-            hash_wchar hash_function;
-            return (hash_function(FirstLine) == hash_function(SecondLine));
-        }
-    };
-}
+        hash_wchar hash_function;
+        return (hash_function(FirstLine) == hash_function(SecondLine));
+    }
+};
 
 struct ElfBack
 {
