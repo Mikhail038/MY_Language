@@ -35,16 +35,15 @@
 
 //=============================================================================================================================================================================
 
-const int BITS_IN_BYTE = 8;
-
-const int CALL_SIZE = 5;
+// TODO As for me, I prefer to align constants in constants block as shown below:
+const int   BITS_IN_BYTE  = 8;
+const int   CALL_SIZE     = 5;
 
 const int NEAR_JUMP_SIZE = 2;
 
 const int NORM_JUMP_SIZE = 6;
 
 //=============================================================================================================================================================================
-
 void set_hex_int (ElfBack* Back, int Number)
 {
     set_bytes(Back, &Number, sizeof (Number));
@@ -56,6 +55,7 @@ void set_hex_long (ElfBack* Back, long Address)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// TODO I'd recommed to add verb ("place_***" or "insert_***" for ex.) to all of the functions names' below
 
 void x86_push_imm (ElfBack* Back, int Number)
 {
@@ -640,7 +640,35 @@ void x86_jump_norm (ElfBack* Back, int Shift, int JumpMode)
 
     set_hex_int(Back, Shift - NORM_JUMP_SIZE);
 }
+// TODO I would combine this function with the one above in next way:
+/* 
+    void x86_jump(ElfBack* Back, int Shift, int JumpMode, bool near=false) {
+        const int NO_OPCODE = -1;
 
+        #define jump(opcode_near, opcode_norm1, opcode_norm2)       \    
+            do {                                                    \
+                if (near)                                           \
+                    set_one_byte(Back, opcode_near);                \
+                else  {                                             \
+                    set_one_byte(Back, opcode_norm1);               \
+                    if (opcode_norm1 != NO_OPCODE)                  \
+                        set_one_byte(Back, opcode_norm2);           \
+                }                                                   \
+            while(0)
+
+        switch(jump_mode) {
+            case x86_jmp:
+                jump(0xeb, 0xe9, NO_OPCODE);
+                break;
+            ...
+        }
+        
+        ...
+
+        #undef jump                
+
+    }
+*/
 void x86_jump_near (ElfBack* Back, int Shift, int JumpMode)
 {
     switch (JumpMode)
@@ -712,6 +740,8 @@ size_t paste_functions_bytes_from_file (char* Address, FILE* FunctionFile)
 
     return FunctionSize;
 }
+
+// TODO if it's old way, then push it to different git branch and delete from main branch))
 
 //================================OLD WAY TO PASTE FUNCTIONS CODE BELOW==============================================================================
 const int InputFunctionSize = 107;
@@ -796,7 +826,7 @@ void x86_make_input_func_body (ElfBack* Back)
 
     // and rdx, 0xff
     // set_one_byte(Back, 0x48);
-    // set_one_byte(Back, 0x81);
+    // set_one_byte(Back, 0x81); // TODO, please, clean up your code
     // set_one_byte(Back, 0xed);
     // set_one_byte(Back, 0xff);
     // set_one_byte(Back, 0x00);

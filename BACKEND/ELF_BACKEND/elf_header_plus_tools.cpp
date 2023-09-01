@@ -12,6 +12,7 @@
 #include <cstring>
 
 //==================================================================================================================================================================
+// TODO all is okay here!
 
 void create_empty_space_for_patch (ElfBack* Back, SupportedPatches Name, size_t SizeOfData)
 {

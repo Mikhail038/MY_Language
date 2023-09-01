@@ -48,6 +48,18 @@ void users_tree (LinePlusElfBack Argument)
 {
     Argument.back->ast_file_name = (char*) Argument.Line;
 
+    //TODO thing like that are usually made with defines like:
+    // #ifdef DEBUG
+    // #define DEBUG_PRINT(...) do {printf(VA_ARGS);} while (0);
+    // #else
+    // #define DEBUG_PRINT(...)
+    // #endif
+    //
+    //usage:
+    //
+    // DEBUG_PRINT(KMGN "|ast choosed| [%s]\n" KNRM, Argument.Line);
+    //
+
     #ifdef DEBUG
     printf(KMGN "|ast choosed| [%s]\n" KNRM, Argument.Line);
     #endif
@@ -73,6 +85,7 @@ void users_graph_viz (LinePlusElfBack Argument)
 
 void users_help (LinePlusElfBack Argument)
 {
+    //TODO combine several printf calls to one
     printf (KGRN Kbright "-t" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "choose custom AST tree\n" KNRM);
     printf (KGRN Kbright "-e" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "create custom execuatable file\n" KNRM);
     printf (KGRN Kbright "-g" KNRM " + " KRED "_FILENAME_    " KNRM Kunderscore "put graph_viz dump in custom file\n" KNRM);
@@ -91,7 +104,8 @@ void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* El
     Back->exit_marker   = false;
     Back->ast_file_name = "AST/ParsedSrc.tr";
     Back->ex_file_name = "a.elf";
-    Back->gv_file_name = "LOGS/BACKEND/GraphVizASTTree";
+    Back->gv_file_name = "LOGS/BACKEND/GraphVizASTTree"; // TODO Well, calling flag-pasrser is not "construct_elf_back" job. 
+                                                         //      It should get flags as parameters
     //they may choose after flags parsing
 
     const ElfBackFlagFunction FlagsArray[] =
@@ -107,6 +121,19 @@ void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* El
     Back->inp_func_file_name = "BACKEND/ELF_BACKEND/input_function";
     Back->out_func_file_name = "BACKEND/ELF_BACKEND/output_function";
 
+/*
+    TODO cat is sad of you not aligning "calloc"s 
+
+            ／＞　  フ
+            | 　_　_| 
+          ／` ミ＿xノ 
+         /　　　　 |
+        /　 ヽ　　 ﾉ
+        │　　|　|　|
+    ／￣|　　 |　|　|
+    (￣ヽ＿_ヽ_)__)
+    ＼二)
+*/
     Back->Funcs         = (BackFuncTable*)     calloc (1, sizeof (BackFuncTable));
     Back->Funcs->Table  = (SBackFunc*)          calloc (MAX_FUNCS_ARRAY, sizeof (SBackFunc));
     Back->Funcs->top_index = 0;
@@ -124,6 +151,32 @@ void construct_elf_back (int argc, char** argv, ElfBack* Back, const ElfHead* El
 
     Back->ByteCodeArray = (char*) calloc(sizeof (char), MAX_ELF_SIZE);
     Back->cur_addr = 0;
+
+    //TODO I like it, it has became much better
+    /*
+                            ⢀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⡄⠀⠀⠀⠀⢀⡴⠚⠉⠀⠀⠀⠈⠓⢤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣏⣿⠟⡄⠀⠀⣠⡟⣡⣄⡀⠀⠀⠀⠀⠀⠀⠑⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠙⠛⢾⣦⣴⢋⡞⠋⠙⠻⣦⡀⠀⠀⠀⠀⢀⣼⡀⠀⠀⢠⣾⣿⡀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⡿⢼⣧⣾⣽⡿⣿⣿⡤⣤⣴⣶⣿⠟⠻⠤⣶⡿⠿⠿⠃⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡟⠀⠀⠈⠛⠛⠒⡟⠁⠀⠀⠻⣿⣿⣱⢠⡞⠁⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠃⢠⣶⣤⣤⣾⣇⣶⣀⠀⠀⠀⠀⣍⠁⠀⠘⡄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⡖⢺⠻⣧⣀⠀⠉⠛⠛⠿⠶⠚⠛⠙⢷⣤⡀⡇⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠴⢶⣤⣤⣾⣿⡇⡅⠈⣧⣿⣎⢙⡒⠢⠤⢄⣀⣀⣀⣠⠤⢹⠀⣷⡄⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⡠⠖⠀⠀⠀⠀⠻⣿⣿⣿⣷⡙⠶⣧⠀⠈⢧⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣦⣤⣤⣤⡀
+⠀⠀⠀⠀⢀⡾⠁⠀⠀⠀⠀⠀⠀⢹⣿⣿⣿⣿⣦⣿⠀⠀⢸⣄⣀⠄⠀⠉⠠⣄⣰⠀⢀⣼⣿⣿⣿⠟⠃⠀⠉
+⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⣿⣿⡿⠁⠀⠀⠈⠀⠀⠀⠀⠀⣤⠞⠋⣠⣿⣿⣿⣿⠋⠀⠀⠀⠀
+⠀⠀⠀⢀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀
+⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⠟⢋⡅⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢺⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀
+⠀⠀⠀⡞⠀⠀⠀⠀⡠⠄⣀⠴⠛⠉⠁⠀⠀⢨⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣽⣿⣾⣿⣷⡄⠀⠀⠀⠀
+⠀⠀⢸⠁⠀⡠⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣿⣿⣿⠟⠀⠀⠀⠀
+⠀⢀⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⠄⠈⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⠿⠿⠿⣿⣷⠤⠶⠦⣄⡀
+⢠⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠄⠂⢹⡀⠀⠀⠀⠀⢀⣀⣠⠾⠟⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉
+⠸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⣤⡴⠾⠛⠋⢹⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⢻⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠓⠚⢸⣿⣦⡙⢣⠀⠀⠀⢸⡧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠈⠛⠒⠒⠒⠒⠒⠒⠒⠒⠒⠒⠒⠒⠒⠒⠛⠛⠛⠛⠓⠒⠒⠒⠚⠛⠒⠒⠂⠐⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    */
+
 }
 
 void destruct_elf_back (ElfBack* Back)
@@ -144,6 +197,8 @@ void destruct_elf_back (ElfBack* Back)
 void make_elf_file (ElfBack* Back)
 {
     AstNode* Root = read_tree (Back->ast_file_name);
+
+    // TODO same as DEBUG_PRINT (look at elf_back.cpp:51)
     #ifdef DEBUG
     make_graf_viz_tree (Root, Back->gv_file_name, false);
     #endif
@@ -253,11 +308,12 @@ void elf_head_shstrtable (ElfBack* Back, size_t SegmentSizeSaved)
 
 void generate_elf_array (ElfBack* Back, AstNode* Root)
 {
-    UniversalNumber PatchData;
+    UniversalNumber PatchData; // TODO Struct's like that are usually called "NumericType" or like that, 'coz it's not an universal number
+                               //       It doesn't support fractions, complex, quaternions and other numbers))
 
     elf_head_start (Back);
 
-    elf_head_start_params (Back);
+    elf_head_start_params (Back); // TODO please use verbs in function names. for ex.: elf_reserve_space_for_head_start_params or else
 
     //=======================================================================
 
@@ -265,9 +321,9 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
 
     paste_patch(Back, SupportedPatches::ProgramHeadersStart, PatchData);
 
-    elf_head_program_header_params (Back);
+    elf_head_program_header_params (Back); // TODO same, use verbs
 
-    create_empty_space_for_patch(Back, SupportedPatches::SegmentSize, sizeof (long int));
+    create_empty_space_for_patch(Back, SupportedPatches::SegmentSize, sizeof (long int)); // TODO this name is cool!
 
     create_empty_space_for_patch(Back, SupportedPatches::SegmentFileSize, sizeof (long int));
 
@@ -281,7 +337,7 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
     //=======================================================================
     //null
 
-    for (int cnt_null_header = 0; cnt_null_header < 64; cnt_null_header++)
+    for (int cnt_null_header = 0; cnt_null_header < 64; cnt_null_header++) // TODO make 64 a named constant for better understanding 
     {
         set_one_byte(Back, 0x00);
     }
@@ -375,19 +431,46 @@ void generate_elf_array (ElfBack* Back, AstNode* Root)
     paste_patch(Back, TableSize, PatchData);
 
     return;
-}
+}       // TODO function is quite big, but if you can't find the way to split it, that's ok
 
 #undef ALIGN_4
 #undef ALIGN_8
 
 //=============================================================================================================================================================================
 
-const int VAR_SIZE_BYTES = 8;
+const int VAR_SIZE_BYTES = 8; // TODO define constants in the upper part of file, also either add "static" keyword or define it in header 
 
 void elf_generate_code (ElfBack* Back, AstNode* Root)
 {
-    x86_call_label(Back, MAIN_LBL);
-
+    x86_call_label(Back, MAIN_LBL); 
+/*      (no verb)
+           /\
+            \
+             \----------\
+                         |
+// TODO He wants to see verbs in function names
+        |
+        |
+        |   ░░░░░░░░░░▄▄█▀▀▀▀▀▀▀▀█▄▄░░░░░░░░
+        |   ░░░░░░░▄▄▀▀░░░░░░░░░░░░▀▀▄▄░░░░░
+        |   ░░░░░▄█▀░░░░▄▀░░░░▄░░░░░░░▀█░░░░
+        |   ░░░░██▄▄████░░░░░░▀▄░░░░░░░░█▄░░
+        |   ░░▄████▀███▄▀▄░░░░░░███▄▄▄▄░░█░░
+        |   ░▄█████▄████░██░░░▄███▄▄░▀█▀░░█░
+        |   ▄███████▀▀░█░▄█░▄███▀█████░█░░▀▄
+        |   █░█▀██▄▄▄▄█▀░█▀█▀██████▀░██▀█░░█
+        \-> █░█░▀▀▀▀▀░░░█▀░█░███▀▀░░▄█▀░█░░█
+            █░░█▄░░░░▄▄▀░░░█░▀██▄▄▄██▀░░█▄░█
+            █░░░░▀█▀▀▀░░░░░░█░░▀▀▀▀░░░░▄█░░█
+            █░░░░░░░░░░░░░░░░▀▄░░░░░░▄█▀░░░█
+            ░█░░░░░░░░░░░░░░░░▀▀▀▀▀▀▀▄░░░░█░
+            ░░█░░░░░░▄▄▄▄▄▄▄░░░░░░░░░░░░░▄▀░
+            ░░░▀▄░░░░░▀█▄░░░▀▀██▄░░░░░░░▄▀░░
+            ░░░░░▀▄▄░░░░░▀▀▀▀▀░░░░░░░░▄▀░░░░
+            ░░░░░░░░▀▀▄▄▄░░░░░░░░▄▄▄▀▀█░░░░░
+            ░░░░░░░░░░▄▀▀█████▀▀▀▀░░░░██░░░░
+            ░░░░░░░░░█░░░██░░░█▀▀▀▀▀▀▀▀█░░░░
+*/
     x86_exit(Back);
 
     FILE* InpFile = fopen(Back->inp_func_file_name, "r");
@@ -673,8 +756,9 @@ void elf_generate_call (ElfBack* Back, AstNode* CurNode, bool RetValueMarker)
 
     elf_pop_function_parameters (Back, CurNode->right);
 
-    if (RetValueMarker == true)
-    {
+    if (RetValueMarker == true) // TODO usually bool vars are not compared explicitly, for ex:  
+    {                           //      if (RetValueMarker) ...
+                                //      But if you want to, that's ok
         x86_push_reg(Back, ELF_FUNC_RET_REG);
     }
 
@@ -920,7 +1004,8 @@ void elf_create_new_var_table (ElfBack* Back, bool ParamMarker)
     PRINT_DEBUG_INFO;
 
     Back->delta_rbp = 0;
-
+    // TODO UnAlIgNeD!11!!11!!!! !!11!
+    // ))
     VarTable* NewTable = (VarTable*)  calloc (1,                  sizeof (VarTable));
     NewTable->Arr       = (SVarAccord*) calloc (VAR_TABLE_CAPACITY, sizeof (SVarAccord));
     NewTable->cur_size = 0;
