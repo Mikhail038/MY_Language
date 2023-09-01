@@ -3,8 +3,10 @@
 #include <cstring>
 #include <cstdio>
 
+//TODO do not start your defines' name from "_" or "__"
 #define _LOCATION __PRETTY_FUNCTION__, __FILE__, __LINE__
 
+// TODO make more universal debug define, I've described it in elf_back.cpp:51
 #ifdef DEBUG_3
 #define START_ \
 do \
@@ -45,6 +47,9 @@ struct JumpLabel final
 
     //----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+    // TODO you can write coppy-constructor with using of copy-assigment
+    //      same for move-constructor
+    
     JumpLabel (const JumpLabel& other) :
         amount(other.amount),
         finish(other.finish)

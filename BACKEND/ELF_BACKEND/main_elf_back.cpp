@@ -48,20 +48,28 @@ int main (int argc, char** argv)
     if (Back.exit_marker == true)
     {
         destruct_elf_back (&Back);
-        return 0;
+        return 0; // TODO I believe, it's an error case, so do not return 0, return EXIT_FAILURE or something
     }
 
     make_elf_file (&Back);
     destruct_elf_back (&Back);
 
-    size_t length = strlen (Back.ex_file_name) + sizeof ("chmod +rwx ");
+    size_t length = strlen (Back.ex_file_name) + sizeof ("chmod +rwx "); // TODO make a string constant "chmod +rwx"
+                                                                         //     because you can forget and write 
+                                                                         //     for ex. "chmod +rw" here
+                                                                         //     then you'll get the wrong size 
+                                                                         //     of allocated space
 
     char Command[length];
 
     sprintf (Command, "chmod +rwx %s", Back.ex_file_name);
     system (Command);
 
-    return 0;
+    return 0; // return not zero but the rezult of "system (Command);"
+              // if "system (Command);" failed you are still returning 0
+              // like everything is ok (but it's not 'coz "system (Command);" failed)
 }
+
+// TODO nice!
 
 //=============================================================================================================================================================================

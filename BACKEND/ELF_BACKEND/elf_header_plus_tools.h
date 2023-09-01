@@ -18,7 +18,7 @@ struct ElfHead
 
     const char magic_signature = 0x7f; //MAGIC SIGNATURE
     const char elf_name[3] = {'E', 'L', 'F'};
-    const char elf_class  = 0x02; //Class (64-bit = 2)
+    const char elf_class  = 0x02; //Class (64-bit = 2) // TODO align constants, please)) Also, it's okay to use clang-format if you want to
     const char endian     = 0x01; //Endian (little endian = 1)
     const char elf_version = 0x01; //Elf Version (only correct = 1)
     const char os_abi     = 0x00; //OS ABI (System V (UNIX) = 0)

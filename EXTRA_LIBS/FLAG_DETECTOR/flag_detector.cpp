@@ -14,6 +14,7 @@ const int INVALID_FLAG = -1;
 
 //==================================================================================================================================================================
 
+// TODO nice!
 void parse_elf_back_flags (ElfBack* Back, int ArgC, char** ArgV, ElfBackFlagFunction* FlagsArray, size_t FlagsAmount)
 {
     int NumberOfFlag = 0;

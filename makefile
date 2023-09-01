@@ -7,6 +7,17 @@ VR_FLAGS = -g -ggdb3 -std=c++17 -O3 -DDEBUG
 
 ASSAN = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
+#TODO common names for cpp flags is CXXFLAGS please, use it
+# it's important 'coz usuzually programmers want to do something like:
+# CXXFLAGS+="MY OWN FAVOURITE FLAGS" make
+# if you don't use CXXFLAGS as variable in your makefile, line above would have no impact 
+# also, it's okay to use additional variables like "DEB_FLAGS", bud you should add it to CXXFLAGS like that:
+# ifeq (CURRENT_MODE, DEBUG) 
+#		CXXFLAGS += DEB_FLAGS
+#
+# Same with copiler,
+# common name is CXX for cpp compiler and CC for c compiler
+#
 DOP = -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations -Wc++14-compat -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconditionally-supported -Wconversion -Wctor-dtor-privacy -Wempty-body -Wfloat-equal -Wformat-nonliteral -Wformat-security -Wformat-signedness -Wformat=2 -Winline -Wlogical-op -Wnon-virtual-dtor -Wopenmp-simd -Woverloaded-virtual -Wpacked -Wpointer-arith -Winit-self -Wredundant-decls -Wshadow -Wsign-conversion -Wstrict-null-sentinel -Wstrict-overflow=2 -Wsuggest-attribute=noreturn -Wsuggest-final-methods -Wsuggest-final-types -Wsuggest-override -Wswitch-default -Wswitch-enum -Wsync-nand -Wundef -Wunreachable-code -Wunused -Wuseless-cast -Wvariadic-macros -Wno-literal-suffix -Wno-missing-field-initializers -Wno-narrowing -Wno-old-style-cast -Wno-varargs -Wstack-protector -fcheck-new -fsized-deallocation -fstack-protector -fstrict-overflow -fno-omit-frame-pointer -Wstack-usage=8192 -pie -fPIE
 DOP += -Wno-unused-result -Wno-stack-usage -Wno-unused-parameter -Wno-stack-protector -Wno-write-strings -Wno-switch-enum -Wno-cast-qual -Wno-conversion -Wno-sign-compare -Wno-sign-conversion -Wno-effc++
 
@@ -50,6 +61,7 @@ VR_OBJ_ELF_B = $(VR_SRC_ELF_B)/OBJECTS
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+#TODO use $^, $@ in your targets
 BUILD_FRONTEND:  $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_file_print.o $(VR_OBJ_F)/front_graph_viz.o EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o
 	$(VR_COMPILER) $(VR_OBJ_F)/front.o $(VR_OBJ_F)/main_front.o $(VR_OBJ_F)/front_file_print.o $(VR_OBJ_F)/front_graph_viz.o EXTRA_LIBS/FLAG_DETECTOR/OBJECTS/flag_detector.o -o front $(VR_FLAGS)
 
@@ -76,6 +88,20 @@ BUILD_BACKEND_ELF:  $(VR_OBJ_ELF_B)/elf_back.o $(VR_OBJ_ELF_B)/elf_byte_ops.o $(
 # 	$(VR_COMPILER) -c -o BACKEND/OBJECTS/disasm.o BACKEND/DISASM/disasm.cpp $(VR_FLAGS)
 
 #=============================================================================================================================================================================
+
+# TODO due to a large amout of flags, it's hard to recognize what file is compiling now
+# I suggest you to use things like
+# target: dependency1.cpp dependency2.cpp
+#	@echo [CXX] $^
+#	@$(VR_COMPILER) -c $^
+#
+# explanation:
+# "@" will make the command after it "quiet"
+# so you'll get in you terminal things like:
+# 
+#	[CXX] dependency1.cpp dependency2.cpp
+# 	*compiling with all of the flags, but not printing it*
+#
 
 $(VR_OBJ_F)/front_file_print.o: $(VR_SRC_F)/front_file_print.cpp
 	$(VR_COMPILER) -c -o  $(VR_OBJ_F)/front_file_print.o $(VR_SRC_F)/front_file_print.cpp $(VR_FLAGS)
